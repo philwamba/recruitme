@@ -39,9 +39,10 @@ Update `.env` with your database connection string:
 DATABASE_URL="postgresql://user:password@localhost:5432/recruitme"
 ```
 
-3. Run database migrations:
+3. Generate Prisma client and run migrations:
 
 ```bash
+pnpm prisma generate
 pnpm prisma migrate dev
 ```
 
