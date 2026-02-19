@@ -1,5 +1,4 @@
 import { WaitlistForm } from '@/components/WaitlistForm'
-import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -8,9 +7,9 @@ export default function Home() {
         <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">
             <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">myapply</span>
+              <span className="sr-only">RecruitMe</span>
               {/* Placeholder logo or text if no logo asset available */}
-              <span className="text-xl font-bold tracking-tight text-gray-900">myapply</span>
+              <span className="text-xl font-bold tracking-tight text-gray-900">RecruitMe</span>
             </a>
           </div>
         </nav>
