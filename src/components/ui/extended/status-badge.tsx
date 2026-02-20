@@ -43,7 +43,7 @@ const statusConfigs: Record<ApplicationStatus, StatusConfig> = {
   HIRED: {
     label: 'Hired',
     icon: CheckCircle2,
-    className: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800',
+    className: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800',
   },
 }
 

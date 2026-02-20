@@ -39,7 +39,7 @@ export function ProgressRing({
     if (val < 30) return 'stroke-red-500'
     if (val < 60) return 'stroke-yellow-500'
     if (val < 80) return 'stroke-blue-500'
-    return 'stroke-green-500'
+    return 'stroke-orange-500'
   }
 
   return (

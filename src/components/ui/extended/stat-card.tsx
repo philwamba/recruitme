@@ -24,35 +24,35 @@ const variantStyles = {
   default: {
     icon: 'bg-muted text-muted-foreground',
     trend: {
-      up: 'text-green-600',
+      up: 'text-orange-600',
       down: 'text-red-600',
     },
   },
   primary: {
     icon: 'bg-primary/10 text-primary',
     trend: {
-      up: 'text-green-600',
+      up: 'text-orange-600',
       down: 'text-red-600',
     },
   },
   success: {
-    icon: 'bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400',
+    icon: 'bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400',
     trend: {
-      up: 'text-green-600',
+      up: 'text-orange-600',
       down: 'text-red-600',
     },
   },
   warning: {
     icon: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400',
     trend: {
-      up: 'text-green-600',
+      up: 'text-orange-600',
       down: 'text-red-600',
     },
   },
   destructive: {
     icon: 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400',
     trend: {
-      up: 'text-green-600',
+      up: 'text-orange-600',
       down: 'text-red-600',
     },
   },

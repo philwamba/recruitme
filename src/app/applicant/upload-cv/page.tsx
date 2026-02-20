@@ -80,8 +80,8 @@ export default function UploadCVPage() {
           <CardContent>
             {uploadStatus === 'complete' ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-950">
-                  <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950">
+                  <CheckCircle2 className="h-8 w-8 text-orange-600" />
                 </div>
                 <h3 className="mt-4 text-lg font-medium">CV Uploaded Successfully!</h3>
                 <p className="mt-2 text-sm text-muted-foreground max-w-sm">
@@ -105,7 +105,7 @@ export default function UploadCVPage() {
                     relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed
                     p-12 transition-colors cursor-pointer
                     ${isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'}
-                    ${file ? 'border-green-500 bg-green-50 dark:bg-green-950/20' : ''}
+                    ${file ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' : ''}
                   `}
                 >
                   <input
@@ -118,7 +118,7 @@ export default function UploadCVPage() {
 
                   {file ? (
                     <>
-                      <FileText className="h-12 w-12 text-green-600" />
+                      <FileText className="h-12 w-12 text-orange-600" />
                       <p className="mt-4 text-sm font-medium">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {(file.size / 1024 / 1024).toFixed(2)} MB

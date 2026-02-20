@@ -45,7 +45,7 @@ export function WaitlistForm() {
       <SubmitButton />
       <div className="w-full sm:w-auto">
       {state?.message && (
-        <p className={`mt-2 text-sm ${state.success ? 'text-green-400' : 'text-red-400'}`}>
+        <p className={`mt-2 text-sm ${state.success ? 'text-orange-400' : 'text-red-400'}`}>
           {state.message}
         </p>
       )}

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { WaitlistForm } from '@/components/WaitlistForm'
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
           </div>
         </nav>
       </header>
+
 
       <div className="relative isolate px-6 pt-14 lg:px-8">
         <div
@@ -43,6 +45,55 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Counselling Section */}
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-24 sm:py-32">
+          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2 lg:items-center">
+            <div className="lg:pr-8 lg:pt-4">
+              <div className="lg:max-w-lg">
+                <h2 className="text-base font-semibold leading-7 text-indigo-600">Guidance</h2>
+                <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Career Counselling</p>
+                <p className="mt-6 text-lg leading-8 text-gray-600">
+                  Navigate your career path with confidence. Our expert counsellors provide personalized guidance to help you identify your strengths, explore opportunities, and achieve your professional goals.
+                </p>
+              </div>
+            </div>
+            <div className="relative aspect-[16/9] lg:aspect-auto lg:h-[400px]">
+               <Image
+                src="/counselling.png"
+                alt="Career Counselling Session"
+                className="absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover shadow-xl ring-1 ring-gray-400/10"
+                width={800}
+                height={600}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Training Section */}
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-24 sm:py-32">
+          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2 lg:items-center">
+             <div className="relative order-last lg:order-first aspect-[16/9] lg:aspect-auto lg:h-[400px]">
+               <Image
+                src="/training.png"
+                alt="Professional Training Workshop"
+                className="absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover shadow-xl ring-1 ring-gray-400/10"
+                width={800}
+                height={600}
+              />
+            </div>
+            <div className="lg:pl-8 lg:pt-4">
+              <div className="lg:max-w-lg">
+                <h2 className="text-base font-semibold leading-7 text-indigo-600">Upskill</h2>
+                <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Professional Training</p>
+                <p className="mt-6 text-lg leading-8 text-gray-600">
+                  Stay ahead in your field with our comprehensive training programs. From technical skills to soft skills, we offer workshops and courses designed to enhance your employability and performance.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div
           className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
           aria-hidden="true"
