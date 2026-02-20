@@ -7,8 +7,173 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Enums
+enum UserRole {
+  ADMIN
+  EMPLOYER
+  APPLICANT
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  REJECTED
+  HIRED
+}
+
+// Existing model
 model Waitlist {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+// User model
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  role          UserRole  @default(APPLICANT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  applicantProfile ApplicantProfile?
+  applications     Application[]
+}
+
+// Applicant Profile
+model ApplicantProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Personal Information
+  firstName String?
+  lastName  String?
+  phone     String?
+  city      String?
+  country   String?
+  avatarUrl String?
+
+  // Links
+  linkedinUrl  String?
+  githubUrl    String?
+  portfolioUrl String?
+
+  // Professional Summary
+  headline String?
+  bio      String? @db.Text
+
+  // Skills (PostgreSQL array)
+  skills String[]
+
+  // CV
+  cvUrl      String?
+  cvFileName String?
+  cvParsedAt DateTime?
+
+  // Computed fields
+  totalYearsExperience Float?
+  profileCompleteness  Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  workExperiences WorkExperience[]
+  educations      Education[]
+  certifications  Certification[]
+}
+
+// Work Experience
+model WorkExperience {
+  id                 String           @id @default(cuid())
+  applicantProfileId String
+  applicantProfile   ApplicantProfile @relation(fields: [applicantProfileId], references: [id], onDelete: Cascade)
+
+  company     String
+  role        String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicantProfileId])
+}
+
+// Education
+model Education {
+  id                 String           @id @default(cuid())
+  applicantProfileId String
+  applicantProfile   ApplicantProfile @relation(fields: [applicantProfileId], references: [id], onDelete: Cascade)
+
+  institution  String
+  degree       String
+  fieldOfStudy String?
+  startDate    DateTime?
+  endDate      DateTime?
+  description  String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicantProfileId])
+}
+
+// Certification
+model Certification {
+  id                 String           @id @default(cuid())
+  applicantProfileId String
+  applicantProfile   ApplicantProfile @relation(fields: [applicantProfileId], references: [id], onDelete: Cascade)
+
+  name           String
+  issuingOrg     String?
+  issueDate      DateTime?
+  expirationDate DateTime?
+  credentialUrl  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicantProfileId])
+}
+
+// Job posting
+model Job {
+  id           String  @id @default(cuid())
+  title        String
+  company      String
+  location     String?
+  description  String  @db.Text
+  requirements String? @db.Text
+  salary       String?
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications Application[]
+}
+
+// Job Application
+model Application {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId       String
+  job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status      ApplicationStatus @default(PENDING)
+  coverLetter String?           @db.Text
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([jobId])
 }
