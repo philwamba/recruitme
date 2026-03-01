@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { getMockUserId, MOCK_USER_ID } from '@/lib/auth'
+import { requireCurrentUser } from '@/lib/auth'
 import {
   personalInfoSchema,
   linksSchema,
@@ -10,34 +10,22 @@ import {
 } from '@/lib/validations/profile'
 import {
   calculateProfileCompletion,
-  calculateTotalYearsExperience,
 } from '@/lib/services/profile-completion'
+import { createActivityLog, createAuditLog } from '@/lib/observability/audit'
+import { reportError } from '@/lib/observability/error-reporting'
 import type { ApplicantProfileWithRelations } from '@/types/profile'
 
 /**
  * Get or create the applicant profile for the current user
  */
 export async function getOrCreateProfile(): Promise<ApplicantProfileWithRelations | null> {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   try {
-    // First, ensure user exists
-    let user = await prisma.user.findUnique({
-      where: { id: userId },
-    })
-
-    if (!user) {
-      // Create mock user for development
-      user = await prisma.user.create({
-        data: {
-          id: MOCK_USER_ID,
-          email: 'demo@recruitme.com',
-          role: 'APPLICANT',
-        },
-      })
-    }
-
-    // Get or create profile
     let profile = await prisma.applicantProfile.findUnique({
       where: { userId },
       include: {
@@ -51,8 +39,7 @@ export async function getOrCreateProfile(): Promise<ApplicantProfileWithRelation
       profile = await prisma.applicantProfile.create({
         data: {
           userId,
-          firstName: 'Demo',
-          lastName: 'User',
+          skills: [],
         },
         include: {
           workExperiences: { orderBy: { startDate: 'desc' } },
@@ -64,7 +51,10 @@ export async function getOrCreateProfile(): Promise<ApplicantProfileWithRelation
 
     return profile
   } catch (error) {
-    console.error('Error getting/creating profile:', error)
+    reportError(error, {
+      scope: 'profile.get-or-create',
+      userId,
+    })
     return null
   }
 }
@@ -73,7 +63,11 @@ export async function getOrCreateProfile(): Promise<ApplicantProfileWithRelation
  * Update personal information
  */
 export async function updatePersonalInfo(formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     firstName: formData.get('firstName') as string,
@@ -116,9 +110,24 @@ export async function updatePersonalInfo(formData: FormData) {
     revalidatePath('/applicant/profile')
     revalidatePath('/applicant/dashboard')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.personal-info.updated',
+      targetType: 'ApplicantProfile',
+      targetId: profile.id,
+    })
+
+    await createActivityLog({
+      actorUserId: userId,
+      description: 'Updated personal information',
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error updating personal info:', error)
+    reportError(error, {
+      scope: 'profile.update-personal-info',
+      userId,
+    })
     return { success: false, error: 'Failed to update personal information' }
   }
 }
@@ -127,7 +136,11 @@ export async function updatePersonalInfo(formData: FormData) {
  * Update profile links
  */
 export async function updateLinks(formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     linkedinUrl: formData.get('linkedinUrl') as string,
@@ -167,9 +180,19 @@ export async function updateLinks(formData: FormData) {
 
     revalidatePath('/applicant/profile')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.links.updated',
+      targetType: 'ApplicantProfile',
+      targetId: profile.id,
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error updating links:', error)
+    reportError(error, {
+      scope: 'profile.update-links',
+      userId,
+    })
     return { success: false, error: 'Failed to update links' }
   }
 }
@@ -178,7 +201,11 @@ export async function updateLinks(formData: FormData) {
  * Update professional summary
  */
 export async function updateSummary(formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     headline: formData.get('headline') as string,
@@ -217,9 +244,19 @@ export async function updateSummary(formData: FormData) {
 
     revalidatePath('/applicant/profile')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.summary.updated',
+      targetType: 'ApplicantProfile',
+      targetId: profile.id,
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error updating summary:', error)
+    reportError(error, {
+      scope: 'profile.update-summary',
+      userId,
+    })
     return { success: false, error: 'Failed to update summary' }
   }
 }
@@ -228,7 +265,11 @@ export async function updateSummary(formData: FormData) {
  * Update skills
  */
 export async function updateSkills(skills: string[]) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   if (skills.length > 50) {
     return { success: false, error: 'Maximum 50 skills allowed' }
@@ -257,9 +298,22 @@ export async function updateSkills(skills: string[]) {
 
     revalidatePath('/applicant/profile')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.skills.updated',
+      targetType: 'ApplicantProfile',
+      targetId: profile.id,
+      metadata: {
+        skillsCount: skills.length,
+      },
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error updating skills:', error)
+    reportError(error, {
+      scope: 'profile.update-skills',
+      userId,
+    })
     return { success: false, error: 'Failed to update skills' }
   }
 }
@@ -268,7 +322,11 @@ export async function updateSkills(skills: string[]) {
  * Get dashboard stats for the current user
  */
 export async function getDashboardStats() {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'VIEW_APPLICANT_DASHBOARD',
+  })
+  const userId = user.id
 
   try {
     const [
@@ -316,7 +374,10 @@ export async function getDashboardStats() {
       recentApplications,
     }
   } catch (error) {
-    console.error('Error getting dashboard stats:', error)
+    reportError(error, {
+      scope: 'dashboard.get-stats',
+      userId,
+    })
     return null
   }
 }

@@ -1,9 +1,5 @@
 'use client'
 
-import * as React from 'react'
-import { X } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ApplicantSidebar } from './applicant-sidebar'
 

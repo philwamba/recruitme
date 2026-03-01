@@ -1,14 +1,14 @@
-import { Suspense } from 'react'
 import { getDashboardStats, getOrCreateProfile } from '@/app/actions/profile'
 import { ProfileCompletionCard } from '@/components/applicant/dashboard/profile-completion-card'
 import { StatsGrid } from '@/components/applicant/dashboard/stats-grid'
 import { RecentApplications } from '@/components/applicant/dashboard/recent-applications'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export const metadata = {
   title: 'Dashboard | RecruitMe',
   description: 'Your applicant dashboard',
 }
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const [profile, dashboardData] = await Promise.all([

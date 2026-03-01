@@ -1,3 +1,4 @@
+import { requireCurrentUser } from '@/lib/auth'
 import { getOrCreateProfile } from '@/app/actions/profile'
 import { PersonalInfoSection } from '@/components/applicant/profile/personal-info-section'
 import { LinksSection } from '@/components/applicant/profile/links-section'
@@ -14,7 +15,13 @@ export const metadata = {
   description: 'Manage your applicant profile',
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProfilePage() {
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
   const profile = await getOrCreateProfile()
 
   if (!profile) {
@@ -56,7 +63,7 @@ export default async function ProfilePage() {
 
       {/* Profile Sections */}
       <div className="space-y-6">
-        <PersonalInfoSection profile={profile} />
+        <PersonalInfoSection profile={profile} email={user.email} />
         <LinksSection profile={profile} />
         <SummarySection profile={profile} />
         <SkillsSection profile={profile} />

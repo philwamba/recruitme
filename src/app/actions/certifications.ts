@@ -2,15 +2,20 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { getMockUserId } from '@/lib/auth'
+import { requireCurrentUser } from '@/lib/auth'
 import { certificationSchema } from '@/lib/validations/certification'
-import { calculateProfileCompletion } from '@/lib/services/profile-completion'
+import { createActivityLog, createAuditLog } from '@/lib/observability/audit'
+import { reportError } from '@/lib/observability/error-reporting'
 
 /**
  * Create a new certification entry
  */
 export async function createCertification(formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     name: formData.get('name') as string,
@@ -51,9 +56,17 @@ export async function createCertification(formData: FormData) {
 
     revalidatePath('/applicant/profile')
 
+    await createActivityLog({
+      actorUserId: userId,
+      description: 'Added certification',
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error creating certification:', error)
+    reportError(error, {
+      scope: 'certification.create',
+      userId,
+    })
     return { success: false, error: 'Failed to create certification' }
   }
 }
@@ -62,7 +75,11 @@ export async function createCertification(formData: FormData) {
  * Update an existing certification entry
  */
 export async function updateCertification(id: string, formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     name: formData.get('name') as string,
@@ -103,9 +120,18 @@ export async function updateCertification(id: string, formData: FormData) {
 
     revalidatePath('/applicant/profile')
 
+    await createActivityLog({
+      actorUserId: userId,
+      description: 'Updated certification',
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error updating certification:', error)
+    reportError(error, {
+      scope: 'certification.update',
+      userId,
+      metadata: { certificationId: id },
+    })
     return { success: false, error: 'Failed to update certification' }
   }
 }
@@ -114,7 +140,11 @@ export async function updateCertification(id: string, formData: FormData) {
  * Delete a certification entry
  */
 export async function deleteCertification(id: string) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   try {
     // Verify ownership
@@ -131,9 +161,20 @@ export async function deleteCertification(id: string) {
 
     revalidatePath('/applicant/profile')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.certification.deleted',
+      targetType: 'Certification',
+      targetId: id,
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error deleting certification:', error)
+    reportError(error, {
+      scope: 'certification.delete',
+      userId,
+      metadata: { certificationId: id },
+    })
     return { success: false, error: 'Failed to delete certification' }
   }
 }

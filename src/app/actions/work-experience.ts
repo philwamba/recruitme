@@ -2,18 +2,24 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { getMockUserId } from '@/lib/auth'
+import { requireCurrentUser } from '@/lib/auth'
 import { experienceSchema } from '@/lib/validations/experience'
 import {
   calculateProfileCompletion,
   calculateTotalYearsExperience,
 } from '@/lib/services/profile-completion'
+import { createActivityLog, createAuditLog } from '@/lib/observability/audit'
+import { reportError } from '@/lib/observability/error-reporting'
 
 /**
  * Create a new work experience entry
  */
 export async function createWorkExperience(formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     company: formData.get('company') as string,
@@ -78,9 +84,17 @@ export async function createWorkExperience(formData: FormData) {
     revalidatePath('/applicant/profile')
     revalidatePath('/applicant/dashboard')
 
+    await createActivityLog({
+      actorUserId: userId,
+      description: 'Added work experience',
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error creating work experience:', error)
+    reportError(error, {
+      scope: 'work-experience.create',
+      userId,
+    })
     return { success: false, error: 'Failed to create work experience' }
   }
 }
@@ -89,7 +103,11 @@ export async function createWorkExperience(formData: FormData) {
  * Update an existing work experience entry
  */
 export async function updateWorkExperience(id: string, formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     company: formData.get('company') as string,
@@ -144,9 +162,18 @@ export async function updateWorkExperience(id: string, formData: FormData) {
 
     revalidatePath('/applicant/profile')
 
+    await createActivityLog({
+      actorUserId: userId,
+      description: 'Updated work experience',
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error updating work experience:', error)
+    reportError(error, {
+      scope: 'work-experience.update',
+      userId,
+      metadata: { experienceId: id },
+    })
     return { success: false, error: 'Failed to update work experience' }
   }
 }
@@ -155,7 +182,11 @@ export async function updateWorkExperience(id: string, formData: FormData) {
  * Delete a work experience entry
  */
 export async function deleteWorkExperience(id: string) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   try {
     // Verify ownership
@@ -196,9 +227,20 @@ export async function deleteWorkExperience(id: string) {
     revalidatePath('/applicant/profile')
     revalidatePath('/applicant/dashboard')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.work-experience.deleted',
+      targetType: 'WorkExperience',
+      targetId: id,
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error deleting work experience:', error)
+    reportError(error, {
+      scope: 'work-experience.delete',
+      userId,
+      metadata: { experienceId: id },
+    })
     return { success: false, error: 'Failed to delete work experience' }
   }
 }

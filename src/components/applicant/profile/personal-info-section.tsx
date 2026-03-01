@@ -9,7 +9,6 @@ import { SectionCard } from '@/components/ui/extended/section-card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Form,
   FormControl,
@@ -24,9 +23,10 @@ import type { ApplicantProfile } from '@/types/profile'
 
 interface PersonalInfoSectionProps {
   profile: ApplicantProfile
+  email: string
 }
 
-export function PersonalInfoSection({ profile }: PersonalInfoSectionProps) {
+export function PersonalInfoSection({ profile, email }: PersonalInfoSectionProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [isPending, setIsPending] = React.useState(false)
 
@@ -197,7 +197,7 @@ export function PersonalInfoSection({ profile }: PersonalInfoSectionProps) {
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Mail className="h-4 w-4" />
-              demo@recruitme.com
+              {email}
             </span>
             {profile.phone && (
               <span className="flex items-center gap-1.5">

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
@@ -91,7 +91,10 @@ export function ExperienceFormDialog({
     }
   }, [open, experience, form])
 
-  const isCurrent = form.watch('isCurrent')
+  const isCurrent = useWatch({
+    control: form.control,
+    name: 'isCurrent',
+  })
 
   async function onSubmit(data: ExperienceFormData) {
     setIsPending(true)
