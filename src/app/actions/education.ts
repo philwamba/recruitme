@@ -2,15 +2,21 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { getMockUserId } from '@/lib/auth'
+import { requireCurrentUser } from '@/lib/auth'
 import { educationSchema } from '@/lib/validations/education'
 import { calculateProfileCompletion } from '@/lib/services/profile-completion'
+import { createActivityLog, createAuditLog } from '@/lib/observability/audit'
+import { reportError } from '@/lib/observability/error-reporting'
 
 /**
  * Create a new education entry
  */
 export async function createEducation(formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     institution: formData.get('institution') as string,
@@ -71,9 +77,18 @@ export async function createEducation(formData: FormData) {
     revalidatePath('/applicant/profile')
     revalidatePath('/applicant/dashboard')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.education.created',
+      targetType: 'Education',
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error creating education:', error)
+    reportError(error, {
+      scope: 'education.create',
+      userId,
+    })
     return { success: false, error: 'Failed to create education entry' }
   }
 }
@@ -82,7 +97,11 @@ export async function createEducation(formData: FormData) {
  * Update an existing education entry
  */
 export async function updateEducation(id: string, formData: FormData) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   const rawData = {
     institution: formData.get('institution') as string,
@@ -124,9 +143,18 @@ export async function updateEducation(id: string, formData: FormData) {
 
     revalidatePath('/applicant/profile')
 
+    await createActivityLog({
+      actorUserId: userId,
+      description: 'Updated education history',
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error updating education:', error)
+    reportError(error, {
+      scope: 'education.update',
+      userId,
+      metadata: { educationId: id },
+    })
     return { success: false, error: 'Failed to update education entry' }
   }
 }
@@ -135,7 +163,11 @@ export async function updateEducation(id: string, formData: FormData) {
  * Delete an education entry
  */
 export async function deleteEducation(id: string) {
-  const userId = getMockUserId()
+  const user = await requireCurrentUser({
+    roles: ['APPLICANT'],
+    permission: 'MANAGE_SELF_PROFILE',
+  })
+  const userId = user.id
 
   try {
     // Verify ownership
@@ -171,9 +203,20 @@ export async function deleteEducation(id: string) {
     revalidatePath('/applicant/profile')
     revalidatePath('/applicant/dashboard')
 
+    await createAuditLog({
+      actorUserId: userId,
+      action: 'profile.education.deleted',
+      targetType: 'Education',
+      targetId: id,
+    })
+
     return { success: true }
   } catch (error) {
-    console.error('Error deleting education:', error)
+    reportError(error, {
+      scope: 'education.delete',
+      userId,
+      metadata: { educationId: id },
+    })
     return { success: false, error: 'Failed to delete education entry' }
   }
 }

@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { format } from 'date-fns'
-import { GraduationCap, Plus, Pencil, Trash2, Building2, Calendar } from 'lucide-react'
+import { GraduationCap, Plus, Pencil, Trash2, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import { SectionCard, SectionEmptyState } from '@/components/ui/extended/section-card'
 import { Button } from '@/components/ui/button'

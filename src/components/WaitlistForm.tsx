@@ -24,7 +24,7 @@ function SubmitButton() {
 }
 
 export function WaitlistForm() {
-  const [state, formAction] = useActionState(addToWaitlist, initialState as any)
+  const [state, formAction] = useActionState(addToWaitlist, initialState)
 
   return (
     <form action={formAction} className="mt-10 flex flex-col gap-y-4 sm:flex-row sm:gap-x-4">

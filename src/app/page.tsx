@@ -1,5 +1,7 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { WaitlistForm } from '@/components/WaitlistForm'
+import { Button } from '@/components/ui/button'
 
 export default function Home() {
   return (
@@ -7,11 +9,18 @@ export default function Home() {
       <header className="absolute inset-x-0 top-0 z-50">
         <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">
-            <a href="#" className="-m-1.5 p-1.5">
+            <Link href="/" className="-m-1.5 p-1.5">
               <span className="sr-only">RecruitMe</span>
-              {/* Placeholder logo or text if no logo asset available */}
               <span className="text-xl font-bold tracking-tight text-gray-900">RecruitMe</span>
-            </a>
+            </Link>
+          </div>
+          <div className="hidden lg:flex lg:items-center lg:gap-3">
+            <Button asChild variant="ghost">
+              <Link href="/sign-in">Sign in</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/sign-up">Create account</Link>
+            </Button>
           </div>
         </nav>
       </header>

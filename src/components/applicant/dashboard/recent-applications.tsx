@@ -1,14 +1,12 @@
 'use client'
 
 import * as React from 'react'
-import Link from 'next/link'
 import { format } from 'date-fns'
 import { ArrowRight, Briefcase, MapPin, Building2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/extended/status-badge'
 import { EmptyState } from '@/components/ui/extended/empty-state'
-import { ROUTES } from '@/lib/constants/routes'
 import type { ApplicationWithJob } from '@/types/profile'
 
 interface RecentApplicationsProps {

@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronLeft,
 } from 'lucide-react'
+import { signOut } from '@/app/auth/actions'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -129,16 +130,19 @@ export function ApplicantSidebar({ isCollapsed = false, onToggle }: ApplicantSid
 
       {/* Sign out */}
       <div className="border-t p-3">
-        <Button
-          variant="ghost"
-          className={cn(
-            'w-full justify-start gap-3 text-muted-foreground hover:text-foreground',
-            isCollapsed && 'justify-center px-2'
-          )}
-        >
-          <LogOut className="h-4 w-4" />
-          {!isCollapsed && <span>Sign out</span>}
-        </Button>
+        <form action={signOut}>
+          <Button
+            type="submit"
+            variant="ghost"
+            className={cn(
+              'w-full justify-start gap-3 text-muted-foreground hover:text-foreground',
+              isCollapsed && 'justify-center px-2'
+            )}
+          >
+            <LogOut className="h-4 w-4" />
+            {!isCollapsed && <span>Sign out</span>}
+          </Button>
+        </form>
       </div>
     </div>
   )

@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types tests/**/*.test.ts",
+    "ci": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "seed:rbac": "node --experimental-strip-types scripts/seed-rbac.ts",
+    "bootstrap:admin": "node --experimental-strip-types scripts/bootstrap-admin.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

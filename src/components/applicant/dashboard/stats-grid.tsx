@@ -6,8 +6,6 @@ import {
   Clock,
   Eye,
   Star,
-  XCircle,
-  CheckCircle2,
 } from 'lucide-react'
 import { StatCard } from '@/components/ui/extended/stat-card'
 import type { DashboardStats } from '@/types/profile'
