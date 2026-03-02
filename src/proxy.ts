@@ -99,13 +99,14 @@ export function proxy(request: NextRequest) {
         }
     }
 
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set(CSP_NONCE_HEADER, nonce)
+
     const response = NextResponse.next({
         request: {
-            headers: new Headers(request.headers),
+            headers: requestHeaders,
         },
     })
-
-    response.headers.set(CSP_NONCE_HEADER, nonce)
 
     response.headers.set('Content-Security-Policy', buildCSPHeader(nonce))
 

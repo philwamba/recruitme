@@ -60,6 +60,15 @@ function getRedisClient(): Redis | null {
     }
 }
 
+// Lua script for atomic rate limit check (INCR + conditional EXPIRE)
+const RATE_LIMIT_SCRIPT = `
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+    redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return count
+`
+
 /**
  * Check rate limit using Redis if available, fallback to in-memory
  */
@@ -72,13 +81,8 @@ export async function checkRateLimitAsync(key: string, limit: number, windowMs: 
             const redisKey = `ratelimit:${key}`
             const windowSec = Math.ceil(windowMs / 1000)
 
-            // Use INCR with EXPIRE for atomic rate limiting
-            const count = await redis.incr(redisKey)
-
-            if (count === 1) {
-                // First request in window - set expiry
-                await redis.expire(redisKey, windowSec)
-            }
+            // Use EVAL for atomic rate limiting (INCR + EXPIRE in single command)
+            const count = await redis.eval(RATE_LIMIT_SCRIPT, 1, redisKey, windowSec) as number
 
             return count <= limit
         } catch {

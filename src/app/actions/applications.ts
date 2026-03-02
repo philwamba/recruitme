@@ -19,7 +19,7 @@ import { savePrivateFile } from '@/lib/services/private-files'
 import { createNotification } from '@/lib/services/notifications'
 
 function createTrackingId() {
-    return `APP-${randomBytes(4).toString('hex').toUpperCase()}`
+    return `APP-${randomBytes(8).toString('hex').toUpperCase()}`
 }
 
 async function upsertApplicationRecord(params: {

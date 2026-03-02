@@ -5,13 +5,39 @@ import type { UserRole } from '@prisma/client'
  */
 function getDefaultPath(role: UserRole): string {
     switch (role) {
-    case 'ADMIN':
-        return '/admin/dashboard'
-    case 'EMPLOYER':
-        return '/employer/dashboard'
-    default:
-        return '/applicant/dashboard'
+        case 'ADMIN':
+            return '/admin/dashboard'
+        case 'EMPLOYER':
+            return '/employer/dashboard'
+        default:
+            return '/applicant/dashboard'
     }
+}
+
+/**
+ * Check if string contains control characters or backslashes
+ * Replaces regex /[\x00-\x1f\x7f\\]/ to avoid lint warnings
+ */
+function hasControlOrBackslash(str: string): boolean {
+    for (let i = 0; i < str.length; i++) {
+        const code = str.charCodeAt(i)
+        // Control characters: 0x00-0x1f and 0x7f (DEL)
+        if (code <= 0x1f || code === 0x7f) {
+            return true
+        }
+        // Backslash
+        if (str[i] === '\\') {
+            return true
+        }
+    }
+    return false
+}
+
+/**
+ * Check if string contains path traversal patterns
+ */
+function hasPathTraversal(str: string): boolean {
+    return str.includes('..')
 }
 
 /**
@@ -22,10 +48,12 @@ function sanitizeRedirectPath(path: string | null, defaultPath: string): string 
         return defaultPath
     }
 
+    // Must start with single slash (not //)
     if (!path.startsWith('/') || path.startsWith('//')) {
         return defaultPath
     }
 
+    // Try to decode and validate
     let decoded: string
     try {
         decoded = decodeURIComponent(path)
@@ -33,14 +61,17 @@ function sanitizeRedirectPath(path: string | null, defaultPath: string): string 
         return defaultPath
     }
 
-    if (/[\x00-\x1f\x7f\\]/.test(decoded) || /\.\./.test(decoded)) {
+    // Reject control characters, backslashes, and path traversal
+    if (hasControlOrBackslash(decoded) || hasPathTraversal(decoded)) {
         return defaultPath
     }
 
-    if (/[\x00-\x1f\x7f\\]/.test(path) || /\.\./.test(path)) {
+    // Also check the original (in case of double-encoding tricks)
+    if (hasControlOrBackslash(path) || hasPathTraversal(path)) {
         return defaultPath
     }
 
+    // Allow only safe characters in the path
     if (!/^\/[a-zA-Z0-9\-_./]*$/.test(decoded)) {
         return defaultPath
     }

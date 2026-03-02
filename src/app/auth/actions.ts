@@ -61,7 +61,14 @@ export async function signIn(
 
         // Use email as fallback key when IP is unavailable
         const rateLimitKey = ipAddress ?? `email:${email}`
-        await assertRateLimitAsync(`signin:${rateLimitKey}`, 10, 1000 * 60 * 15)
+        try {
+            await assertRateLimitAsync(`signin:${rateLimitKey}`, 10, 1000 * 60 * 15)
+        } catch {
+            return {
+                success: false,
+                message: 'Too many sign-in attempts. Please try again later.',
+            }
+        }
         const user = await prisma.user.findUnique({
             where: { email },
         })
@@ -225,7 +232,15 @@ export async function signUp(
         const email = parsed.data.email.toLowerCase()
 
         const rateLimitKey = ipAddress ?? `email:${email}`
-        await assertRateLimitAsync(`signup:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        try {
+            await assertRateLimitAsync(`signup:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        } catch {
+            return {
+                success: false,
+                message: 'Too many sign-up attempts. Please try again later.',
+            }
+        }
+
         const existingUser = await prisma.user.findUnique({
             where: { email },
         })
@@ -375,7 +390,15 @@ export async function requestPasswordReset(
 
         // Use email as fallback key when IP is unavailable
         const rateLimitKey = ipAddress ?? `email:${email}`
-        await assertRateLimitAsync(`password-reset:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        try {
+            await assertRateLimitAsync(`password-reset:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        } catch {
+            return {
+                success: false,
+                message: 'Too many password reset requests. Please try again later.',
+            }
+        }
+
         const user = await prisma.user.findUnique({
             where: { email },
         })

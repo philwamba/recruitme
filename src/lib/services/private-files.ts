@@ -109,7 +109,7 @@ export async function savePrivateFile(file: File, options?: { scan?: boolean }):
     }
 
     // Scan for malware if scanning is enabled and requested
-    let scanStatus: 'PENDING' | 'CLEAN' | 'REJECTED' = 'PENDING'
+    let scanStatus: 'PENDING' | 'CLEAN' | 'REJECTED' = 'CLEAN'
     const shouldScan = options?.scan !== false && isScanningEnabled()
 
     if (shouldScan) {
@@ -117,8 +117,10 @@ export async function savePrivateFile(file: File, options?: { scan?: boolean }):
         if (scanResult.status === 'REJECTED') {
             throw new Error(`File rejected: ${scanResult.details ?? 'malware detected'}`)
         }
+        // ERROR results leave status as PENDING for retry, CLEAN is confirmed clean
         scanStatus = scanResult.status === 'CLEAN' ? 'CLEAN' : 'PENDING'
     }
+    // When scanning is disabled, files are marked CLEAN by default
 
     const hash = createHash('sha256').update(buffer).digest('hex')
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')

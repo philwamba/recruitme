@@ -38,7 +38,9 @@ export async function GET(request: Request) {
             })
 
             if (existingByLinkedIn) {
-                if (existingByLinkedIn.email !== profile.email) {
+                const emailChanged = existingByLinkedIn.email !== profile.email
+
+                if (emailChanged) {
                     const emailConflict = await tx.user.findUnique({
                         where: { email: profile.email },
                     })
@@ -51,7 +53,11 @@ export async function GET(request: Request) {
                     where: { id: existingByLinkedIn.id },
                     data: {
                         email: profile.email,
-                        emailVerified: existingByLinkedIn.emailVerified ?? (profile.emailVerified ? new Date() : null),
+                        // If email changed, require re-verification based on LinkedIn's status for new email
+                        // Otherwise preserve existing verification status
+                        emailVerified: emailChanged
+                            ? (profile.emailVerified ? new Date() : null)
+                            : (existingByLinkedIn.emailVerified ?? (profile.emailVerified ? new Date() : null)),
                     },
                 })
 
@@ -162,6 +168,11 @@ export async function GET(request: Request) {
                         userId: user.id,
                     })
                 }
+            } else {
+                reportError(new Error('NEXT_PUBLIC_APP_URL not configured - verification email not sent'), {
+                    scope: 'auth.linkedin.verification-email.config',
+                    userId: user.id,
+                })
             }
 
             return NextResponse.redirect(

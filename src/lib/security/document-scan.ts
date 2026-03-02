@@ -13,10 +13,19 @@ export type ScanResult = {
 }
 
 /**
- * Check if ClamAV scanning is configured
+ * Validate that the ClamAV port is a valid TCP port number
+ */
+function isValidPort(port: string | undefined): boolean {
+    if (!port) return false
+    const portNum = parseInt(port, 10)
+    return Number.isInteger(portNum) && portNum >= 1 && portNum <= 65535
+}
+
+/**
+ * Check if ClamAV scanning is configured with valid host and port
  */
 export function isScanningEnabled(): boolean {
-    return Boolean(env.clamavHost)
+    return Boolean(env.clamavHost) && isValidPort(env.clamavPort)
 }
 
 /**
@@ -24,13 +33,15 @@ export function isScanningEnabled(): boolean {
  * https://linux.die.net/man/8/clamd
  */
 async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
-    if (!env.clamavHost) {
+    if (!isScanningEnabled()) {
         return { status: 'CLEAN', details: 'Scanning disabled' }
     }
 
     if (buffer.length > MAX_SCAN_SIZE_BYTES) {
         return { status: 'ERROR', details: 'File exceeds maximum scan size' }
     }
+
+    const port = parseInt(env.clamavPort!, 10)
 
     return new Promise<ScanResult>((resolve) => {
         const socket = new Socket()
@@ -77,25 +88,21 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
             resolve({ status: 'ERROR', details: `ClamAV connection error: ${err.message}` })
         })
 
-        socket.connect(
-            parseInt(env.clamavPort!, 10),
-            env.clamavHost!,
-            () => {
-                socket.write('zINSTREAM\0')
+        socket.connect(port, env.clamavHost!, () => {
+            socket.write('zINSTREAM\0')
 
-                const CHUNK_SIZE = 2048
-                for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
-                    const chunk = buffer.subarray(i, i + CHUNK_SIZE)
-                    const lengthBuffer = Buffer.alloc(4)
-                    lengthBuffer.writeUInt32BE(chunk.length, 0)
-                    socket.write(lengthBuffer)
-                    socket.write(chunk)
-                }
-
-                const terminator = Buffer.alloc(4, 0)
-                socket.write(terminator)
+            const CHUNK_SIZE = 2048
+            for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
+                const chunk = buffer.subarray(i, i + CHUNK_SIZE)
+                const lengthBuffer = Buffer.alloc(4)
+                lengthBuffer.writeUInt32BE(chunk.length, 0)
+                socket.write(lengthBuffer)
+                socket.write(chunk)
             }
-        )
+
+            const terminator = Buffer.alloc(4, 0)
+            socket.write(terminator)
+        })
     })
 }
 
@@ -106,7 +113,7 @@ export async function scanBuffer(buffer: Buffer): Promise<ScanResult> {
     if (!isScanningEnabled()) {
         if (process.env.NODE_ENV === 'production') {
             reportOperationalEvent('Document scanning disabled in production', {
-                warning: 'CLAMAV_HOST not configured',
+                warning: 'CLAMAV_HOST or CLAMAV_PORT not configured properly',
             })
         }
         return { status: 'CLEAN', details: 'Scanning disabled' }
@@ -131,20 +138,26 @@ export async function scanDocument(documentId: string): Promise<ScanResult> {
         const buffer = await readPrivateFile(document.storageKey)
         const result = await scanBuffer(buffer)
 
-        await prisma.candidateDocument.update({
-            where: { id: documentId },
-            data: {
-                scanStatus: result.status === 'CLEAN' ? 'CLEAN' : 'REJECTED',
-            },
-        })
+        // Only update status for definitive results
+        // ERROR results leave status unchanged for retry
+        if (result.status === 'CLEAN') {
+            await prisma.candidateDocument.update({
+                where: { id: documentId },
+                data: { scanStatus: 'CLEAN' },
+            })
+        } else if (result.status === 'REJECTED') {
+            await prisma.candidateDocument.update({
+                where: { id: documentId },
+                data: { scanStatus: 'REJECTED' },
+            })
 
-        if (result.status === 'REJECTED') {
             reportOperationalEvent('Malware detected in document', {
                 documentId,
                 storageKey: document.storageKey,
                 threat: result.details,
             })
         }
+        // ERROR status: leave as PENDING for background retry
 
         return result
     } catch (error) {

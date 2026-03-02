@@ -71,12 +71,15 @@ export default async function JobDetailPage({
         },
     }
 
+    // Escape < to prevent XSS via </script> injection
+    const safeJsonLd = JSON.stringify(jsonLd).replace(/</g, '\\u003c')
+
     return (
         <div className="min-h-screen bg-muted/20">
             <script
                 type="application/ld+json"
                 nonce={nonce}
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: safeJsonLd }}
             />
             <div className="mx-auto max-w-4xl space-y-8 px-4 py-10">
                 <div className="space-y-3">

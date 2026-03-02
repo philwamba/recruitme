@@ -1,8 +1,22 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { reportError } from '@/lib/observability/error-reporting'
 
 const MAX_EXPORT_RECORDS = 10000
+const MAX_OFFSET = 100000
+
+/**
+ * Sanitize CSV value to prevent formula injection
+ * Prefixes values starting with =, +, -, @ with a tab character
+ */
+function sanitizeCsvValue(value: string): string {
+    const trimmed = value.trim()
+    if (/^[=+\-@]/.test(trimmed)) {
+        return `\t${trimmed}`
+    }
+    return trimmed
+}
 
 export async function GET(request: Request) {
     const user = await getCurrentUser()
@@ -15,53 +29,72 @@ export async function GET(request: Request) {
     const limitParam = url.searchParams.get('limit')
     const offsetParam = url.searchParams.get('offset')
 
-    const limit = Math.min(
-        limitParam ? parseInt(limitParam, 10) || MAX_EXPORT_RECORDS : MAX_EXPORT_RECORDS,
-        MAX_EXPORT_RECORDS,
-    )
-    const offset = offsetParam ? parseInt(offsetParam, 10) || 0 : 0
+    // Parse and sanitize pagination values
+    const parsedLimit = limitParam ? parseInt(limitParam, 10) : MAX_EXPORT_RECORDS
+    const limit = Number.isNaN(parsedLimit)
+        ? MAX_EXPORT_RECORDS
+        : Math.max(1, Math.min(parsedLimit, MAX_EXPORT_RECORDS))
 
-    const applications = await prisma.application.findMany({
-        where:
-      user.role === 'ADMIN'
-          ? undefined
-          : {
-              job: {
-                  createdByUserId: user.id,
-              },
-          },
-        include: {
-            job: true,
-            currentStage: true,
-            user: true,
-        },
-        orderBy: { appliedAt: 'desc' },
-        take: limit,
-        skip: offset,
-    })
+    const parsedOffset = offsetParam ? parseInt(offsetParam, 10) : 0
+    const offset = Number.isNaN(parsedOffset)
+        ? 0
+        : Math.max(0, Math.min(parsedOffset, MAX_OFFSET))
 
-    const csvRows = [
-        ['trackingId', 'candidateEmail', 'jobTitle', 'company', 'status', 'stage', 'submittedAt'].join(','),
-        ...applications.map(application =>
-            [
-                application.trackingId,
-                application.user.email,
-                application.job.title,
-                application.job.company,
-                application.status,
-                application.currentStage?.name ?? '',
-                application.submittedAt?.toISOString() ?? '',
-            ]
-                .map(value => `"${String(value).replaceAll('"', '""')}"`)
-                .join(','),
-        ),
-    ]
+    try {
+        const applications = await prisma.application.findMany({
+            where:
+                user.role === 'ADMIN'
+                    ? undefined
+                    : {
+                        job: {
+                            createdByUserId: user.id,
+                        },
+                    },
+            include: {
+                job: true,
+                currentStage: true,
+                user: true,
+            },
+            orderBy: [
+                { appliedAt: 'desc' },
+                { id: 'desc' }, // Stable secondary key for deterministic ordering
+            ],
+            take: limit,
+            skip: offset,
+        })
 
-    return new NextResponse(csvRows.join('\n'), {
-        status: 200,
-        headers: {
-            'Content-Type': 'text/csv; charset=utf-8',
-            'Content-Disposition': 'attachment; filename="candidates-export.csv"',
-        },
-    })
+        const csvRows = [
+            ['trackingId', 'candidateEmail', 'jobTitle', 'company', 'status', 'stage', 'submittedAt'].join(','),
+            ...applications.map(application =>
+                [
+                    sanitizeCsvValue(application.trackingId),
+                    sanitizeCsvValue(application.user.email),
+                    sanitizeCsvValue(application.job.title),
+                    sanitizeCsvValue(application.job.company),
+                    application.status,
+                    application.currentStage?.name ?? '',
+                    application.submittedAt?.toISOString() ?? '',
+                ]
+                    .map(value => `"${String(value).replaceAll('"', '""')}"`)
+                    .join(','),
+            ),
+        ]
+
+        return new NextResponse(csvRows.join('\n'), {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/csv; charset=utf-8',
+                'Content-Disposition': 'attachment; filename="candidates-export.csv"',
+            },
+        })
+    } catch (error) {
+        reportError(error, {
+            scope: 'api.employer.candidates.export',
+            userId: user.id,
+        })
+        return NextResponse.json(
+            { error: 'Failed to export candidates' },
+            { status: 500 },
+        )
+    }
 }
