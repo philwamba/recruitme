@@ -8,7 +8,7 @@ import {
     S3Client,
 } from '@aws-sdk/client-s3'
 import { env } from '@/lib/env'
-import { isScanningEnabled, scanBuffer } from '@/lib/security/document-scan'
+import { scanBuffer } from '@/lib/security/document-scan'
 
 // Configurable storage root with fallback for development
 const STORAGE_ROOT = env.privateFilesRoot
@@ -103,24 +103,19 @@ export async function savePrivateFile(file: File, options?: { scan?: boolean }):
     validatePrivateUpload(file)
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    // Validate magic bytes for defense-in-depth
     if (!validateMagicBytes(buffer, file.type)) {
         throw new Error('File content does not match declared type')
     }
 
-    // Scan for malware if scanning is enabled and requested
     let scanStatus: 'PENDING' | 'CLEAN' | 'REJECTED' = 'CLEAN'
-    const shouldScan = options?.scan !== false && isScanningEnabled()
 
-    if (shouldScan) {
+    if (options?.scan !== false) {
         const scanResult = await scanBuffer(buffer)
         if (scanResult.status === 'REJECTED') {
             throw new Error(`File rejected: ${scanResult.details ?? 'malware detected'}`)
         }
-        // ERROR results leave status as PENDING for retry, CLEAN is confirmed clean
         scanStatus = scanResult.status === 'CLEAN' ? 'CLEAN' : 'PENDING'
     }
-    // When scanning is disabled, files are marked CLEAN by default
 
     const hash = createHash('sha256').update(buffer).digest('hex')
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')

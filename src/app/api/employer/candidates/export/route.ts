@@ -50,10 +50,28 @@ export async function GET(request: Request) {
                             createdByUserId: user.id,
                         },
                     },
-            include: {
-                job: true,
-                currentStage: true,
-                user: true,
+            select: {
+                trackingId: true,
+                status: true,
+                submittedAt: true,
+                appliedAt: true,
+                id: true,
+                job: {
+                    select: {
+                        title: true,
+                        company: true,
+                    },
+                },
+                currentStage: {
+                    select: {
+                        name: true,
+                    },
+                },
+                user: {
+                    select: {
+                        email: true,
+                    },
+                },
             },
             orderBy: [
                 { appliedAt: 'desc' },
@@ -71,8 +89,8 @@ export async function GET(request: Request) {
                     sanitizeCsvValue(application.user.email),
                     sanitizeCsvValue(application.job.title),
                     sanitizeCsvValue(application.job.company),
-                    application.status,
-                    application.currentStage?.name ?? '',
+                    sanitizeCsvValue(application.status),
+                    sanitizeCsvValue(application.currentStage?.name ?? ''),
                     application.submittedAt?.toISOString() ?? '',
                 ]
                     .map(value => `"${String(value).replaceAll('"', '""')}"`)
@@ -85,6 +103,9 @@ export async function GET(request: Request) {
             headers: {
                 'Content-Type': 'text/csv; charset=utf-8',
                 'Content-Disposition': 'attachment; filename="candidates-export.csv"',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+                'Pragma': 'no-cache',
+                'Expires': '0',
             },
         })
     } catch (error) {

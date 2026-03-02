@@ -94,7 +94,11 @@ export function proxy(request: NextRequest) {
 
         if (!hasSession) {
             const signInUrl = new URL('/sign-in', request.url)
-            signInUrl.searchParams.set('next', pathname)
+           
+            const fullPath = request.nextUrl.search
+                ? `${pathname}${request.nextUrl.search}`
+                : pathname
+            signInUrl.searchParams.set('next', fullPath)
             return NextResponse.redirect(signInUrl)
         }
     }

@@ -1,9 +1,21 @@
+import { Suspense } from 'react'
 import { UserRole } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { updateUserRole } from '@/app/actions/admin'
+import { AdminPageHeader, TableSkeleton } from '@/components/admin'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { format } from 'date-fns'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +30,21 @@ export default async function AdminUsersPage() {
         permission: 'MANAGE_USERS',
     })
 
+    return (
+        <div className="space-y-6">
+            <AdminPageHeader
+                title="Users"
+                description="Manage user accounts and role assignments"
+            />
+
+            <Suspense fallback={<TableSkeleton columns={5} rows={10} showAvatar />}>
+                <UsersSection />
+            </Suspense>
+        </div>
+    )
+}
+
+async function UsersSection() {
     const users = await prisma.user.findMany({
         include: {
             applicantProfile: true,
@@ -32,51 +59,65 @@ export default async function AdminUsersPage() {
         take: 100,
     })
 
-    return (
-        <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
-            <div>
-                <h1 className="text-2xl font-semibold tracking-tight">User & Role Management</h1>
-                <p className="text-muted-foreground">
-          Review registered accounts and update role assignments for platform access.
-                </p>
-            </div>
+    const roleColors: Record<UserRole, string> = {
+        ADMIN: 'bg-primary/10 text-primary',
+        EMPLOYER: 'bg-info/10 text-info',
+        APPLICANT: 'bg-muted text-muted-foreground',
+    }
 
-            <div className="grid gap-4">
-                {users.map(user => (
-                    <Card key={user.id}>
-                        <CardHeader>
-                            <CardTitle>{user.email}</CardTitle>
-                            <CardDescription>
-                Created {new Date(user.createdAt).toLocaleDateString()} • Applications:{' '}
-                                {user._count.applications} • Jobs: {user._count.jobsCreated}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                            <div className="text-sm text-muted-foreground">
-                Profile: {user.applicantProfile ? 'Available' : 'Not created'} • Verified:{' '}
-                                {user.emailVerified ? 'Yes' : 'No'}
+    return (
+        <div className="space-y-4">
+            {users.map(user => (
+                <Card key={user.id}>
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-10 w-10">
+                                    <AvatarFallback className="bg-primary/10 text-primary">
+                                        {user.email.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-medium">{user.email}</p>
+                                        <Badge className={roleColors[user.role]}>
+                                            {user.role}
+                                        </Badge>
+                                        {user.emailVerified && (
+                                            <Badge variant="outline" className="text-success border-success">
+                                                Verified
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Joined {format(new Date(user.createdAt), 'MMM d, yyyy')} •{' '}
+                                        {user._count.applications} applications •{' '}
+                                        {user._count.jobsCreated} jobs created
+                                    </p>
+                                </div>
                             </div>
-                            <form action={handleUpdateRole} className="flex gap-2">
+                            <form action={handleUpdateRole} className="flex items-center gap-2">
                                 <input type="hidden" name="userId" value={user.id} />
-                                <select
-                                    name="role"
-                                    defaultValue={user.role}
-                                    className="rounded-md border px-3 py-2 text-sm"
-                                >
-                                    {Object.values(UserRole).map(role => (
-                                        <option key={role} value={role}>
-                                            {role}
-                                        </option>
-                                    ))}
-                                </select>
-                                <Button type="submit" variant="outline">
-                  Update Role
+                                <Select name="role" defaultValue={user.role}>
+                                    <SelectTrigger className="w-[140px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.values(UserRole).map(role => (
+                                            <SelectItem key={role} value={role}>
+                                                {role}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button type="submit" variant="outline" size="sm">
+                                    Update
                                 </Button>
                             </form>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
         </div>
     )
 }
