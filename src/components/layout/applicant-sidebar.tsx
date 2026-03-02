@@ -97,7 +97,8 @@ export function ApplicantSidebar({ isCollapsed = false, onToggle }: ApplicantSid
                 <Link href={ROUTES.HOME} className="flex items-center">
                     {isCollapsed ? (
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                            <span className="text-lg font-bold text-primary-foreground">R</span>
+                            <span aria-hidden="true" className="text-lg font-bold text-primary-foreground">R</span>
+                            <span className="sr-only">RecruitMe</span>
                         </div>
                     ) : (
                         <Image

@@ -153,30 +153,39 @@ export async function GET(request: Request) {
             })
 
             const appUrl = getBaseUrl()
-            if (appUrl) {
-                const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}`
-                try {
+            let emailSent = false
+
+            try {
+                if (appUrl) {
+                    const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}`
                     await sendEmail({
                         to: user.email,
                         subject: 'Verify your RecruitMe account',
                         html: `Complete your sign-up by opening <a href="${verificationUrl}">this verification link</a>.`,
                         text: `Complete your sign-up by opening this verification link: ${verificationUrl}`,
                     })
-                } catch (emailError) {
-                    reportError(emailError, {
-                        scope: 'auth.linkedin.verification-email',
+                } else {
+                    // Fallback: send email with token for manual verification
+                    await sendEmail({
+                        to: user.email,
+                        subject: 'Verify your RecruitMe account',
+                        html: `Your verification token is: <code>${verificationToken}</code><br><br>Please contact support or paste this token in the verification form to complete your registration.`,
+                        text: `Your verification token is: ${verificationToken}\n\nPlease contact support or paste this token in the verification form to complete your registration.`,
+                    })
+                    reportOperationalEvent('Verification email sent with fallback (no baseUrl)', {
                         userId: user.id,
                     })
                 }
-            } else {
-                reportError(new Error('NEXT_PUBLIC_APP_URL not configured - verification email not sent'), {
-                    scope: 'auth.linkedin.verification-email.config',
+                emailSent = true
+            } catch (emailError) {
+                reportError(emailError, {
+                    scope: 'auth.linkedin.verification-email',
                     userId: user.id,
                 })
             }
 
             return NextResponse.redirect(
-                new URL('/sign-in?message=verify-email', request.url),
+                new URL(emailSent ? '/sign-in?message=verify-email' : '/sign-in?error=verification-email-failed', request.url),
             )
         }
 
