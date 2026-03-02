@@ -121,7 +121,13 @@ async function DeliveryLogsSection() {
     const deliveryLogs = await prisma.deliveryLog.findMany({
         orderBy: { attemptedAt: 'desc' },
         take: 20,
-        include: { notification: true },
+        include: {
+            notification: {
+                select: {
+                    subject: true,
+                },
+            },
+        },
     })
 
     return (
@@ -173,7 +179,13 @@ async function AuditLogsSection() {
     const auditLogs = await prisma.auditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: 20,
-        include: { actor: true },
+        include: {
+            actor: {
+                select: {
+                    email: true,
+                },
+            },
+        },
     })
 
     return (
@@ -220,7 +232,13 @@ async function ActivityLogsSection() {
     const activityLogs = await prisma.activityLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: 20,
-        include: { actor: true },
+        include: {
+            actor: {
+                select: {
+                    email: true,
+                },
+            },
+        },
     })
 
     return (

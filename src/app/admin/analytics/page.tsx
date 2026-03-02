@@ -15,6 +15,8 @@ export default async function AdminAnalyticsPage() {
         permission: 'VIEW_ANALYTICS',
     })
 
+    const analyticsPromise = getRecruitmentAnalytics()
+
     return (
         <div className="space-y-6">
             <AdminPageHeader
@@ -23,23 +25,23 @@ export default async function AdminAnalyticsPage() {
             />
 
             <Suspense fallback={<StatCardGridSkeleton count={4} />}>
-                <StatsSection />
+                <StatsSection analyticsPromise={analyticsPromise} />
             </Suspense>
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <Suspense fallback={<ChartSkeleton />}>
-                    <ApplicationsPerJobSection />
+                    <ApplicationsPerJobSection analyticsPromise={analyticsPromise} />
                 </Suspense>
                 <Suspense fallback={<ChartSkeleton />}>
-                    <StageConversionSection />
+                    <StageConversionSection analyticsPromise={analyticsPromise} />
                 </Suspense>
             </div>
         </div>
     )
 }
 
-async function StatsSection() {
-    const analytics = await getRecruitmentAnalytics()
+async function StatsSection({ analyticsPromise }: { analyticsPromise: Promise<Awaited<ReturnType<typeof getRecruitmentAnalytics>>> }) {
+    const analytics = await analyticsPromise
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -75,8 +77,8 @@ async function StatsSection() {
     )
 }
 
-async function ApplicationsPerJobSection() {
-    const analytics = await getRecruitmentAnalytics()
+async function ApplicationsPerJobSection({ analyticsPromise }: { analyticsPromise: Promise<Awaited<ReturnType<typeof getRecruitmentAnalytics>>> }) {
+    const analytics = await analyticsPromise
 
     const maxCount = Math.max(...analytics.applicationsPerJob.map(j => j.count), 1)
 
@@ -105,8 +107,8 @@ async function ApplicationsPerJobSection() {
     )
 }
 
-async function StageConversionSection() {
-    const analytics = await getRecruitmentAnalytics()
+async function StageConversionSection({ analyticsPromise }: { analyticsPromise: Promise<Awaited<ReturnType<typeof getRecruitmentAnalytics>>> }) {
+    const analytics = await analyticsPromise
 
     const stageLabels: Record<string, string> = {
         SUBMITTED: 'Submitted',

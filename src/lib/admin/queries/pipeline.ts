@@ -106,10 +106,18 @@ export async function getPipelineData(jobId: string) {
         }
     })
 
+    const unassignedApps = applicationsByStage.get(null) || []
+
     return {
         job,
         stages: stagesWithApplications,
-        unassigned: applicationsByStage.get(null) || [],
+        unassigned: unassignedApps.map((app) => ({
+            ...app,
+            avgRating:
+                app.ratings.length > 0
+                    ? app.ratings.reduce((sum, r) => sum + r.score, 0) / app.ratings.length
+                    : null,
+        })),
     }
 }
 

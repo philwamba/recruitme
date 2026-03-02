@@ -26,15 +26,6 @@ export async function createJob(data: JobFormData) {
     const validated = jobFormSchema.parse(data)
     const { ipAddress, userAgent } = await getRequestContext()
 
-    const job = await prisma.job.create({
-        data: {
-            ...validated,
-            slug: generateSlug(validated.title),
-            createdByUserId: user.id,
-            status: validated.status || 'DRAFT',
-        },
-    })
-
     // Create default pipeline stages
     const defaultStages = [
         { name: 'Applied', order: 1, isDefault: true },
@@ -44,11 +35,24 @@ export async function createJob(data: JobFormData) {
         { name: 'Offer', order: 5 },
     ]
 
-    await prisma.jobPipelineStage.createMany({
-        data: defaultStages.map(stage => ({
-            ...stage,
-            jobId: job.id,
-        })),
+    const job = await prisma.$transaction(async (tx) => {
+        const newJob = await tx.job.create({
+            data: {
+                ...validated,
+                slug: generateSlug(validated.title),
+                createdByUserId: user.id,
+                status: validated.status || 'DRAFT',
+            },
+        })
+
+        await tx.jobPipelineStage.createMany({
+            data: defaultStages.map(stage => ({
+                ...stage,
+                jobId: newJob.id,
+            })),
+        })
+
+        return newJob
     })
 
     await createAuditLog({

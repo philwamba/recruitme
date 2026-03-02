@@ -53,11 +53,28 @@ async function CandidatesTableSection({
     search?: string
     page?: string
 }) {
+    const validStatuses = [
+        'DRAFT',
+        'SUBMITTED',
+        'UNDER_REVIEW',
+        'SHORTLISTED',
+        'INTERVIEW_PHASE_1',
+        'INTERVIEW_PHASE_2',
+        'ASSESSMENT',
+        'OFFER',
+        'REJECTED',
+        'HIRED',
+        'WITHDRAWN',
+    ]
+    const validatedStatus = status && validStatuses.includes(status) ? status : undefined
+    const pageNumber = page ? parseInt(page, 10) : 1
+    const validatedPage = !isNaN(pageNumber) && pageNumber > 0 ? pageNumber : 1
+
     const { applications } = await getCandidates({
-        status: status as any,
+        status: validatedStatus as any,
         jobId,
         search,
-        page: page ? parseInt(page) : 1,
+        page: validatedPage,
     })
 
     return <CandidatesTable candidates={applications} />

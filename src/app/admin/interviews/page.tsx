@@ -23,7 +23,7 @@ export default async function AdminInterviewsPage() {
                 title="Interviews"
                 description="Manage scheduled interviews and feedback"
                 actions={
-                    <Button>
+                    <Button disabled title="Action not yet implemented">
                         <Calendar className="mr-2 h-4 w-4" />
                         Schedule Interview
                     </Button>

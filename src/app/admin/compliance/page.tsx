@@ -44,7 +44,13 @@ export default async function AdminCompliancePage() {
 
 async function DeletionRequestsSection() {
     const requests = await prisma.dataDeletionRequest.findMany({
-        include: { user: true },
+        include: {
+            user: {
+                select: {
+                    email: true,
+                },
+            },
+        },
         orderBy: { createdAt: 'desc' },
         take: 100,
     })

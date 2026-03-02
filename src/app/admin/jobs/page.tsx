@@ -65,11 +65,16 @@ async function JobsTableSection({
     search?: string
     page?: string
 }) {
+    const validStatuses = ['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED']
+    const validatedStatus = status && validStatuses.includes(status) ? status : undefined
+    const pageNumber = page ? parseInt(page, 10) : 1
+    const validatedPage = !isNaN(pageNumber) && pageNumber > 0 ? pageNumber : 1
+
     const { jobs } = await getJobs({
-        status: status as any,
+        status: validatedStatus as any,
         departmentId: department,
         search,
-        page: page ? parseInt(page) : 1,
+        page: validatedPage,
     })
 
     return <JobsTable jobs={jobs} />
