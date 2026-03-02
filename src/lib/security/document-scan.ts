@@ -5,7 +5,7 @@ import { reportError, reportOperationalEvent } from '@/lib/observability/error-r
 import { readPrivateFile } from '@/lib/services/private-files'
 
 const CLAMAV_TIMEOUT_MS = 30000
-const MAX_SCAN_SIZE_BYTES = 25 * 1024 * 1024 // 25MB ClamAV default limit
+const MAX_SCAN_SIZE_BYTES = 25 * 1024 * 1024
 
 export type ScanResult = {
     status: 'CLEAN' | 'REJECTED' | 'ERROR'
@@ -25,7 +25,6 @@ export function isScanningEnabled(): boolean {
  */
 async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
     if (!env.clamavHost) {
-        // ClamAV not configured - skip scanning
         return { status: 'CLEAN', details: 'Scanning disabled' }
     }
 
@@ -61,10 +60,6 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
             resolved = true
             const response = Buffer.concat(chunks).toString('utf-8').trim()
 
-            // ClamAV INSTREAM responses:
-            // - "stream: OK" = clean
-            // - "stream: <virus_name> FOUND" = infected
-            // - "INSTREAM size limit exceeded" = too large
             if (response.includes('OK')) {
                 resolve({ status: 'CLEAN', details: response })
             } else if (response.includes('FOUND')) {
@@ -86,12 +81,8 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
             parseInt(env.clamavPort!, 10),
             env.clamavHost!,
             () => {
-                // Send INSTREAM command
                 socket.write('zINSTREAM\0')
 
-                // Send file data in chunks
-                // ClamAV expects: 4-byte length (big-endian) + data, repeated
-                // Terminate with 4 zero bytes
                 const CHUNK_SIZE = 2048
                 for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
                     const chunk = buffer.subarray(i, i + CHUNK_SIZE)
@@ -101,7 +92,6 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
                     socket.write(chunk)
                 }
 
-                // Send terminator (zero-length chunk)
                 const terminator = Buffer.alloc(4, 0)
                 socket.write(terminator)
             }
@@ -114,8 +104,6 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
  */
 export async function scanBuffer(buffer: Buffer): Promise<ScanResult> {
     if (!isScanningEnabled()) {
-        // If scanning is not configured, allow the file
-        // In production, you should configure ClamAV
         if (process.env.NODE_ENV === 'production') {
             reportOperationalEvent('Document scanning disabled in production', {
                 warning: 'CLAMAV_HOST not configured',
@@ -143,7 +131,6 @@ export async function scanDocument(documentId: string): Promise<ScanResult> {
         const buffer = await readPrivateFile(document.storageKey)
         const result = await scanBuffer(buffer)
 
-        // Update document scan status
         await prisma.candidateDocument.update({
             where: { id: documentId },
             data: {
