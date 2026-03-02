@@ -9,6 +9,8 @@ import { Progress } from '@/components/ui/progress'
 
 export const dynamic = 'force-dynamic'
 
+type Analytics = Awaited<ReturnType<typeof getRecruitmentAnalytics>>
+
 export default async function AdminAnalyticsPage() {
     await requireCurrentUser({
         roles: ['ADMIN', 'EMPLOYER'],
@@ -34,7 +36,7 @@ export default async function AdminAnalyticsPage() {
     )
 }
 
-function StatsSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
+function StatsSection({ analytics }: { analytics: Analytics }) {
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -70,7 +72,7 @@ function StatsSection({ analytics }: { analytics: Awaited<ReturnType<typeof getR
     )
 }
 
-function ApplicationsPerJobSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
+function ApplicationsPerJobSection({ analytics }: { analytics: Analytics }) {
 
     const maxCount = Math.max(...analytics.applicationsPerJob.map(j => j.count), 1)
 
@@ -99,7 +101,7 @@ function ApplicationsPerJobSection({ analytics }: { analytics: Awaited<ReturnTyp
     )
 }
 
-function StageConversionSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
+function StageConversionSection({ analytics }: { analytics: Analytics }) {
 
     const stageLabels: Record<string, string> = {
         SUBMITTED: 'Submitted',

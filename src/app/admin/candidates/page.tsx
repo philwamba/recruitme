@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { ApplicationStatus } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
 import { getCandidates } from '@/lib/admin/queries/candidates'
 import { AdminPageHeader, TableSkeleton } from '@/components/admin'
@@ -53,25 +54,16 @@ async function CandidatesTableSection({
     search?: string
     page?: string
 }) {
-    const validStatuses = [
-        'DRAFT',
-        'SUBMITTED',
-        'UNDER_REVIEW',
-        'SHORTLISTED',
-        'INTERVIEW_PHASE_1',
-        'INTERVIEW_PHASE_2',
-        'ASSESSMENT',
-        'OFFER',
-        'REJECTED',
-        'HIRED',
-        'WITHDRAWN',
-    ]
-    const validatedStatus = status && validStatuses.includes(status) ? status : undefined
+    const validStatuses = Object.values(ApplicationStatus)
+    const validatedStatus: ApplicationStatus | undefined =
+        status && validStatuses.includes(status as ApplicationStatus)
+            ? (status as ApplicationStatus)
+            : undefined
     const pageNumber = page ? parseInt(page, 10) : 1
     const validatedPage = !isNaN(pageNumber) && pageNumber > 0 ? pageNumber : 1
 
     const { applications } = await getCandidates({
-        status: validatedStatus as any,
+        status: validatedStatus,
         jobId,
         search,
         page: validatedPage,

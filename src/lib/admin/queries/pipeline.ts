@@ -91,18 +91,21 @@ export async function getPipelineData(jobId: string) {
         applicationsByStage.set(stageId, existing)
     }
 
+    // Helper to calculate average rating
+    const enrichWithAvgRating = (app: typeof applications[0]) => ({
+        ...app,
+        avgRating:
+            app.ratings.length > 0
+                ? app.ratings.reduce((sum, r) => sum + r.score, 0) / app.ratings.length
+                : null,
+    })
+
     // Calculate average ratings
-    const stagesWithApplications = job.pipelineStages.map((stage) => {
+    const stagesWithApplications = job.pipelineStages.map(stage => {
         const stageApps = applicationsByStage.get(stage.id) || []
         return {
             ...stage,
-            applications: stageApps.map((app) => ({
-                ...app,
-                avgRating:
-                    app.ratings.length > 0
-                        ? app.ratings.reduce((sum, r) => sum + r.score, 0) / app.ratings.length
-                        : null,
-            })),
+            applications: stageApps.map(enrichWithAvgRating),
         }
     })
 
@@ -111,13 +114,7 @@ export async function getPipelineData(jobId: string) {
     return {
         job,
         stages: stagesWithApplications,
-        unassigned: unassignedApps.map((app) => ({
-            ...app,
-            avgRating:
-                app.ratings.length > 0
-                    ? app.ratings.reduce((sum, r) => sum + r.score, 0) / app.ratings.length
-                    : null,
-        })),
+        unassigned: unassignedApps.map(enrichWithAvgRating),
     }
 }
 
