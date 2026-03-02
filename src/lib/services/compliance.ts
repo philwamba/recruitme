@@ -59,7 +59,6 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         })
     }
 
-    // Get documents to delete (needed for file cleanup after DB transaction)
     const documents = await prisma.candidateDocument.findMany({
         where: {
             OR: [
@@ -70,8 +69,6 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         select: { storageKey: true },
     })
 
-    // First: Run DB transaction to delete all records
-    // Set status to PROCESSING first, then COMPLETED after file cleanup
     await prisma.$transaction([
         prisma.notification.deleteMany({ where: { userId: request.userId } }),
         prisma.candidateDocument.deleteMany({
@@ -93,7 +90,6 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         }),
     ])
 
-    // Second: Delete files from storage (after DB transaction succeeds)
     const failedDeletions: string[] = []
     for (const document of documents) {
         const success = await removePrivateFile(document.storageKey)
@@ -106,10 +102,7 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         }
     }
 
-    // Third: Update status to COMPLETED
-    // Note: We mark as COMPLETED even with file deletion failures since DB records are gone
-    // The warning in notes will flag any storage cleanup issues
-    const finalStatus = 'COMPLETED'
+    const finalStatus = failedDeletions.length > 0 ? 'FAILED' : 'COMPLETED'
     const finalNotes = failedDeletions.length > 0
         ? `${notes ?? ''}\nWarning: ${failedDeletions.length} file(s) could not be deleted from storage.`.trim()
         : notes ?? null

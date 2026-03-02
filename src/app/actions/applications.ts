@@ -111,7 +111,6 @@ async function storeUploadedFiles({
             },
         })
 
-        // Only update storage location, not cvParsedAt (set by parsing job when complete)
         if (applicantProfileId) {
             await prisma.applicantProfile.update({
                 where: { id: applicantProfileId },
@@ -196,7 +195,6 @@ export async function saveApplicationDraft(jobId: string, formData: FormData) {
         revalidatePath('/applicant/applications')
         revalidatePath('/jobs')
 
-        // Best-effort notification - don't fail the action if notification fails
         try {
             await createNotification({
                 userId: user.id,
@@ -494,19 +492,14 @@ export async function addApplicationTag(formData: FormData) {
         return { success: false, error: 'Not authorized' }
     }
 
-    // Find or create tag - don't update existing tag colors to avoid global side effects
-    let tag = await prisma.tag.findUnique({
+    const tag = await prisma.tag.upsert({
         where: { name: parsed.data.tagName },
+        update: {},
+        create: {
+            name: parsed.data.tagName,
+            color: parsed.data.tagColor || null,
+        },
     })
-
-    if (!tag) {
-        tag = await prisma.tag.create({
-            data: {
-                name: parsed.data.tagName,
-                color: parsed.data.tagColor || null,
-            },
-        })
-    }
 
     await prisma.applicationTag.upsert({
         where: {

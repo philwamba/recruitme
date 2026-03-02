@@ -266,7 +266,6 @@ export async function submitAssessment(formData: FormData) {
         redirect('/applicant/assessments?error=invalid-submission')
     }
 
-    // Run DB updates in transaction, notification outside (best-effort)
     const submission = await prisma.$transaction(async tx => {
         const updatedSubmission = await tx.assessmentSubmission.update({
             where: {
@@ -292,7 +291,6 @@ export async function submitAssessment(formData: FormData) {
         return updatedSubmission
     })
 
-    // Best-effort notification outside transaction
     try {
         await createNotification({
             userId: user.id,
@@ -313,7 +311,7 @@ export async function submitAssessment(formData: FormData) {
 }
 
 export async function reviewAssessment(formData: FormData) {
-    await requireCurrentUser({
+    const user = await requireCurrentUser({
         roles: ['EMPLOYER', 'ADMIN'],
         permission: 'MANAGE_APPLICATIONS',
     })
@@ -330,6 +328,28 @@ export async function reviewAssessment(formData: FormData) {
 
     // Run both updates in a single transaction for atomicity
     await prisma.$transaction(async tx => {
+        // Load submission with job ownership info for authorization
+        const existing = await tx.assessmentSubmission.findUnique({
+            where: { id: parsed.data.submissionId },
+            include: {
+                assessment: {
+                    include: {
+                        job: { select: { createdByUserId: true } },
+                    },
+                },
+            },
+        })
+
+        if (!existing) {
+            throw new Error('Submission not found')
+        }
+
+        // Resource-level authorization: EMPLOYER must own the job the assessment belongs to
+        const ownerUserId = existing.assessment.job?.createdByUserId
+        if (user.role === 'EMPLOYER' && ownerUserId !== user.id) {
+            throw new Error('Not authorized to review this submission')
+        }
+
         const submission = await tx.assessmentSubmission.update({
             where: { id: parsed.data.submissionId },
             data: {
