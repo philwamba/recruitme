@@ -17,7 +17,9 @@ export async function getRecruitmentAnalytics() {
           select: { applications: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        applications: { _count: 'desc' },
+      },
       take: 10,
     }),
     prisma.application.findMany({

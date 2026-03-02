@@ -85,13 +85,17 @@ export default async function AdminTemplatesPage() {
           <CardTitle>Saved Templates</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {templates.map((template) => (
-            <div key={template.id} className="rounded-md border p-3">
-              <p className="font-medium">{template.name}</p>
-              <p className="text-sm text-muted-foreground">{template.subject}</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{template.body}</p>
-            </div>
-          ))}
+          {templates.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No templates saved yet.</p>
+          ) : (
+            templates.map((template) => (
+              <div key={template.id} className="rounded-md border p-3">
+                <p className="font-medium">{template.name}</p>
+                <p className="text-sm text-muted-foreground">{template.subject}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{template.body}</p>
+              </div>
+            ))
+          )}
         </CardContent>
       </Card>
     </div>

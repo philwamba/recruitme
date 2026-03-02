@@ -43,7 +43,16 @@ export default async function AdminCompliancePage() {
                 <p className="mt-2 text-sm text-muted-foreground">{request.reason ?? 'No reason provided'}</p>
                 <form action={processDeletionRequestAction} className="mt-4 space-y-3">
                   <input type="hidden" name="requestId" value={request.id} />
-                  <textarea name="notes" className="min-h-20 w-full rounded-md border px-3 py-2 text-sm" placeholder="Processing notes" />
+                  <label htmlFor={`notes-${request.id}`} className="sr-only">
+                    Processing notes
+                  </label>
+                  <textarea
+                    id={`notes-${request.id}`}
+                    name="notes"
+                    className="min-h-20 w-full rounded-md border px-3 py-2 text-sm"
+                    placeholder="Processing notes"
+                    aria-label="Processing notes"
+                  />
                   <div className="flex gap-3">
                     <Button type="submit" name="action" value="approve" variant="destructive">
                       Approve

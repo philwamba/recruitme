@@ -45,4 +45,10 @@ export const env = {
   cloudflareR2AccessKeyId: readOptional('CLOUDFLARE_R2_ACCESS_KEY_ID'),
   cloudflareR2SecretAccessKey: readOptional('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
   cloudflareR2BucketName: readOptional('CLOUDFLARE_R2_BUCKET_NAME'),
+  linkedinClientId: readOptional('LINKEDIN_CLIENT_ID'),
+  linkedinClientSecret: readOptional('LINKEDIN_CLIENT_SECRET'),
+  linkedinRedirectUri: readOptional('LINKEDIN_REDIRECT_URI'),
+  googleClientId: readOptional('GOOGLE_CLIENT_ID'),
+  googleClientSecret: readOptional('GOOGLE_CLIENT_SECRET'),
+  googleRedirectUri: readOptional('GOOGLE_REDIRECT_URI'),
 } as const

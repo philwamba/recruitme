@@ -56,11 +56,16 @@ export default async function ApplicantAssessmentsPage() {
                 </p>
                 <form action={submitAssessment} className="space-y-3">
                   <input type="hidden" name="assessmentId" value={submission.assessmentId} />
+                  <label htmlFor={`response-${submission.id}`} className="sr-only">
+                    Assessment response
+                  </label>
                   <textarea
+                    id={`response-${submission.id}`}
                     name="responseText"
                     defaultValue={submission.responseText ?? ''}
                     className="min-h-40 w-full rounded-md border px-3 py-2 text-sm"
                     placeholder="Add your assessment response"
+                    aria-label="Assessment response"
                   />
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>

@@ -73,7 +73,11 @@ export async function retryFailedOutboxJob(formData: FormData) {
     redirect('/admin/operations?error=invalid-job')
   }
 
-  await retryOutboxJob(jobId)
+  try {
+    await retryOutboxJob(jobId)
+  } catch {
+    redirect('/admin/operations?error=retry-failed')
+  }
 
   await createAuditLog({
     actorUserId: user.id,

@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { requireCurrentUser } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { getPublishedJobBySlug } from '@/lib/services/jobs'
 import { saveApplicationDraft, submitApplication } from '@/app/actions/applications'
+import { GoogleAuthButton } from '@/components/auth/google-auth-button'
+import { LinkedInAuthButton } from '@/components/auth/linkedin-auth-button'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -17,13 +19,56 @@ export default async function ApplyPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const user = await requireCurrentUser({
-    roles: ['APPLICANT'],
-    permission: 'MANAGE_SELF_PROFILE',
-  })
   const job = await getPublishedJobBySlug(slug)
 
   if (!job) {
+    notFound()
+  }
+
+  const user = await getCurrentUser()
+
+  if (!user) {
+    const nextPath = `/jobs/${job.slug}/apply`
+
+    return (
+      <div className="min-h-screen bg-muted/20">
+        <div className="mx-auto max-w-2xl space-y-6 px-4 py-10">
+          <div className="space-y-2">
+            <Link href={`/jobs/${job.slug}`} className="text-sm text-primary hover:underline">
+              Back to role
+            </Link>
+            <h1 className="text-3xl font-semibold tracking-tight">Apply for {job.title}</h1>
+            <p className="text-muted-foreground">
+              Sign in first to start your application. LinkedIn sign-in will return you directly to this role.
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Start your application</CardTitle>
+              <CardDescription>
+                Use LinkedIn for a faster application entry, or continue with your RecruitMe account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <GoogleAuthButton nextPath={nextPath} label="Apply with Google" />
+                <LinkedInAuthButton nextPath={nextPath} label="Apply with LinkedIn" />
+              </div>
+              <Button asChild variant="outline" className="w-full">
+                <Link href={`/sign-in?next=${encodeURIComponent(nextPath)}`}>Sign in with email</Link>
+              </Button>
+              <Button asChild className="w-full">
+                <Link href={`/sign-up?next=${encodeURIComponent(nextPath)}`}>Create account to apply</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (user.role !== 'APPLICANT') {
     notFound()
   }
 
@@ -92,7 +137,8 @@ export default async function ApplyPage({
 
               <div className="space-y-2">
                 <Label htmlFor="cvFile" required>CV</Label>
-                <input id="cvFile" name="cvFile" type="file" accept=".pdf,.doc,.docx" className="w-full text-sm" required />
+                <input id="cvFile" name="cvFile" type="file" accept=".pdf,.doc,.docx" className="w-full text-sm" />
+                <p className="text-xs text-muted-foreground">Required for final submission, optional for drafts.</p>
               </div>
 
               <div className="space-y-2">

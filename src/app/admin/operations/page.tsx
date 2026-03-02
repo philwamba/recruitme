@@ -90,7 +90,7 @@ export default async function AdminOperationsPage() {
                   {log.status} • {new Date(log.attemptedAt).toLocaleString()}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Notification: {log.notification.subject}
+                  Notification: {log.notification?.subject ?? 'Notification deleted'}
                 </p>
               </div>
             ))}

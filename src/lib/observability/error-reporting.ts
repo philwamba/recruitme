@@ -93,20 +93,34 @@ export function reportError(error: unknown, context: ErrorContext) {
   try {
     const message = error instanceof Error ? error.message : 'Unknown error'
     const stack = error instanceof Error ? error.stack : undefined
+    const sanitizedMetadata = redactSensitiveData(context.metadata)
+    const timestamp = new Date().toISOString()
 
-    const sanitizedPayload = {
+    // Full payload for local logging (includes stack for debugging)
+    const consolePayload = {
       level: 'error',
       message,
       stack,
       scope: context.scope,
       userId: context.userId,
-      metadata: redactSensitiveData(context.metadata),
-      timestamp: new Date().toISOString(),
+      metadata: sanitizedMetadata,
+      timestamp,
       environment: env.appEnvironment,
     }
 
-    emitConsole('error', sanitizedPayload)
-    emitWebhook('error', sanitizedPayload)
+    // Redacted payload for external webhook (no stack to avoid leaking internals)
+    const webhookPayload = {
+      level: 'error',
+      message,
+      scope: context.scope,
+      userId: context.userId,
+      metadata: sanitizedMetadata,
+      timestamp,
+      environment: env.appEnvironment,
+    }
+
+    emitConsole('error', consolePayload)
+    emitWebhook('error', webhookPayload)
   } catch {
     // Last resort: never throw from logging
     console.error('Error reporting failed')

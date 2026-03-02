@@ -62,7 +62,7 @@ export async function createInterview(formData: FormData) {
       data: {
         applicationId: application.id,
         title: parsed.data.title,
-        scheduledAt: new Date(parsed.data.scheduledAt),
+        scheduledAt: parsed.data.scheduledAt,
         durationMinutes: parsed.data.durationMinutes,
         timezone: parsed.data.timezone,
         location: parsed.data.location || null,
@@ -128,6 +128,33 @@ export async function submitInterviewFeedback(formData: FormData) {
     redirect('/employer/interviews?error=invalid-feedback')
   }
 
+  // Authorization: verify the interview exists and belongs to the claimed application
+  const interview = await prisma.interview.findUnique({
+    where: { id: parsed.data.interviewId },
+    include: {
+      application: {
+        include: { job: true },
+      },
+    },
+  })
+
+  if (!interview) {
+    redirect('/employer/interviews?error=interview-not-found')
+  }
+
+  if (interview.applicationId !== parsed.data.applicationId) {
+    redirect('/employer/interviews?error=unauthorized')
+  }
+
+  // Authorization: verify user can manage this application (job creator or admin)
+  const canManage =
+    user.role === 'ADMIN' ||
+    interview.application.job.createdByUserId === user.id
+
+  if (!canManage) {
+    redirect('/employer/interviews?error=unauthorized')
+  }
+
   await prisma.interviewFeedback.create({
     data: {
       interviewId: parsed.data.interviewId,
@@ -176,7 +203,7 @@ export async function createAssessment(formData: FormData) {
         jobId: application.jobId,
         title: parsed.data.title,
         instructions: parsed.data.instructions,
-        dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
+        dueAt: parsed.data.dueAt,
         createdByUserId: user.id,
         submissions: {
           create: {

@@ -15,7 +15,7 @@ export default async function ApplicantCompliancePage() {
 
   const requests = await prisma.dataDeletionRequest.findMany({
     where: { userId: user.id },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { requestedAt: 'desc' },
   })
 
   return (

@@ -1,10 +1,28 @@
 import { Recommendation } from '@prisma/client'
 import { z } from 'zod'
 
+const dateStringSchema = z.preprocess(
+  (val) => {
+    if (typeof val !== 'string' || !val.trim()) return undefined
+    const parsed = new Date(val)
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed
+  },
+  z.date({ message: 'Invalid date format' })
+)
+
+const optionalDateStringSchema = z.preprocess(
+  (val) => {
+    if (typeof val !== 'string' || !val.trim()) return null
+    const parsed = new Date(val)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  },
+  z.date().nullable()
+)
+
 export const interviewSchema = z.object({
   applicationId: z.string().min(1),
   title: z.string().min(3).max(150),
-  scheduledAt: z.string().min(1),
+  scheduledAt: dateStringSchema,
   durationMinutes: z.coerce.number().int().min(15).max(240).default(60),
   timezone: z.string().min(2).max(100),
   location: z.string().max(150).optional().default(''),
@@ -25,7 +43,7 @@ export const assessmentSchema = z.object({
   applicationId: z.string().min(1),
   title: z.string().min(3).max(150),
   instructions: z.string().min(10),
-  dueAt: z.string().optional().default(''),
+  dueAt: optionalDateStringSchema,
 })
 
 export const assessmentSubmissionSchema = z.object({

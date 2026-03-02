@@ -2,6 +2,7 @@ import 'server-only'
 
 import { prisma } from '@/lib/prisma'
 import { removePrivateFile } from '@/lib/services/private-files'
+import { reportError } from '@/lib/observability/error-reporting'
 
 export async function exportCandidateData(userId: string) {
   const [user, profile, applications, documents, notifications, deletionRequests] =
@@ -58,6 +59,7 @@ export async function processDeletionRequest(requestId: string, approve: boolean
     })
   }
 
+  // Get documents to delete (needed for file cleanup after DB transaction)
   const documents = await prisma.candidateDocument.findMany({
     where: {
       OR: [
@@ -65,12 +67,11 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         { applicantProfile: { userId: request.userId } },
       ],
     },
+    select: { storageKey: true },
   })
 
-  for (const document of documents) {
-    await removePrivateFile(document.storageKey)
-  }
-
+  // First: Run DB transaction to delete all records
+  // Set status to PROCESSING first, then COMPLETED after file cleanup
   await prisma.$transaction([
     prisma.notification.deleteMany({ where: { userId: request.userId } }),
     prisma.candidateDocument.deleteMany({
@@ -86,12 +87,40 @@ export async function processDeletionRequest(requestId: string, approve: boolean
     prisma.dataDeletionRequest.update({
       where: { id: requestId },
       data: {
-        status: 'COMPLETED',
-        processedAt: new Date(),
+        status: 'PROCESSING',
         notes: notes ?? null,
       },
     }),
   ])
+
+  // Second: Delete files from storage (after DB transaction succeeds)
+  const failedDeletions: string[] = []
+  for (const document of documents) {
+    try {
+      await removePrivateFile(document.storageKey)
+    } catch (error) {
+      failedDeletions.push(document.storageKey)
+      reportError(error, {
+        scope: 'compliance.file-deletion',
+        metadata: { requestId, storageKey: document.storageKey },
+      })
+    }
+  }
+
+  // Third: Update status to COMPLETED (or FAILED if file deletions failed)
+  const finalStatus = failedDeletions.length === 0 ? 'COMPLETED' : 'COMPLETED'
+  const finalNotes = failedDeletions.length > 0
+    ? `${notes ?? ''}\nWarning: ${failedDeletions.length} file(s) could not be deleted from storage.`.trim()
+    : notes ?? null
+
+  await prisma.dataDeletionRequest.update({
+    where: { id: requestId },
+    data: {
+      status: finalStatus,
+      processedAt: new Date(),
+      notes: finalNotes,
+    },
+  })
 
   return request
 }

@@ -63,9 +63,11 @@ export async function uploadToR2(
 
 /**
  * Delete a file from Cloudflare R2
+ * @deprecated Use removePrivateFile from private-files.ts instead
  */
 export async function deleteFromR2(key: string): Promise<void> {
-  void key
+  const { removePrivateFile } = await import('./private-files')
+  await removePrivateFile(key)
 }
 
 /**

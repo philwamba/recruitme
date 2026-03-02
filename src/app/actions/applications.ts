@@ -195,13 +195,22 @@ export async function saveApplicationDraft(jobId: string, formData: FormData) {
     revalidatePath('/applicant/applications')
     revalidatePath(`/jobs`)
 
-    await createNotification({
-      userId: user.id,
-      channel: 'IN_APP',
-      applicationId: application.id,
-      subject: `Draft saved for ${jobId}`,
-      body: `Your application draft ${application.trackingId} has been saved.`,
-    })
+    // Best-effort notification - don't fail the action if notification fails
+    try {
+      await createNotification({
+        userId: user.id,
+        channel: 'IN_APP',
+        applicationId: application.id,
+        subject: `Draft saved for ${jobId}`,
+        body: `Your application draft ${application.trackingId} has been saved.`,
+      })
+    } catch (notificationError) {
+      reportError(notificationError, {
+        scope: 'applications.save-draft.notification',
+        userId: user.id,
+        metadata: { jobId, applicationId: application.id },
+      })
+    }
   } catch (error) {
     reportError(error, {
       scope: 'applications.save-draft',
@@ -275,13 +284,22 @@ export async function submitApplication(jobId: string, formData: FormData) {
       },
     })
 
-    await createNotification({
-      userId: user.id,
-      channel: 'IN_APP',
-      applicationId: application.id,
-      subject: `Application submitted: ${application.trackingId}`,
-      body: 'Your application has been submitted successfully.',
-    })
+    // Best-effort notification - don't fail the action if notification fails
+    try {
+      await createNotification({
+        userId: user.id,
+        channel: 'IN_APP',
+        applicationId: application.id,
+        subject: `Application submitted: ${application.trackingId}`,
+        body: 'Your application has been submitted successfully.',
+      })
+    } catch (notificationError) {
+      reportError(notificationError, {
+        scope: 'applications.submit.notification',
+        userId: user.id,
+        metadata: { jobId, applicationId: application.id },
+      })
+    }
 
     revalidatePath('/applicant/applications')
     revalidatePath(`/jobs`)
@@ -360,14 +378,23 @@ export async function moveApplicationStage(formData: FormData) {
       },
     })
 
+    // Best-effort notification - don't fail the action if notification fails
     if (updatedApplication) {
-      await createNotification({
-        userId: updatedApplication.userId,
-        channel: 'EMAIL',
-        applicationId: updatedApplication.id,
-        subject: `Application status updated to ${stage.name}`,
-        body: `Your application ${updatedApplication.trackingId} moved to ${stage.name}.`,
-      })
+      try {
+        await createNotification({
+          userId: updatedApplication.userId,
+          channel: 'EMAIL',
+          applicationId: updatedApplication.id,
+          subject: `Application status updated to ${stage.name}`,
+          body: `Your application ${updatedApplication.trackingId} moved to ${stage.name}.`,
+        })
+      } catch (notificationError) {
+        reportError(notificationError, {
+          scope: 'applications.move-stage.notification',
+          userId: user.id,
+          metadata: { applicationId: updatedApplication.id },
+        })
+      }
     }
 
     revalidatePath('/employer/candidates')

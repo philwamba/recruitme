@@ -20,6 +20,7 @@ import { getRequestContext } from '@/lib/request-context'
 import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
 import { reportError, reportOperationalEvent } from '@/lib/observability/error-reporting'
 import { sendEmail } from '@/lib/services/email-delivery'
+import { getPostSignInPath } from '@/lib/auth/paths'
 
 type AuthActionState = {
   success: boolean
@@ -304,14 +305,37 @@ export async function signUp(
       tokenFingerprint: hashToken(verificationToken).slice(0, 16),
     })
 
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl && process.env.NODE_ENV === 'production') {
+      reportError(new Error('NEXT_PUBLIC_APP_URL not configured in production'), {
+        scope: 'auth.sign-up.config',
+        userId: user.id,
+      })
+      return {
+        success: true,
+        message: 'Account created but verification email could not be sent. Please contact support.',
+      }
+    }
+    const verificationUrl = `${appUrl ?? 'http://localhost:3000'}/verify-email?token=${verificationToken}`
 
-    await sendEmail({
-      to: user.email,
-      subject: 'Verify your RecruitMe account',
-      html: `Complete your sign-up by opening <a href="${verificationUrl}">this verification link</a>.`,
-      text: `Complete your sign-up by opening this verification link: ${verificationUrl}`,
-    })
+    // Best-effort email - don't fail account creation if email fails
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your RecruitMe account',
+        html: `Complete your sign-up by opening <a href="${verificationUrl}">this verification link</a>.`,
+        text: `Complete your sign-up by opening this verification link: ${verificationUrl}`,
+      })
+    } catch (emailError) {
+      reportError(emailError, {
+        scope: 'auth.sign-up.email',
+        userId: user.id,
+      })
+      return {
+        success: true,
+        message: 'Account created but verification email could not be sent. Please try again or contact support.',
+      }
+    }
 
     return {
       success: true,
@@ -397,14 +421,31 @@ export async function requestPasswordReset(
         tokenFingerprint: hashToken(resetToken).slice(0, 16),
       })
 
-      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/reset-password?token=${resetToken}`
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL
+      if (!appUrl && process.env.NODE_ENV === 'production') {
+        reportError(new Error('NEXT_PUBLIC_APP_URL not configured in production'), {
+          scope: 'auth.password-reset.config',
+          userId: user.id,
+        })
+        // Don't send email with invalid URL - continue to return success message
+      } else {
+        const resetUrl = `${appUrl ?? 'http://localhost:3000'}/reset-password?token=${resetToken}`
 
-      await sendEmail({
-        to: user.email,
-        subject: 'Reset your RecruitMe password',
-        html: `You requested a password reset. Open <a href="${resetUrl}">this secure reset link</a> to continue.`,
-        text: `You requested a password reset. Open this secure reset link to continue: ${resetUrl}`,
-      })
+        // Best-effort email - don't fail if email delivery fails
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: 'Reset your RecruitMe password',
+            html: `You requested a password reset. Open <a href="${resetUrl}">this secure reset link</a> to continue.`,
+            text: `You requested a password reset. Open this secure reset link to continue: ${resetUrl}`,
+          })
+        } catch (emailError) {
+          reportError(emailError, {
+            scope: 'auth.password-reset.email',
+            userId: user.id,
+          })
+        }
+      }
     }
 
     return {
@@ -566,21 +607,4 @@ export async function signOut() {
   await requireCurrentUser()
   await signOutCurrentUser()
   redirect('/sign-in')
-}
-
-function getPostSignInPath(role: 'ADMIN' | 'EMPLOYER' | 'APPLICANT', nextPath: string | null) {
-  // Validate nextPath: must start with '/' but NOT '//' (protocol-relative URLs)
-  if (nextPath && nextPath.startsWith('/') && !nextPath.startsWith('//')) {
-    return nextPath
-  }
-
-  if (role === 'ADMIN') {
-    return '/admin/dashboard'
-  }
-
-  if (role === 'EMPLOYER') {
-    return '/employer/dashboard'
-  }
-
-  return '/applicant/dashboard'
 }

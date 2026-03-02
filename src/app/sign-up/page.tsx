@@ -3,8 +3,13 @@ import { getCurrentUser } from '@/lib/auth'
 import { AuthCard } from '@/components/auth/auth-card'
 import { SignUpForm } from '@/components/auth/sign-up-form'
 
-export default async function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>
+}) {
   const user = await getCurrentUser()
+  const params = await searchParams
 
   if (user) {
     redirect(
@@ -24,7 +29,7 @@ export default async function SignUpPage() {
       footerLinkLabel="Sign in"
       footerLinkHref="/sign-in"
     >
-      <SignUpForm />
+      <SignUpForm nextPath={params.next ?? ''} />
     </AuthCard>
   )
 }
