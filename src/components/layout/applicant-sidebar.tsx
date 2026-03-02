@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -93,12 +94,19 @@ export function ApplicantSidebar({ isCollapsed = false, onToggle }: ApplicantSid
         >
             {/* Logo */}
             <div className="flex h-16 items-center border-b px-4">
-                <Link href={ROUTES.HOME} className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                        <span className="text-lg font-bold text-primary-foreground">R</span>
-                    </div>
-                    {!isCollapsed && (
-                        <span className="text-lg font-semibold tracking-tight">RecruitMe</span>
+                <Link href={ROUTES.HOME} className="flex items-center">
+                    {isCollapsed ? (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                            <span className="text-lg font-bold text-primary-foreground">R</span>
+                        </div>
+                    ) : (
+                        <Image
+                            src="/logo.png"
+                            alt="RecruitMe"
+                            width={130}
+                            height={36}
+                            className="h-8 w-auto"
+                        />
                     )}
                 </Link>
                 {onToggle && (

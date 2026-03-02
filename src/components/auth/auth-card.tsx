@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 interface AuthCardProps {
@@ -39,11 +40,15 @@ export function AuthCard({
 
                 {/* Brandmark */}
                 <div className="relative z-10">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 shadow-inner ring-1 ring-white/20 backdrop-blur-sm transition-all duration-200 group-hover:bg-white/25">
-                            <span className="text-xl font-bold text-white">R</span>
-                        </div>
-                        <span className="text-xl font-semibold tracking-tight text-white">RecruitMe</span>
+                    <Link href="/" className="block transition-opacity hover:opacity-90">
+                        <Image
+                            src="/logo.png"
+                            alt="RecruitMe"
+                            width={180}
+                            height={50}
+                            className="h-12 w-auto brightness-0 invert"
+                            priority
+                        />
                     </Link>
                 </div>
 
@@ -96,12 +101,16 @@ export function AuthCard({
             <div className="flex flex-1 flex-col items-center justify-center bg-background px-6 py-12">
 
                 {/* Mobile-only brandmark */}
-                <div className="mb-8 flex items-center gap-2 lg:hidden">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                        <span className="text-lg font-bold text-primary-foreground">R</span>
-                    </div>
-                    <span className="text-lg font-semibold tracking-tight">RecruitMe</span>
-                </div>
+                <Link href="/" className="mb-8 block lg:hidden">
+                    <Image
+                        src="/logo.png"
+                        alt="RecruitMe"
+                        width={160}
+                        height={44}
+                        className="h-10 w-auto"
+                        priority
+                    />
+                </Link>
 
                 <div className="w-full max-w-sm space-y-8">
                     {/* Header */}

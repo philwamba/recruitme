@@ -10,7 +10,14 @@ export default function Home() {
                     <div className="flex lg:flex-1">
                         <Link href="/" className="-m-1.5 p-1.5">
                             <span className="sr-only">RecruitMe</span>
-                            <span className="text-xl font-bold tracking-tight text-foreground">RecruitMe</span>
+                            <Image
+                                src="/logo.png"
+                                alt="RecruitMe"
+                                width={140}
+                                height={38}
+                                className="h-9 w-auto"
+                                priority
+                            />
                         </Link>
                     </div>
                     <div className="flex items-center gap-2 lg:gap-3">
