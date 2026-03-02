@@ -20,6 +20,29 @@ export async function updateUserRole(formData: FormData) {
     redirect('/admin/users?error=invalid-role')
   }
 
+  // Prevent self-demotion
+  if (targetUserId === user.id && role !== 'ADMIN') {
+    redirect('/admin/users?error=cannot-demote-self')
+  }
+
+  // Prevent removal of last admin
+  if (role !== 'ADMIN') {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { role: true },
+    })
+
+    if (targetUser?.role === 'ADMIN') {
+      const adminCount = await prisma.user.count({
+        where: { role: 'ADMIN' },
+      })
+
+      if (adminCount === 1) {
+        redirect('/admin/users?error=cannot-remove-last-admin')
+      }
+    }
+  }
+
   await prisma.user.update({
     where: { id: targetUserId },
     data: { role },

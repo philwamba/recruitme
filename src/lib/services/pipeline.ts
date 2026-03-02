@@ -1,5 +1,6 @@
 import 'server-only'
 
+import type { PrismaClient } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 const DEFAULT_STAGE_NAMES = [
@@ -14,17 +15,42 @@ const DEFAULT_STAGE_NAMES = [
   'Rejected',
 ]
 
-export async function createDefaultPipelineStages(jobId: string) {
-  await prisma.jobPipelineStage.createMany({
-    data: DEFAULT_STAGE_NAMES.map((name, index) => ({
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>
+
+export async function createDefaultPipelineStages(
+  jobId: string,
+  tx?: TransactionClient
+) {
+  const client = tx ?? prisma
+
+  // Make idempotent: check for existing stages
+  const existingStages = await client.jobPipelineStage.findMany({
+    where: { jobId },
+    select: { name: true },
+  })
+
+  const existingNames = new Set(existingStages.map((s) => s.name))
+  const missingStages = DEFAULT_STAGE_NAMES.filter((name) => !existingNames.has(name))
+
+  if (missingStages.length === 0) {
+    return client.jobPipelineStage.findMany({
+      where: { jobId },
+      orderBy: { order: 'asc' },
+    })
+  }
+
+  // Only create missing stages
+  const hasDefault = existingStages.length > 0
+  await client.jobPipelineStage.createMany({
+    data: missingStages.map((name, index) => ({
       jobId,
       name,
-      order: index + 1,
-      isDefault: index === 0,
+      order: existingStages.length + index + 1,
+      isDefault: !hasDefault && index === 0,
     })),
   })
 
-  return prisma.jobPipelineStage.findMany({
+  return client.jobPipelineStage.findMany({
     where: { jobId },
     orderBy: { order: 'asc' },
   })

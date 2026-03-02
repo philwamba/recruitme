@@ -9,10 +9,15 @@ const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>> = Obje
     'MANAGE_USERS',
     'VIEW_AUDIT_LOGS',
     'MANAGE_SYSTEM_SETTINGS',
+    'VIEW_ANALYTICS',
+    'MANAGE_NOTIFICATIONS',
+    'MANAGE_COMPLIANCE',
   ] as const),
   EMPLOYER: Object.freeze([
     'MANAGE_JOBS',
     'MANAGE_APPLICATIONS',
+    'VIEW_ANALYTICS',
+    'MANAGE_NOTIFICATIONS',
   ] as const),
   APPLICANT: Object.freeze([
     'VIEW_APPLICANT_DASHBOARD',

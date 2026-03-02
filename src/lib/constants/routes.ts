@@ -11,6 +11,9 @@ export const ROUTES = {
     PROFILE: '/applicant/profile',
     UPLOAD_CV: '/applicant/upload-cv',
     APPLICATIONS: '/applicant/applications',
+    ASSESSMENTS: '/applicant/assessments',
+    NOTIFICATIONS: '/applicant/notifications',
+    COMPLIANCE: '/applicant/compliance',
     SETTINGS: '/applicant/settings',
   },
 
@@ -19,12 +22,17 @@ export const ROUTES = {
     DASHBOARD: '/employer/dashboard',
     JOBS: '/employer/jobs',
     CANDIDATES: '/employer/candidates',
+    INTERVIEWS: '/employer/interviews',
+    ASSESSMENTS: '/employer/assessments',
   },
 
-  // Admin routes (future)
+  // Admin routes
   ADMIN: {
     DASHBOARD: '/admin/dashboard',
     USERS: '/admin/users',
+    ANALYTICS: '/admin/analytics',
+    TEMPLATES: '/admin/templates',
+    COMPLIANCE: '/admin/compliance',
   },
 } as const
 

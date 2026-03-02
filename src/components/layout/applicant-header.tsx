@@ -1,9 +1,11 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import { Bell, Menu, Search, User } from 'lucide-react'
 import type { AuthenticatedUser } from '@/lib/auth'
 import { signOut } from '@/app/auth/actions'
+import { ROUTES } from '@/lib/constants/routes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -53,11 +55,12 @@ export function ApplicantHeader({ user, onMenuClick }: ApplicantHeaderProps) {
       {/* Right side actions */}
       <div className="ml-auto flex items-center gap-2">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Notifications</span>
-          {/* Notification badge */}
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
+        <Button variant="ghost" size="icon" className="relative" asChild>
+          <Link href={ROUTES.APPLICANT.NOTIFICATIONS}>
+            <Bell className="h-5 w-5" />
+            <span className="sr-only">Notifications</span>
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
+          </Link>
         </Button>
 
         {/* User menu */}
@@ -82,9 +85,11 @@ export function ApplicantHeader({ user, onMenuClick }: ApplicantHeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={ROUTES.APPLICANT.PROFILE}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem disabled>
               <span className="text-muted-foreground">Settings (Coming soon)</span>

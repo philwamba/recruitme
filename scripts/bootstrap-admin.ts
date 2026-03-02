@@ -7,11 +7,12 @@ async function main() {
   const rawEmail = process.env.BOOTSTRAP_ADMIN_EMAIL
   const password = process.env.BOOTSTRAP_ADMIN_PASSWORD
 
-  if (!rawEmail || !password) {
+  // Normalize first, then validate
+  const email = (rawEmail ?? '').trim().toLowerCase()
+
+  if (!email || !password) {
     throw new Error('BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD are required')
   }
-
-  const email = rawEmail.trim().toLowerCase()
 
   const existingUser = await prisma.user.findUnique({
     where: { email },

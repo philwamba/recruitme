@@ -33,7 +33,15 @@ function redactSensitiveData(obj: unknown, seen = new WeakSet()): unknown {
   const result: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(obj)) {
     const lowerKey = key.toLowerCase()
-    if (SENSITIVE_KEYS.has(lowerKey) || lowerKey.includes('secret') || lowerKey.includes('token')) {
+    const isSensitive =
+      SENSITIVE_KEYS.has(lowerKey) ||
+      lowerKey.includes('secret') ||
+      lowerKey.includes('token') ||
+      // Password variants: pass, pwd, passwd, passphrase, passwordHash, etc.
+      lowerKey.includes('pass') ||
+      lowerKey.includes('pwd')
+
+    if (isSensitive) {
       result[key] = '[REDACTED]'
     } else {
       result[key] = redactSensitiveData(value, seen)

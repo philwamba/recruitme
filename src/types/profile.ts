@@ -20,6 +20,23 @@ import type {
   WorkplaceType,
   JobStatus,
   DocumentType,
+  Interview,
+  InterviewParticipant,
+  InterviewFeedback,
+  Assessment,
+  AssessmentSubmission,
+  EmailTemplate,
+  Notification,
+  DeliveryLog,
+  OutboxJob,
+  ConsentRecord,
+  DataDeletionRequest,
+  NotificationChannel,
+  NotificationStatus,
+  InterviewStatus,
+  AssessmentStatus,
+  Recommendation,
+  DataDeletionRequestStatus,
 } from '@prisma/client'
 
 // Re-export Prisma types
@@ -39,6 +56,17 @@ export type {
   ApplicationTag,
   ApplicationRating,
   CandidateDocument,
+  Interview,
+  InterviewParticipant,
+  InterviewFeedback,
+  Assessment,
+  AssessmentSubmission,
+  EmailTemplate,
+  Notification,
+  DeliveryLog,
+  OutboxJob,
+  ConsentRecord,
+  DataDeletionRequest,
 }
 export {
   ApplicationStatus,
@@ -47,6 +75,12 @@ export {
   WorkplaceType,
   JobStatus,
   DocumentType,
+  NotificationChannel,
+  NotificationStatus,
+  InterviewStatus,
+  AssessmentStatus,
+  Recommendation,
+  DataDeletionRequestStatus,
 }
 
 // Extended profile with relations

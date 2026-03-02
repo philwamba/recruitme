@@ -24,8 +24,20 @@ export const jobFormSchema = z.object({
   employmentType: z.nativeEnum(EmploymentType),
   workplaceType: z.nativeEnum(WorkplaceType),
   status: z.nativeEnum(JobStatus),
-  expiresAt: z.string().optional().default(''),
-})
+  expiresAt: z.string().optional().default('').refine(
+    (val) => val === '' || !isNaN(Date.parse(val)),
+    { message: 'expiresAt must be empty or a valid ISO date' }
+  ),
+}).refine(
+  (data) => {
+    // If both salaryMin and salaryMax are provided, max must be >= min
+    if (data.salaryMin != null && data.salaryMax != null) {
+      return data.salaryMax >= data.salaryMin
+    }
+    return true
+  },
+  { message: 'salaryMax must be greater than or equal to salaryMin', path: ['salaryMax'] }
+)
 
 export type JobSearchInput = z.infer<typeof jobSearchSchema>
 export type JobFormInput = z.infer<typeof jobFormSchema>

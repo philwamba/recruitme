@@ -22,6 +22,9 @@ enum Permission {
   MANAGE_USERS
   VIEW_AUDIT_LOGS
   MANAGE_SYSTEM_SETTINGS
+  VIEW_ANALYTICS
+  MANAGE_NOTIFICATIONS
+  MANAGE_COMPLIANCE
 }
 
 enum ApplicationStatus {
@@ -67,6 +70,79 @@ enum DocumentType {
 enum DocumentScanStatus {
   PENDING
   CLEAN
+  REJECTED
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum InterviewParticipantRole {
+  INTERVIEWER
+  COORDINATOR
+  OBSERVER
+}
+
+enum Recommendation {
+  STRONG_YES
+  YES
+  MAYBE
+  NO
+  STRONG_NO
+}
+
+enum AssessmentStatus {
+  ASSIGNED
+  SUBMITTED
+  REVIEWED
+  CANCELLED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum OutboxJobType {
+  SEND_NOTIFICATION
+  SEND_STAGE_NOTIFICATION
+  SEND_INTERVIEW_INVITATION
+  SEND_ASSESSMENT_INVITATION
+}
+
+enum OutboxJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ConsentType {
+  APPLICATION_PROCESSING
+  EMAIL_COMMUNICATION
+  DATA_RETENTION
+}
+
+enum DataDeletionRequestStatus {
+  REQUESTED
+  IN_PROGRESS
+  COMPLETED
   REJECTED
 }
 
@@ -116,6 +192,15 @@ model User {
   applicationStageEvents ApplicationStageEvent[] @relation("StageChangedBy")
   applicationRatings ApplicationRating[]
   candidateDocuments CandidateDocument[]
+  interviewsCreated  Interview[] @relation("InterviewCreator")
+  interviewParticipants InterviewParticipant[]
+  interviewFeedbacks InterviewFeedback[]
+  assessmentsCreated Assessment[] @relation("AssessmentCreator")
+  assessmentSubmissions AssessmentSubmission[]
+  notifications Notification[]
+  emailTemplatesCreated EmailTemplate[] @relation("EmailTemplateCreator")
+  consentRecords ConsentRecord[]
+  deletionRequests DataDeletionRequest[]
 }
 
 model RolePermission {
@@ -353,6 +438,8 @@ model Job {
 
   applications   Application[]
   pipelineStages JobPipelineStage[]
+  assessments    Assessment[]
+  emailTemplates EmailTemplate[]
 
   @@index([status, publishedAt])
   @@index([departmentId])
@@ -382,6 +469,11 @@ model Application {
   tags           ApplicationTag[]
   ratings        ApplicationRating[]
   documents      CandidateDocument[]
+  interviews     Interview[]
+  interviewFeedbacks InterviewFeedback[]
+  assessments    Assessment[]
+  notifications  Notification[]
+  consentRecords ConsentRecord[]
 
   @@unique([userId, jobId])
   @@index([userId])
@@ -496,4 +588,202 @@ model CandidateDocument {
   @@index([applicationId])
   @@index([applicantProfileId])
   @@index([uploadedByUserId])
+}
+
+model Interview {
+  id              String           @id @default(cuid())
+  applicationId   String
+  application     Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title           String
+  scheduledAt     DateTime
+  durationMinutes Int              @default(60)
+  timezone        String
+  location        String?
+  meetingUrl      String?
+  status          InterviewStatus  @default(SCHEDULED)
+  notes           String?          @db.Text
+  createdByUserId String?
+  createdBy       User?            @relation("InterviewCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  participants InterviewParticipant[]
+  feedbacks    InterviewFeedback[]
+
+  @@index([applicationId])
+  @@index([scheduledAt])
+}
+
+model InterviewParticipant {
+  id          String                   @id @default(cuid())
+  interviewId String
+  interview   Interview                @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email       String
+  role        InterviewParticipantRole
+  createdAt   DateTime                 @default(now())
+
+  @@index([interviewId])
+  @@index([userId])
+}
+
+model InterviewFeedback {
+  id            String         @id @default(cuid())
+  interviewId   String
+  interview     Interview      @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  applicationId String
+  application   Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  authorUserId  String
+  author        User           @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+  score         Int
+  recommendation Recommendation
+  comments      String?        @db.Text
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([interviewId])
+  @@index([applicationId])
+  @@index([authorUserId])
+}
+
+model Assessment {
+  id              String           @id @default(cuid())
+  jobId           String?
+  job             Job?             @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  applicationId   String
+  application     Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title           String
+  instructions    String           @db.Text
+  dueAt           DateTime?
+  status          AssessmentStatus @default(ASSIGNED)
+  createdByUserId String?
+  createdBy       User?            @relation("AssessmentCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  submissions AssessmentSubmission[]
+
+  @@index([applicationId])
+  @@index([jobId])
+}
+
+model AssessmentSubmission {
+  id              String      @id @default(cuid())
+  assessmentId    String
+  assessment      Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  applicantUserId String
+  applicantUser   User        @relation(fields: [applicantUserId], references: [id], onDelete: Cascade)
+  responseText    String?     @db.Text
+  score           Int?
+  reviewerNotes   String?     @db.Text
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([assessmentId, applicantUserId])
+  @@index([assessmentId])
+  @@index([applicantUserId])
+}
+
+model EmailTemplate {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  jobId           String?
+  job             Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  subject         String
+  body            String   @db.Text
+  isActive        Boolean  @default(true)
+  createdByUserId String?
+  createdBy       User?    @relation("EmailTemplateCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  notifications Notification[]
+
+  @@index([jobId])
+}
+
+model Notification {
+  id            String             @id @default(cuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   Application?       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  templateId    String?
+  template      EmailTemplate?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  channel       NotificationChannel
+  status        NotificationStatus @default(PENDING)
+  subject       String
+  body          String             @db.Text
+  readAt        DateTime?
+  sentAt        DateTime?
+  metadata      Json?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  deliveryLogs DeliveryLog[]
+
+  @@index([userId, status])
+  @@index([applicationId])
+}
+
+model DeliveryLog {
+  id             String         @id @default(cuid())
+  notificationId String
+  notification   Notification   @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  provider       String
+  status         DeliveryStatus
+  responseCode   String?
+  responseBody   String?        @db.Text
+  attemptedAt    DateTime       @default(now())
+
+  @@index([notificationId])
+}
+
+model OutboxJob {
+  id          String         @id @default(cuid())
+  type        OutboxJobType
+  payload     Json
+  status      OutboxJobStatus @default(PENDING)
+  availableAt DateTime       @default(now())
+  processedAt DateTime?
+  attempts    Int            @default(0)
+  lastError   String?        @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status, availableAt])
+}
+
+model ConsentRecord {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  consentType   ConsentType
+  grantedAt     DateTime    @default(now())
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, consentType])
+  @@index([applicationId])
+}
+
+model DataDeletionRequest {
+  id            String                    @id @default(cuid())
+  userId        String
+  user          User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        DataDeletionRequestStatus @default(REQUESTED)
+  reason        String?                   @db.Text
+  requestedAt   DateTime                  @default(now())
+  processedAt   DateTime?
+  notes         String?                   @db.Text
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@index([userId, status])
 }

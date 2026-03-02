@@ -1,8 +1,14 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdir, readFile, stat, unlink, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { resolve } from 'node:path'
 
-const STORAGE_ROOT = '/tmp/recruitme-private-files'
+// Configurable storage root with fallback for development
+const STORAGE_ROOT = process.env.PRIVATE_FILES_ROOT ?? '/tmp/recruitme-private-files'
+
+if (process.env.NODE_ENV === 'production' && STORAGE_ROOT.startsWith('/tmp')) {
+  console.warn('WARNING: Using ephemeral /tmp storage in production. Set PRIVATE_FILES_ROOT to a persistent path.')
+}
+
 const ALLOWED_FILE_TYPES = new Set([
   'application/pdf',
   'application/msword',
@@ -11,6 +17,38 @@ const ALLOWED_FILE_TYPES = new Set([
   'image/jpeg',
 ])
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
+
+// Magic bytes for file type validation
+const MAGIC_BYTES: Record<string, number[]> = {
+  'application/pdf': [0x25, 0x50, 0x44, 0x46], // %PDF
+  'image/png': [0x89, 0x50, 0x4e, 0x47], // PNG
+  'image/jpeg': [0xff, 0xd8, 0xff], // JPEG
+  // DOC/DOCX use compound/ZIP formats with variable headers - skip magic check for those
+}
+
+function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
+  const expectedMagic = MAGIC_BYTES[mimeType]
+  if (!expectedMagic) {
+    // No magic bytes defined for this type, skip validation
+    return true
+  }
+  if (buffer.length < expectedMagic.length) {
+    return false
+  }
+  return expectedMagic.every((byte, index) => buffer[index] === byte)
+}
+
+function getSecurePath(storageKey: string): string {
+  // Prevent path traversal by resolving and validating the path
+  const resolvedRoot = resolve(STORAGE_ROOT)
+  const resolvedPath = resolve(resolvedRoot, storageKey)
+
+  if (!resolvedPath.startsWith(resolvedRoot + '/') && resolvedPath !== resolvedRoot) {
+    throw new Error('Invalid storage key: path traversal detected')
+  }
+
+  return resolvedPath
+}
 
 export function validatePrivateUpload(file: File) {
   if (!ALLOWED_FILE_TYPES.has(file.type)) {
@@ -25,12 +63,19 @@ export function validatePrivateUpload(file: File) {
 export async function savePrivateFile(file: File) {
   validatePrivateUpload(file)
   const buffer = Buffer.from(await file.arrayBuffer())
+
+  // Validate magic bytes for defense-in-depth
+  if (!validateMagicBytes(buffer, file.type)) {
+    throw new Error('File content does not match declared type')
+  }
+
   const hash = createHash('sha256').update(buffer).digest('hex')
   const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const storageKey = `${randomUUID()}-${safeName}`
 
   await mkdir(STORAGE_ROOT, { recursive: true })
-  await writeFile(join(STORAGE_ROOT, storageKey), buffer)
+  const securePath = getSecurePath(storageKey)
+  await writeFile(securePath, buffer)
 
   return {
     storageKey,
@@ -42,13 +87,16 @@ export async function savePrivateFile(file: File) {
 }
 
 export async function readPrivateFile(storageKey: string) {
-  return readFile(join(STORAGE_ROOT, storageKey))
+  const securePath = getSecurePath(storageKey)
+  return readFile(securePath)
 }
 
 export async function getPrivateFileStats(storageKey: string) {
-  return stat(join(STORAGE_ROOT, storageKey))
+  const securePath = getSecurePath(storageKey)
+  return stat(securePath)
 }
 
 export async function removePrivateFile(storageKey: string) {
-  await unlink(join(STORAGE_ROOT, storageKey)).catch(() => undefined)
+  const securePath = getSecurePath(storageKey)
+  await unlink(securePath).catch(() => undefined)
 }
