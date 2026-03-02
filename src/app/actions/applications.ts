@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { ApplicationStatus } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
 import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
 import { reportError } from '@/lib/observability/error-reporting'
@@ -106,17 +107,17 @@ async function storeUploadedFiles({
                 mimeType: stored.mimeType,
                 sizeBytes: stored.sizeBytes,
                 sha256: stored.sha256,
-                scanStatus: 'CLEAN',
+                scanStatus: 'PENDING',
             },
         })
 
+        // Only update storage location, not cvParsedAt (set by parsing job when complete)
         if (applicantProfileId) {
             await prisma.applicantProfile.update({
                 where: { id: applicantProfileId },
                 data: {
                     cvUrl: stored.storageKey,
                     cvFileName: stored.originalFileName,
-                    cvParsedAt: new Date(),
                 },
             })
         }
@@ -137,7 +138,7 @@ async function storeUploadedFiles({
                 mimeType: stored.mimeType,
                 sizeBytes: stored.sizeBytes,
                 sha256: stored.sha256,
-                scanStatus: 'CLEAN',
+                scanStatus: 'PENDING',
             },
         })
     }
@@ -345,6 +346,7 @@ export async function moveApplicationStage(formData: FormData) {
         const [application, stage] = await Promise.all([
             prisma.application.findUnique({
                 where: { id: parsed.data.applicationId },
+                include: { job: true },
             }),
             prisma.jobPipelineStage.findUnique({
                 where: { id: parsed.data.stageId },
@@ -353,6 +355,11 @@ export async function moveApplicationStage(formData: FormData) {
 
         if (!application || !stage || application.jobId !== stage.jobId) {
             return { success: false, error: 'Application or stage not found' }
+        }
+
+        // Resource-level authorization: EMPLOYER must own the job
+        if (user.role === 'EMPLOYER' && application.job.createdByUserId !== user.id) {
+            return { success: false, error: 'Not authorized to modify this application' }
         }
 
         const previousStageId = application.currentStageId
@@ -429,6 +436,21 @@ export async function addApplicationNote(formData: FormData) {
         return { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid note' }
     }
 
+    // Verify application exists and check authorization
+    const application = await prisma.application.findUnique({
+        where: { id: parsed.data.applicationId },
+        include: { job: true },
+    })
+
+    if (!application) {
+        return { success: false, error: 'Application not found' }
+    }
+
+    // Resource-level authorization: EMPLOYER must own the job
+    if (user.role === 'EMPLOYER' && application.job.createdByUserId !== user.id) {
+        return { success: false, error: 'Not authorized' }
+    }
+
     await prisma.applicationNote.create({
         data: {
             applicationId: parsed.data.applicationId,
@@ -446,7 +468,6 @@ export async function addApplicationTag(formData: FormData) {
         roles: ['EMPLOYER', 'ADMIN'],
         permission: 'MANAGE_APPLICATIONS',
     })
-    void user
 
     const parsed = applicationTagSchema.safeParse({
         applicationId: formData.get('applicationId'),
@@ -458,16 +479,34 @@ export async function addApplicationTag(formData: FormData) {
         return { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid tag' }
     }
 
-    const tag = await prisma.tag.upsert({
-        where: { name: parsed.data.tagName },
-        update: {
-            color: parsed.data.tagColor || null,
-        },
-        create: {
-            name: parsed.data.tagName,
-            color: parsed.data.tagColor || null,
-        },
+    // Verify application exists and check authorization
+    const application = await prisma.application.findUnique({
+        where: { id: parsed.data.applicationId },
+        include: { job: true },
     })
+
+    if (!application) {
+        return { success: false, error: 'Application not found' }
+    }
+
+    // Resource-level authorization: EMPLOYER must own the job
+    if (user.role === 'EMPLOYER' && application.job.createdByUserId !== user.id) {
+        return { success: false, error: 'Not authorized' }
+    }
+
+    // Find or create tag - don't update existing tag colors to avoid global side effects
+    let tag = await prisma.tag.findUnique({
+        where: { name: parsed.data.tagName },
+    })
+
+    if (!tag) {
+        tag = await prisma.tag.create({
+            data: {
+                name: parsed.data.tagName,
+                color: parsed.data.tagColor || null,
+            },
+        })
+    }
 
     await prisma.applicationTag.upsert({
         where: {
@@ -503,6 +542,21 @@ export async function addApplicationRating(formData: FormData) {
         return { success: false, error: parsed.error.errors[0]?.message ?? 'Invalid rating' }
     }
 
+    // Verify application exists and check authorization
+    const application = await prisma.application.findUnique({
+        where: { id: parsed.data.applicationId },
+        include: { job: true },
+    })
+
+    if (!application) {
+        return { success: false, error: 'Application not found' }
+    }
+
+    // Resource-level authorization: EMPLOYER must own the job
+    if (user.role === 'EMPLOYER' && application.job.createdByUserId !== user.id) {
+        return { success: false, error: 'Not authorized' }
+    }
+
     await prisma.applicationRating.create({
         data: {
             applicationId: parsed.data.applicationId,
@@ -516,7 +570,7 @@ export async function addApplicationRating(formData: FormData) {
     return { success: true }
 }
 
-function mapStageNameToStatus(stageName: string) {
+function mapStageNameToStatus(stageName: string): ApplicationStatus {
     const normalized = stageName.toLowerCase()
 
     if (normalized.includes('review')) return 'UNDER_REVIEW'

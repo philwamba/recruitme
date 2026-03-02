@@ -224,7 +224,6 @@ export async function signUp(
 
         const email = parsed.data.email.toLowerCase()
 
-        // Use email as fallback key when IP is unavailable
         const rateLimitKey = ipAddress ?? `email:${email}`
         assertRateLimit(`signup:${rateLimitKey}`, 5, 1000 * 60 * 15)
         const existingUser = await prisma.user.findUnique({
@@ -233,8 +232,8 @@ export async function signUp(
 
         if (existingUser) {
             return {
-                success: false,
-                message: 'An account with that email already exists.',
+                success: true,
+                message: 'Account created. Check your email for the verification link.',
             }
         }
 

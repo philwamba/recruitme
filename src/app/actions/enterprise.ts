@@ -102,6 +102,10 @@ export async function createInterview(formData: FormData) {
         revalidatePath('/employer/candidates')
         redirect('/employer/interviews?status=interview-created')
     } catch (error) {
+        // Re-throw Next.js redirect errors
+        if (error instanceof Error && 'digest' in error && String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')) {
+            throw error
+        }
         reportError(error, {
             scope: 'enterprise.create-interview',
             userId: user.id,
@@ -235,6 +239,10 @@ export async function createAssessment(formData: FormData) {
         revalidatePath('/employer/assessments')
         redirect('/employer/assessments?status=assessment-created')
     } catch (error) {
+        // Re-throw Next.js redirect errors
+        if (error instanceof Error && 'digest' in error && String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')) {
+            throw error
+        }
         reportError(error, {
             scope: 'enterprise.create-assessment',
             userId: user.id,
@@ -258,8 +266,9 @@ export async function submitAssessment(formData: FormData) {
         redirect('/applicant/assessments?error=invalid-submission')
     }
 
-    await prisma.$transaction(async tx => {
-        const submission = await tx.assessmentSubmission.update({
+    // Run DB updates in transaction, notification outside (best-effort)
+    const submission = await prisma.$transaction(async tx => {
+        const updatedSubmission = await tx.assessmentSubmission.update({
             where: {
                 assessmentId_applicantUserId: {
                     assessmentId: parsed.data.assessmentId,
@@ -280,6 +289,11 @@ export async function submitAssessment(formData: FormData) {
             data: { status: 'SUBMITTED' },
         })
 
+        return updatedSubmission
+    })
+
+    // Best-effort notification outside transaction
+    try {
         await createNotification({
             userId: user.id,
             channel: 'IN_APP',
@@ -287,7 +301,12 @@ export async function submitAssessment(formData: FormData) {
             subject: `Assessment submitted: ${submission.assessment.title}`,
             body: 'Your assessment response has been recorded.',
         })
-    })
+    } catch (notificationError) {
+        reportError(notificationError, {
+            scope: 'enterprise.submit-assessment.notification',
+            userId: user.id,
+        })
+    }
 
     revalidatePath('/applicant/assessments')
     redirect('/applicant/assessments?status=submitted')
@@ -309,23 +328,23 @@ export async function reviewAssessment(formData: FormData) {
         redirect('/employer/assessments?error=invalid-review')
     }
 
-    const submission = await prisma.assessmentSubmission.update({
-        where: { id: parsed.data.submissionId },
-        data: {
-            score: parsed.data.score,
-            reviewerNotes: parsed.data.reviewerNotes || null,
-            reviewedAt: new Date(),
-        },
-        include: {
-            assessment: true,
-        },
-    })
+    // Run both updates in a single transaction for atomicity
+    await prisma.$transaction(async tx => {
+        const submission = await tx.assessmentSubmission.update({
+            where: { id: parsed.data.submissionId },
+            data: {
+                score: parsed.data.score,
+                reviewerNotes: parsed.data.reviewerNotes || null,
+                reviewedAt: new Date(),
+            },
+        })
 
-    await prisma.assessment.update({
-        where: { id: submission.assessmentId },
-        data: {
-            status: 'REVIEWED',
-        },
+        await tx.assessment.update({
+            where: { id: submission.assessmentId },
+            data: {
+                status: 'REVIEWED',
+            },
+        })
     })
 
     revalidatePath('/employer/assessments')
