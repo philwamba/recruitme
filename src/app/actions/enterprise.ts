@@ -102,7 +102,6 @@ export async function createInterview(formData: FormData) {
         revalidatePath('/employer/candidates')
         redirect('/employer/interviews?status=interview-created')
     } catch (error) {
-        // Re-throw Next.js redirect errors
         if (error instanceof Error && 'digest' in error && String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')) {
             throw error
         }
@@ -239,7 +238,6 @@ export async function createAssessment(formData: FormData) {
         revalidatePath('/employer/assessments')
         redirect('/employer/assessments?status=assessment-created')
     } catch (error) {
-        // Re-throw Next.js redirect errors
         if (error instanceof Error && 'digest' in error && String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')) {
             throw error
         }
