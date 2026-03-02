@@ -4,47 +4,47 @@ import { StatsGrid } from '@/components/applicant/dashboard/stats-grid'
 import { RecentApplications } from '@/components/applicant/dashboard/recent-applications'
 
 export const metadata = {
-  title: 'Dashboard | RecruitMe',
-  description: 'Your applicant dashboard',
+    title: 'Dashboard | RecruitMe',
+    description: 'Your applicant dashboard',
 }
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const [profile, dashboardData] = await Promise.all([
-    getOrCreateProfile(),
-    getDashboardStats(),
-  ])
+    const [profile, dashboardData] = await Promise.all([
+        getOrCreateProfile(),
+        getDashboardStats(),
+    ])
 
-  const stats = dashboardData?.stats ?? {
-    totalApplications: 0,
-    submittedApplications: 0,
-    reviewingApplications: 0,
-    shortlistedApplications: 0,
-    rejectedApplications: 0,
-    hiredApplications: 0,
-  }
+    const stats = dashboardData?.stats ?? {
+        totalApplications: 0,
+        submittedApplications: 0,
+        reviewingApplications: 0,
+        shortlistedApplications: 0,
+        rejectedApplications: 0,
+        hiredApplications: 0,
+    }
 
-  const recentApplications = dashboardData?.recentApplications ?? []
+    const recentApplications = dashboardData?.recentApplications ?? []
 
-  return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
+    return (
+        <div className="space-y-6">
+            {/* Page Header */}
+            <div>
+                <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground">
           Welcome back{profile?.firstName ? `, ${profile.firstName}` : ''}! Here&apos;s an overview of your profile and applications.
-        </p>
-      </div>
+                </p>
+            </div>
 
-      {/* Profile Completion Card */}
-      <ProfileCompletionCard profile={profile} />
+            {/* Profile Completion Card */}
+            <ProfileCompletionCard profile={profile} />
 
-      {/* Stats Grid */}
-      <StatsGrid stats={stats} />
+            {/* Stats Grid */}
+            <StatsGrid stats={stats} />
 
-      {/* Recent Applications */}
-      <RecentApplications applications={recentApplications} />
-    </div>
-  )
+            {/* Recent Applications */}
+            <RecentApplications applications={recentApplications} />
+        </div>
+    )
 }

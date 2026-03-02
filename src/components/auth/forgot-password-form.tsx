@@ -7,25 +7,25 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const initialState = {
-  success: false,
-  message: '',
+    success: false,
+    message: '',
 }
 
 export function ForgotPasswordForm() {
-  const [state, formAction] = useActionState(requestPasswordReset, initialState)
+    const [state, formAction] = useActionState(requestPasswordReset, initialState)
 
-  return (
-    <form action={formAction} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email" required>Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
-      {state.message ? (
-        <p className={`text-sm ${state.success ? 'text-emerald-600' : 'text-destructive'}`}>
-          {state.message}
-        </p>
-      ) : null}
-      <FormSubmitButton idleLabel="Request reset link" pendingLabel="Processing..." />
-    </form>
-  )
+    return (
+        <form action={formAction} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="email" required>Email</Label>
+                <Input id="email" name="email" type="email" autoComplete="email" required />
+            </div>
+            {state.message ? (
+                <p className={`text-sm ${state.success ? 'text-emerald-600' : 'text-destructive'}`}>
+                    {state.message}
+                </p>
+            ) : null}
+            <FormSubmitButton idleLabel="Request reset link" pendingLabel="Processing..." />
+        </form>
+    )
 }

@@ -21,6 +21,7 @@ import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
 import { reportError, reportOperationalEvent } from '@/lib/observability/error-reporting'
 import { sendEmail } from '@/lib/services/email-delivery'
 import { getPostSignInPath } from '@/lib/auth/paths'
+import { getBaseUrl } from '@/lib/url'
 
 type AuthActionState = {
   success: boolean
@@ -305,18 +306,19 @@ export async function signUp(
             tokenFingerprint: hashToken(verificationToken).slice(0, 16),
         })
 
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL
-        if (!appUrl && process.env.NODE_ENV === 'production') {
-            reportError(new Error('NEXT_PUBLIC_APP_URL not configured in production'), {
+        const appUrl = getBaseUrl()
+        if (!appUrl) {
+            reportError(new Error('NEXT_PUBLIC_APP_URL not configured or invalid in production'), {
                 scope: 'auth.sign-up.config',
                 userId: user.id,
+                metadata: { rawValue: process.env.NEXT_PUBLIC_APP_URL },
             })
             return {
                 success: true,
                 message: 'Account created but verification email could not be sent. Please contact support.',
             }
         }
-        const verificationUrl = `${appUrl ?? 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+        const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}`
 
         // Best-effort email - don't fail account creation if email fails
         try {
@@ -421,15 +423,16 @@ export async function requestPasswordReset(
                 tokenFingerprint: hashToken(resetToken).slice(0, 16),
             })
 
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL
-            if (!appUrl && process.env.NODE_ENV === 'production') {
-                reportError(new Error('NEXT_PUBLIC_APP_URL not configured in production'), {
+            const appUrl = getBaseUrl()
+            if (!appUrl) {
+                reportError(new Error('NEXT_PUBLIC_APP_URL not configured or invalid in production'), {
                     scope: 'auth.password-reset.config',
                     userId: user.id,
+                    metadata: { rawValue: process.env.NEXT_PUBLIC_APP_URL },
                 })
                 // Don't send email with invalid URL - continue to return success message
             } else {
-                const resetUrl = `${appUrl ?? 'http://localhost:3000'}/reset-password?token=${resetToken}`
+                const resetUrl = `${appUrl}/reset-password?token=${resetToken}`
 
                 // Best-effort email - don't fail if email delivery fails
                 try {

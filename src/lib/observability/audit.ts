@@ -19,47 +19,47 @@ type ActivityInput = {
 }
 
 export async function createAuditLog(input: AuditInput) {
-  try {
-    await prisma.auditLog.create({
-      data: {
-        actorUserId: input.actorUserId ?? null,
-        action: input.action,
-        targetType: input.targetType,
-        targetId: input.targetId ?? null,
-        metadata: input.metadata as Prisma.InputJsonValue | undefined,
-        ipAddress: input.ipAddress ?? null,
-        userAgent: input.userAgent ?? null,
-      },
-    })
-  } catch (error) {
-    reportError(error, {
-      scope: 'audit.create',
-      userId: input.actorUserId ?? undefined,
-      metadata: {
-        action: input.action,
-        targetType: input.targetType,
-        targetId: input.targetId ?? undefined,
-      },
-    })
-  }
+    try {
+        await prisma.auditLog.create({
+            data: {
+                actorUserId: input.actorUserId ?? null,
+                action: input.action,
+                targetType: input.targetType,
+                targetId: input.targetId ?? null,
+                metadata: input.metadata as Prisma.InputJsonValue | undefined,
+                ipAddress: input.ipAddress ?? null,
+                userAgent: input.userAgent ?? null,
+            },
+        })
+    } catch (error) {
+        reportError(error, {
+            scope: 'audit.create',
+            userId: input.actorUserId ?? undefined,
+            metadata: {
+                action: input.action,
+                targetType: input.targetType,
+                targetId: input.targetId ?? undefined,
+            },
+        })
+    }
 }
 
 export async function createActivityLog(input: ActivityInput) {
-  try {
-    await prisma.activityLog.create({
-      data: {
-        actorUserId: input.actorUserId ?? null,
-        description: input.description,
-        metadata: input.metadata as Prisma.InputJsonValue | undefined,
-      },
-    })
-  } catch (error) {
-    reportError(error, {
-      scope: 'activity.create',
-      userId: input.actorUserId ?? undefined,
-      metadata: {
-        description: input.description,
-      },
-    })
-  }
+    try {
+        await prisma.activityLog.create({
+            data: {
+                actorUserId: input.actorUserId ?? null,
+                description: input.description,
+                metadata: input.metadata as Prisma.InputJsonValue | undefined,
+            },
+        })
+    } catch (error) {
+        reportError(error, {
+            scope: 'activity.create',
+            userId: input.actorUserId ?? undefined,
+            metadata: {
+                description: input.description,
+            },
+        })
+    }
 }

@@ -4,16 +4,16 @@ import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
-  User,
-  FileText,
-  Briefcase,
-  Bell,
-  ClipboardCheck,
-  Shield,
-  Settings,
-  LogOut,
-  ChevronLeft,
+    LayoutDashboard,
+    User,
+    FileText,
+    Briefcase,
+    Bell,
+    ClipboardCheck,
+    Shield,
+    Settings,
+    LogOut,
+    ChevronLeft,
 } from 'lucide-react'
 import { signOut } from '@/app/auth/actions'
 import { cn } from '@/lib/utils'
@@ -30,50 +30,50 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: ROUTES.APPLICANT.DASHBOARD,
-    icon: LayoutDashboard,
-  },
-  {
-    title: 'My Profile',
-    href: ROUTES.APPLICANT.PROFILE,
-    icon: User,
-  },
-  {
-    title: 'Upload CV',
-    href: ROUTES.APPLICANT.UPLOAD_CV,
-    icon: FileText,
-  },
-  {
-    title: 'Applications',
-    href: ROUTES.APPLICANT.APPLICATIONS,
-    icon: Briefcase,
-  },
-  {
-    title: 'Assessments',
-    href: ROUTES.APPLICANT.ASSESSMENTS,
-    icon: ClipboardCheck,
-  },
-  {
-    title: 'Notifications',
-    href: ROUTES.APPLICANT.NOTIFICATIONS,
-    icon: Bell,
-  },
+    {
+        title: 'Dashboard',
+        href: ROUTES.APPLICANT.DASHBOARD,
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'My Profile',
+        href: ROUTES.APPLICANT.PROFILE,
+        icon: User,
+    },
+    {
+        title: 'Upload CV',
+        href: ROUTES.APPLICANT.UPLOAD_CV,
+        icon: FileText,
+    },
+    {
+        title: 'Applications',
+        href: ROUTES.APPLICANT.APPLICATIONS,
+        icon: Briefcase,
+    },
+    {
+        title: 'Assessments',
+        href: ROUTES.APPLICANT.ASSESSMENTS,
+        icon: ClipboardCheck,
+    },
+    {
+        title: 'Notifications',
+        href: ROUTES.APPLICANT.NOTIFICATIONS,
+        icon: Bell,
+    },
 ]
 
 const secondaryNavItems: NavItem[] = [
-  {
-    title: 'Privacy',
-    href: ROUTES.APPLICANT.COMPLIANCE,
-    icon: Shield,
-  },
-  {
-    title: 'Settings',
-    href: ROUTES.APPLICANT.SETTINGS,
-    icon: Settings,
-    badge: 'Soon',
-  },
+    {
+        title: 'Privacy',
+        href: ROUTES.APPLICANT.COMPLIANCE,
+        icon: Shield,
+    },
+    {
+        title: 'Settings',
+        href: ROUTES.APPLICANT.SETTINGS,
+        icon: Settings,
+        badge: 'Soon',
+    },
 ]
 
 interface ApplicantSidebarProps {
@@ -82,90 +82,90 @@ interface ApplicantSidebarProps {
 }
 
 export function ApplicantSidebar({ isCollapsed = false, onToggle }: ApplicantSidebarProps) {
-  const pathname = usePathname()
+    const pathname = usePathname()
 
-  return (
-    <div
-      className={cn(
-        'relative flex h-full flex-col border-r bg-card',
-        isCollapsed ? 'w-16' : 'w-64'
-      )}
-    >
-      {/* Logo */}
-      <div className="flex h-16 items-center border-b px-4">
-        <Link href={ROUTES.HOME} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">R</span>
-          </div>
-          {!isCollapsed && (
-            <span className="text-lg font-semibold tracking-tight">RecruitMe</span>
-          )}
-        </Link>
-        {onToggle && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-auto h-8 w-8"
-            onClick={onToggle}
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <ChevronLeft
-              aria-hidden="true"
-              className={cn(
-                'h-4 w-4',
-                isCollapsed && 'rotate-180'
-              )}
-            />
-          </Button>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="space-y-1">
-          {mainNavItems.map((item) => (
-            <NavLink
-              key={item.href}
-              item={item}
-              isActive={pathname === item.href}
-              isCollapsed={isCollapsed}
-            />
-          ))}
-        </nav>
-
-        <Separator className="my-4" />
-
-        <nav className="space-y-1">
-          {secondaryNavItems.map((item) => (
-            <NavLink
-              key={item.href}
-              item={item}
-              isActive={pathname === item.href}
-              isCollapsed={isCollapsed}
-            />
-          ))}
-        </nav>
-      </ScrollArea>
-
-      {/* Sign out */}
-      <div className="border-t p-3">
-        <form action={signOut}>
-          <Button
-            type="submit"
-            variant="ghost"
-            aria-label={isCollapsed ? 'Sign out' : undefined}
+    return (
+        <div
             className={cn(
-              'w-full justify-start gap-3 text-muted-foreground hover:text-foreground',
-              isCollapsed && 'justify-center px-2'
+                'relative flex h-full flex-col border-r bg-card',
+                isCollapsed ? 'w-16' : 'w-64',
             )}
-          >
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            {!isCollapsed && <span>Sign out</span>}
-          </Button>
-        </form>
-      </div>
-    </div>
-  )
+        >
+            {/* Logo */}
+            <div className="flex h-16 items-center border-b px-4">
+                <Link href={ROUTES.HOME} className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                        <span className="text-lg font-bold text-primary-foreground">R</span>
+                    </div>
+                    {!isCollapsed && (
+                        <span className="text-lg font-semibold tracking-tight">RecruitMe</span>
+                    )}
+                </Link>
+                {onToggle && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-auto h-8 w-8"
+                        onClick={onToggle}
+                        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    >
+                        <ChevronLeft
+                            aria-hidden="true"
+                            className={cn(
+                                'h-4 w-4',
+                                isCollapsed && 'rotate-180',
+                            )}
+                        />
+                    </Button>
+                )}
+            </div>
+
+            {/* Navigation */}
+            <ScrollArea className="flex-1 px-3 py-4">
+                <nav className="space-y-1">
+                    {mainNavItems.map(item => (
+                        <NavLink
+                            key={item.href}
+                            item={item}
+                            isActive={pathname === item.href}
+                            isCollapsed={isCollapsed}
+                        />
+                    ))}
+                </nav>
+
+                <Separator className="my-4" />
+
+                <nav className="space-y-1">
+                    {secondaryNavItems.map(item => (
+                        <NavLink
+                            key={item.href}
+                            item={item}
+                            isActive={pathname === item.href}
+                            isCollapsed={isCollapsed}
+                        />
+                    ))}
+                </nav>
+            </ScrollArea>
+
+            {/* Sign out */}
+            <div className="border-t p-3">
+                <form action={signOut}>
+                    <Button
+                        type="submit"
+                        variant="ghost"
+                        aria-label={isCollapsed ? 'Sign out' : undefined}
+                        className={cn(
+                            'w-full justify-start gap-3 text-muted-foreground hover:text-foreground',
+                            isCollapsed && 'justify-center px-2',
+                        )}
+                    >
+                        <LogOut className="h-4 w-4" aria-hidden="true" />
+                        {!isCollapsed && <span>Sign out</span>}
+                    </Button>
+                </form>
+            </div>
+        </div>
+    )
 }
 
 interface NavLinkProps {
@@ -175,32 +175,32 @@ interface NavLinkProps {
 }
 
 function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
-  const Icon = item.icon
+    const Icon = item.icon
 
-  return (
-    <Link
-      href={item.badge ? '#' : item.href}
-      aria-label={isCollapsed ? item.title : undefined}
-      className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
-        isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-        isCollapsed && 'justify-center px-2',
-        item.badge && 'cursor-not-allowed opacity-60'
-      )}
-    >
-      <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-      {!isCollapsed && (
-        <>
-          <span className="flex-1">{item.title}</span>
-          {item.badge && (
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              {item.badge}
-            </span>
-          )}
-        </>
-      )}
-    </Link>
-  )
+    return (
+        <Link
+            href={item.badge ? '#' : item.href}
+            aria-label={isCollapsed ? item.title : undefined}
+            className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
+                isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                isCollapsed && 'justify-center px-2',
+                item.badge && 'cursor-not-allowed opacity-60',
+            )}
+        >
+            <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            {!isCollapsed && (
+                <>
+                    <span className="flex-1">{item.title}</span>
+                    {item.badge && (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {item.badge}
+                        </span>
+                    )}
+                </>
+            )}
+        </Link>
+    )
 }

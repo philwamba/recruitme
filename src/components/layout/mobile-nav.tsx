@@ -9,14 +9,14 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-64 p-0">
-        <SheetHeader className="sr-only">
-          <SheetTitle>Navigation</SheetTitle>
-        </SheetHeader>
-        <ApplicantSidebar />
-      </SheetContent>
-    </Sheet>
-  )
+    return (
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent side="left" className="w-64 p-0">
+                <SheetHeader className="sr-only">
+                    <SheetTitle>Navigation</SheetTitle>
+                </SheetHeader>
+                <ApplicantSidebar />
+            </SheetContent>
+        </Sheet>
+    )
 }

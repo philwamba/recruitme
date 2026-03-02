@@ -2,10 +2,10 @@
 
 import * as React from 'react'
 import {
-  Briefcase,
-  Clock,
-  Eye,
-  Star,
+    Briefcase,
+    Clock,
+    Eye,
+    Star,
 } from 'lucide-react'
 import { StatCard } from '@/components/ui/extended/stat-card'
 import type { DashboardStats } from '@/types/profile'
@@ -16,45 +16,45 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ stats, isLoading = false }: StatsGridProps) {
-  const statItems = [
-    {
-      title: 'Total Applications',
-      value: stats.totalApplications,
-      icon: Briefcase,
-      variant: 'primary' as const,
-    },
-    {
-      title: 'Submitted',
-      value: stats.submittedApplications,
-      icon: Clock,
-      variant: 'default' as const,
-    },
-    {
-      title: 'Reviewing',
-      value: stats.reviewingApplications,
-      icon: Eye,
-      variant: 'default' as const,
-    },
-    {
-      title: 'Shortlisted',
-      value: stats.shortlistedApplications,
-      icon: Star,
-      variant: 'warning' as const,
-    },
-  ]
+    const statItems = [
+        {
+            title: 'Total Applications',
+            value: stats.totalApplications,
+            icon: Briefcase,
+            variant: 'primary' as const,
+        },
+        {
+            title: 'Submitted',
+            value: stats.submittedApplications,
+            icon: Clock,
+            variant: 'default' as const,
+        },
+        {
+            title: 'Reviewing',
+            value: stats.reviewingApplications,
+            icon: Eye,
+            variant: 'default' as const,
+        },
+        {
+            title: 'Shortlisted',
+            value: stats.shortlistedApplications,
+            icon: Star,
+            variant: 'warning' as const,
+        },
+    ]
 
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {statItems.map((item) => (
-        <StatCard
-          key={item.title}
-          title={item.title}
-          value={item.value}
-          icon={item.icon}
-          variant={item.variant}
-          isLoading={isLoading}
-        />
-      ))}
-    </div>
-  )
+    return (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {statItems.map(item => (
+                <StatCard
+                    key={item.title}
+                    title={item.title}
+                    value={item.value}
+                    icon={item.icon}
+                    variant={item.variant}
+                    isLoading={isLoading}
+                />
+            ))}
+        </div>
+    )
 }

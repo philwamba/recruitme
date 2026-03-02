@@ -9,14 +9,14 @@ interface FormSubmitButtonProps {
 }
 
 export function FormSubmitButton({
-  idleLabel,
-  pendingLabel,
+    idleLabel,
+    pendingLabel,
 }: FormSubmitButtonProps) {
-  const { pending } = useFormStatus()
+    const { pending } = useFormStatus()
 
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? pendingLabel : idleLabel}
-    </Button>
-  )
+    return (
+        <Button type="submit" className="w-full" disabled={pending}>
+            {pending ? pendingLabel : idleLabel}
+        </Button>
+    )
 }

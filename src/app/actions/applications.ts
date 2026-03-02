@@ -239,10 +239,19 @@ export async function submitApplication(jobId: string, formData: FormData) {
         redirect('/applicant/applications?error=invalid-submission')
     }
 
+    const cvFile = formData.get('cvFile')
+    const hasNewCvFile = cvFile instanceof File && cvFile.size > 0
+
     try {
         const profile = await prisma.applicantProfile.findUnique({
             where: { userId: user.id },
         })
+
+        const hasExistingCv = Boolean(profile?.cvUrl)
+
+        if (!hasNewCvFile && !hasExistingCv) {
+            redirect(`/jobs?error=cv-required&job=${jobId}`)
+        }
 
         const application = await upsertApplicationRecord({
             userId: user.id,
@@ -253,7 +262,6 @@ export async function submitApplication(jobId: string, formData: FormData) {
             submit: true,
         })
 
-        const cvFile = formData.get('cvFile')
         const supportingDocuments = formData
             .getAll('supportingDocuments')
             .filter((value): value is File => value instanceof File)
@@ -262,7 +270,7 @@ export async function submitApplication(jobId: string, formData: FormData) {
             applicationId: application.id,
             applicantProfileId: profile?.id ?? null,
             userId: user.id,
-            cvFile: cvFile instanceof File ? cvFile : null,
+            cvFile: hasNewCvFile ? (cvFile as File) : null,
             supportingDocuments,
         })
 
@@ -284,7 +292,6 @@ export async function submitApplication(jobId: string, formData: FormData) {
             },
         })
 
-        // Best-effort notification - don't fail the action if notification fails
         try {
             await createNotification({
                 userId: user.id,
@@ -305,7 +312,6 @@ export async function submitApplication(jobId: string, formData: FormData) {
         revalidatePath('/jobs')
         redirect(`/applicant/applications?status=submitted&trackingId=${application.trackingId}`)
     } catch (error) {
-    // Re-throw Next.js redirect errors (they use NEXT_REDIRECT digest)
         if (error instanceof Error && 'digest' in error && String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')) {
             throw error
         }
@@ -378,7 +384,6 @@ export async function moveApplicationStage(formData: FormData) {
             },
         })
 
-        // Best-effort notification - don't fail the action if notification fails
         if (updatedApplication) {
             try {
                 await createNotification({
