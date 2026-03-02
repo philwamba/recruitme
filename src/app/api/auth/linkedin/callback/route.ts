@@ -3,8 +3,11 @@ import { prisma } from '@/lib/prisma'
 import { createUserSession } from '@/lib/auth'
 import { getPostSignInPath } from '@/lib/auth/paths'
 import { createActivityLog, createAuditLog } from '@/lib/observability/audit'
-import { reportError } from '@/lib/observability/error-reporting'
+import { reportError, reportOperationalEvent } from '@/lib/observability/error-reporting'
 import { consumeLinkedInOAuthState, exchangeLinkedInCodeForProfile } from '@/lib/oauth/linkedin'
+import { createOpaqueToken, hashToken } from '@/lib/security/token'
+import { sendEmail } from '@/lib/services/email-delivery'
+import { getBaseUrl } from '@/lib/url'
 
 export async function GET(request: Request) {
     const url = new URL(request.url)
@@ -29,7 +32,7 @@ export async function GET(request: Request) {
     try {
         const profile = await exchangeLinkedInCodeForProfile(code)
 
-        const user = await prisma.$transaction(async tx => {
+        const result = await prisma.$transaction(async tx => {
             const existingByLinkedIn = await tx.user.findUnique({
                 where: { linkedinId: profile.linkedinId },
             })
@@ -44,13 +47,16 @@ export async function GET(request: Request) {
                     }
                 }
 
-                return tx.user.update({
+                const user = await tx.user.update({
                     where: { id: existingByLinkedIn.id },
                     data: {
                         email: profile.email,
-                        emailVerified: existingByLinkedIn.emailVerified ?? new Date(),
+                        // Keep existing verification or set if LinkedIn verifies
+                        emailVerified: existingByLinkedIn.emailVerified ?? (profile.emailVerified ? new Date() : null),
                     },
                 })
+
+                return { user, isNewUser: false }
             }
 
             const existingByEmail = await tx.user.findUnique({
@@ -62,7 +68,8 @@ export async function GET(request: Request) {
                     where: { id: existingByEmail.id },
                     data: {
                         linkedinId: profile.linkedinId,
-                        emailVerified: existingByEmail.emailVerified ?? new Date(),
+                        // Keep existing verification or set if LinkedIn verifies
+                        emailVerified: existingByEmail.emailVerified ?? (profile.emailVerified ? new Date() : null),
                     },
                 })
 
@@ -84,16 +91,19 @@ export async function GET(request: Request) {
                     })
                 }
 
-                return tx.user.findUniqueOrThrow({
+                const user = await tx.user.findUniqueOrThrow({
                     where: { id: existingByEmail.id },
                 })
+
+                return { user, isNewUser: false }
             }
 
+            // New user - set emailVerified based on LinkedIn's verification status
             const createdUser = await tx.user.create({
                 data: {
                     email: profile.email,
                     linkedinId: profile.linkedinId,
-                    emailVerified: new Date(),
+                    emailVerified: profile.emailVerified ? new Date() : null,
                     role: 'APPLICANT',
                 },
             })
@@ -108,9 +118,60 @@ export async function GET(request: Request) {
                 },
             })
 
-            return createdUser
+            return { user: createdUser, isNewUser: true }
         })
 
+        const { user, isNewUser } = result
+
+        // If email not verified, send verification email and redirect
+        if (!user.emailVerified) {
+            const verificationToken = createOpaqueToken(24)
+
+            await prisma.verificationToken.create({
+                data: {
+                    userId: user.id,
+                    tokenHash: hashToken(verificationToken),
+                    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+                },
+            })
+
+            await prisma.authSecurityEvent.create({
+                data: {
+                    userId: user.id,
+                    email: user.email,
+                    type: 'EMAIL_VERIFICATION_REQUESTED',
+                },
+            })
+
+            reportOperationalEvent('LinkedIn OAuth - verification required', {
+                email: user.email,
+                linkedinEmailVerified: profile.emailVerified,
+            })
+
+            const appUrl = getBaseUrl()
+            if (appUrl) {
+                const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}`
+                try {
+                    await sendEmail({
+                        to: user.email,
+                        subject: 'Verify your RecruitMe account',
+                        html: `Complete your sign-up by opening <a href="${verificationUrl}">this verification link</a>.`,
+                        text: `Complete your sign-up by opening this verification link: ${verificationUrl}`,
+                    })
+                } catch (emailError) {
+                    reportError(emailError, {
+                        scope: 'auth.linkedin.verification-email',
+                        userId: user.id,
+                    })
+                }
+            }
+
+            return NextResponse.redirect(
+                new URL('/sign-in?message=verify-email', request.url),
+            )
+        }
+
+        // Email is verified - create session and sign in
         await createUserSession({
             id: user.id,
             email: user.email,
@@ -121,7 +182,7 @@ export async function GET(request: Request) {
 
         await createAuditLog({
             actorUserId: user.id,
-            action: 'auth.linkedin.sign-in',
+            action: isNewUser ? 'auth.linkedin.sign-up' : 'auth.linkedin.sign-in',
             targetType: 'User',
             targetId: user.id,
             metadata: {
@@ -131,7 +192,7 @@ export async function GET(request: Request) {
 
         await createActivityLog({
             actorUserId: user.id,
-            description: 'Signed in with LinkedIn',
+            description: isNewUser ? 'Signed up with LinkedIn' : 'Signed in with LinkedIn',
         })
 
         return NextResponse.redirect(

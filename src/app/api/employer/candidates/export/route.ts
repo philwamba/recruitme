@@ -2,12 +2,26 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+// Max records per export to prevent memory exhaustion
+const MAX_EXPORT_RECORDS = 10000
+
+export async function GET(request: Request) {
     const user = await getCurrentUser()
 
     if (!user || (user.role !== 'EMPLOYER' && user.role !== 'ADMIN')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Support pagination via query params
+    const url = new URL(request.url)
+    const limitParam = url.searchParams.get('limit')
+    const offsetParam = url.searchParams.get('offset')
+
+    const limit = Math.min(
+        limitParam ? parseInt(limitParam, 10) || MAX_EXPORT_RECORDS : MAX_EXPORT_RECORDS,
+        MAX_EXPORT_RECORDS,
+    )
+    const offset = offsetParam ? parseInt(offsetParam, 10) || 0 : 0
 
     const applications = await prisma.application.findMany({
         where:
@@ -24,6 +38,8 @@ export async function GET() {
             user: true,
         },
         orderBy: { appliedAt: 'desc' },
+        take: limit,
+        skip: offset,
     })
 
     const csvRows = [

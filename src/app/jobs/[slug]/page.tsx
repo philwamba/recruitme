@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPublishedJobBySlug } from '@/lib/services/jobs'
+import { getNonce } from '@/lib/security/csp-nonce'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -49,6 +50,8 @@ export default async function JobDetailPage({
         notFound()
     }
 
+    const nonce = await getNonce()
+
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'JobPosting',
@@ -72,6 +75,7 @@ export default async function JobDetailPage({
         <div className="min-h-screen bg-muted/20">
             <script
                 type="application/ld+json"
+                nonce={nonce}
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <div className="mx-auto max-w-4xl space-y-8 px-4 py-10">

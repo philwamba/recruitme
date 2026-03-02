@@ -8,6 +8,7 @@ import {
     S3Client,
 } from '@aws-sdk/client-s3'
 import { env } from '@/lib/env'
+import { isScanningEnabled, scanBuffer } from '@/lib/security/document-scan'
 
 // Configurable storage root with fallback for development
 const STORAGE_ROOT = env.privateFilesRoot
@@ -89,13 +90,34 @@ export function validatePrivateUpload(file: File) {
     }
 }
 
-export async function savePrivateFile(file: File) {
+export type SavePrivateFileResult = {
+    storageKey: string
+    sha256: string
+    sizeBytes: number
+    mimeType: string
+    originalFileName: string
+    scanStatus: 'PENDING' | 'CLEAN' | 'REJECTED'
+}
+
+export async function savePrivateFile(file: File, options?: { scan?: boolean }): Promise<SavePrivateFileResult> {
     validatePrivateUpload(file)
     const buffer = Buffer.from(await file.arrayBuffer())
 
     // Validate magic bytes for defense-in-depth
     if (!validateMagicBytes(buffer, file.type)) {
         throw new Error('File content does not match declared type')
+    }
+
+    // Scan for malware if scanning is enabled and requested
+    let scanStatus: 'PENDING' | 'CLEAN' | 'REJECTED' = 'PENDING'
+    const shouldScan = options?.scan !== false && isScanningEnabled()
+
+    if (shouldScan) {
+        const scanResult = await scanBuffer(buffer)
+        if (scanResult.status === 'REJECTED') {
+            throw new Error(`File rejected: ${scanResult.details ?? 'malware detected'}`)
+        }
+        scanStatus = scanResult.status === 'CLEAN' ? 'CLEAN' : 'PENDING'
     }
 
     const hash = createHash('sha256').update(buffer).digest('hex')
@@ -123,6 +145,7 @@ export async function savePrivateFile(file: File) {
         sizeBytes: buffer.byteLength,
         mimeType: file.type || 'application/octet-stream',
         originalFileName: file.name,
+        scanStatus,
     }
 }
 

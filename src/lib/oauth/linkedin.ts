@@ -139,6 +139,7 @@ export async function exchangeLinkedInCodeForProfile(code: string) {
     return {
         linkedinId: String(profilePayload.sub),
         email: String(profilePayload.email).toLowerCase(),
+        emailVerified: profilePayload.email_verified === true,
         firstName: String(profilePayload.given_name ?? ''),
         lastName: String(profilePayload.family_name ?? ''),
         avatarUrl: typeof profilePayload.picture === 'string' ? profilePayload.picture : null,

@@ -25,6 +25,7 @@ export default async function ApplicantApplicationsPage() {
             documents: true,
         },
         orderBy: { updatedAt: 'desc' },
+        take: 50,
     })
 
     return (
