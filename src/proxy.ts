@@ -57,13 +57,10 @@ const PUBLIC_PATHS = new Set([
  * Check if a path is explicitly public
  */
 function isPublicPath(pathname: string): boolean {
-    // Exact matches for known public pages
     if (PUBLIC_PATHS.has(pathname)) {
         return true
     }
 
-    // Public job detail pages: /jobs/[slug] (viewing jobs is public)
-    // But /jobs/[slug]/apply requires auth (handled separately)
     if (pathname.startsWith('/jobs/') && !pathname.endsWith('/apply')) {
         return true
     }
