@@ -19,6 +19,7 @@ import { createOpaqueToken, hashToken } from '@/lib/security/token'
 import { getRequestContext } from '@/lib/request-context'
 import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
 import { reportError, reportOperationalEvent } from '@/lib/observability/error-reporting'
+import { sendEmail } from '@/lib/services/email-delivery'
 
 type AuthActionState = {
   success: boolean
@@ -303,15 +304,18 @@ export async function signUp(
       tokenFingerprint: hashToken(verificationToken).slice(0, 16),
     })
 
-    // Development only: log full URL to console (not persisted in reportOperationalEvent)
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] Verification URL: ${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/verify-email?token=${verificationToken}`)
-    }
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/verify-email?token=${verificationToken}`
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify your RecruitMe account',
+      html: `Complete your sign-up by opening <a href="${verificationUrl}">this verification link</a>.`,
+      text: `Complete your sign-up by opening this verification link: ${verificationUrl}`,
+    })
 
     return {
       success: true,
-      message:
-        'Account created. Check the server log for the verification link in development.',
+      message: 'Account created. Check your email for the verification link.',
     }
   } catch (error) {
     reportError(error, {
@@ -393,16 +397,19 @@ export async function requestPasswordReset(
         tokenFingerprint: hashToken(resetToken).slice(0, 16),
       })
 
-      // Development only: log full URL to console (not persisted in reportOperationalEvent)
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEV] Reset URL: ${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/reset-password?token=${resetToken}`)
-      }
+      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/reset-password?token=${resetToken}`
+
+      await sendEmail({
+        to: user.email,
+        subject: 'Reset your RecruitMe password',
+        html: `You requested a password reset. Open <a href="${resetUrl}">this secure reset link</a> to continue.`,
+        text: `You requested a password reset. Open this secure reset link to continue: ${resetUrl}`,
+      })
     }
 
     return {
       success: true,
-      message:
-        'If an account exists for that email, a reset link has been generated in the server log.',
+      message: 'If an account exists for that email, a password reset link has been sent.',
     }
   } catch (error) {
     reportError(error, {

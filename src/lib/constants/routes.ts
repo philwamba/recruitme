@@ -33,6 +33,7 @@ export const ROUTES = {
     ANALYTICS: '/admin/analytics',
     TEMPLATES: '/admin/templates',
     COMPLIANCE: '/admin/compliance',
+    OPERATIONS: '/admin/operations',
   },
 } as const
 

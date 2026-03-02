@@ -1,3 +1,5 @@
+import { env } from '@/lib/env'
+
 type ErrorContext = {
   scope: string
   userId?: string
@@ -58,6 +60,35 @@ function safeStringify(obj: unknown): string {
   }
 }
 
+function emitConsole(level: 'error' | 'info', payload: Record<string, unknown>) {
+  const serialized = safeStringify(payload)
+  if (level === 'error') {
+    console.error(serialized)
+    return
+  }
+
+  console.info(serialized)
+}
+
+function emitWebhook(level: 'error' | 'info', payload: Record<string, unknown>) {
+  if (!env.observabilityWebhookUrl) {
+    return
+  }
+
+  void fetch(env.observabilityWebhookUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: safeStringify({
+      ...payload,
+      level,
+      environment: env.appEnvironment,
+      source: 'recruitme',
+    }),
+  }).catch(() => undefined)
+}
+
 export function reportError(error: unknown, context: ErrorContext) {
   try {
     const message = error instanceof Error ? error.message : 'Unknown error'
@@ -71,9 +102,11 @@ export function reportError(error: unknown, context: ErrorContext) {
       userId: context.userId,
       metadata: redactSensitiveData(context.metadata),
       timestamp: new Date().toISOString(),
+      environment: env.appEnvironment,
     }
 
-    console.error(safeStringify(sanitizedPayload))
+    emitConsole('error', sanitizedPayload)
+    emitWebhook('error', sanitizedPayload)
   } catch {
     // Last resort: never throw from logging
     console.error('Error reporting failed')
@@ -90,9 +123,11 @@ export function reportOperationalEvent(
       message,
       metadata: redactSensitiveData(metadata),
       timestamp: new Date().toISOString(),
+      environment: env.appEnvironment,
     }
 
-    console.info(safeStringify(sanitizedPayload))
+    emitConsole('info', sanitizedPayload)
+    emitWebhook('info', sanitizedPayload)
   } catch {
     // Last resort: never throw from logging
     console.info('Operational event reporting failed')

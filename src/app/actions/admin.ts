@@ -6,6 +6,7 @@ import { UserRole } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createAuditLog } from '@/lib/observability/audit'
+import { retryOutboxJob } from '@/lib/services/outbox'
 
 export async function updateUserRole(formData: FormData) {
   const user = await requireCurrentUser({
@@ -58,4 +59,29 @@ export async function updateUserRole(formData: FormData) {
 
   revalidatePath('/admin/users')
   redirect('/admin/users?status=role-updated')
+}
+
+export async function retryFailedOutboxJob(formData: FormData) {
+  const user = await requireCurrentUser({
+    roles: ['ADMIN'],
+    permission: 'VIEW_AUDIT_LOGS',
+  })
+
+  const jobId = String(formData.get('jobId') ?? '')
+
+  if (!jobId) {
+    redirect('/admin/operations?error=invalid-job')
+  }
+
+  await retryOutboxJob(jobId)
+
+  await createAuditLog({
+    actorUserId: user.id,
+    action: 'outbox.retry.requested',
+    targetType: 'OutboxJob',
+    targetId: jobId,
+  })
+
+  revalidatePath('/admin/operations')
+  redirect('/admin/operations?status=job-requeued')
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { reportError } from '@/lib/observability/error-reporting'
 import { readPrivateFile } from '@/lib/services/private-files'
 
 export async function GET(
@@ -71,7 +72,11 @@ export async function GET(
     if (err.code === 'ENOENT') {
       return NextResponse.json({ error: 'File not found' }, { status: 404 })
     }
-    console.error('Error reading file:', error)
+    reportError(error, {
+      scope: 'documents.download',
+      userId: user.id,
+      metadata: { documentId: document.id },
+    })
     return NextResponse.json({ error: 'Failed to read file' }, { status: 500 })
   }
 }

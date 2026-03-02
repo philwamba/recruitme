@@ -15,7 +15,7 @@ interface StatCardProps {
     value: number
     direction: 'up' | 'down'
   }
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'destructive'
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'info' | 'destructive'
   isLoading?: boolean
   className?: string
 }
@@ -23,37 +23,50 @@ interface StatCardProps {
 const variantStyles = {
   default: {
     icon: 'bg-muted text-muted-foreground',
+    accent: 'bg-muted/30',
     trend: {
-      up: 'text-orange-600',
-      down: 'text-red-600',
+      up: 'text-success',
+      down: 'text-destructive',
     },
   },
   primary: {
     icon: 'bg-primary/10 text-primary',
+    accent: 'bg-primary/5',
     trend: {
-      up: 'text-orange-600',
-      down: 'text-red-600',
+      up: 'text-success',
+      down: 'text-destructive',
     },
   },
   success: {
-    icon: 'bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400',
+    icon: 'bg-success/10 text-success',
+    accent: 'bg-success/5',
     trend: {
-      up: 'text-orange-600',
-      down: 'text-red-600',
+      up: 'text-success',
+      down: 'text-destructive',
     },
   },
   warning: {
-    icon: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400',
+    icon: 'bg-warning/10 text-warning',
+    accent: 'bg-warning/5',
     trend: {
-      up: 'text-orange-600',
-      down: 'text-red-600',
+      up: 'text-success',
+      down: 'text-destructive',
+    },
+  },
+  info: {
+    icon: 'bg-info/10 text-info',
+    accent: 'bg-info/5',
+    trend: {
+      up: 'text-success',
+      down: 'text-destructive',
     },
   },
   destructive: {
-    icon: 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400',
+    icon: 'bg-destructive/10 text-destructive',
+    accent: 'bg-destructive/5',
     trend: {
-      up: 'text-orange-600',
-      down: 'text-red-600',
+      up: 'text-success',
+      down: 'text-destructive',
     },
   },
 }
@@ -72,13 +85,13 @@ export function StatCard({
 
   if (isLoading) {
     return (
-      <Card className={cn('', className)}>
+      <Card className={cn('relative overflow-hidden', className)}>
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
-            <Skeleton className="h-12 w-12 rounded-lg" />
-            <div className="space-y-2">
+            <Skeleton className="h-12 w-12 rounded-xl" />
+            <div className="space-y-2 flex-1">
               <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-7 w-16" />
+              <Skeleton className="h-8 w-20" />
             </div>
           </div>
         </CardContent>
@@ -87,12 +100,12 @@ export function StatCard({
   }
 
   return (
-    <Card className={cn('transition-shadow hover:shadow-md', className)}>
+    <Card className={className}>
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
           <div
             className={cn(
-              'flex h-12 w-12 items-center justify-center rounded-lg',
+              'flex h-12 w-12 items-center justify-center rounded-xl',
               styles.icon
             )}
           >
@@ -102,26 +115,26 @@ export function StatCard({
             <p className="text-sm font-medium text-muted-foreground truncate">
               {title}
             </p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold tracking-tight">{value}</p>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <p className="text-3xl font-bold tracking-tight">{value}</p>
               {trend && (
                 <span
                   className={cn(
-                    'flex items-center text-xs font-medium',
-                    styles.trend[trend.direction]
+                    'flex items-center gap-0.5 text-xs font-semibold',
+                    trend.direction === 'up' ? 'text-success' : 'text-destructive'
                   )}
                 >
                   {trend.direction === 'up' ? (
-                    <TrendingUp className="mr-0.5 h-3 w-3" />
+                    <TrendingUp className="h-3 w-3" />
                   ) : (
-                    <TrendingDown className="mr-0.5 h-3 w-3" />
+                    <TrendingDown className="h-3 w-3" />
                   )}
                   {trend.value}%
                 </span>
               )}
             </div>
             {description && (
-              <p className="text-xs text-muted-foreground mt-1">{description}</p>
+              <p className="text-xs text-muted-foreground mt-1.5">{description}</p>
             )}
           </div>
         </div>

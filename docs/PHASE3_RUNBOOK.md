@@ -8,14 +8,14 @@
 
 ## Candidate Data Export
 
-- Endpoint: `GET /app/api/compliance/export`
+- Endpoint: `GET /api/compliance/export`
 - Access: authenticated applicant only
 - Output: JSON export of user, profile, applications, documents, notifications, and deletion requests
 
 ## Deletion Requests
 
-- Applicants can submit requests from `/admin/compliance` when signed in as an applicant
-- Admins process requests from the same route
+- Applicants can submit requests from `/applicant/compliance`
+- Admins process requests from `/admin/compliance`
 - Approval path:
   - removes private files from `/tmp/recruitme-private-files`
   - deletes notifications

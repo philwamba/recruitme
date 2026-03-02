@@ -50,7 +50,7 @@ export const emailTemplateSchema = z.object({
 export const notificationCreateSchema = z.object({
   userId: z.string().min(1),
   applicationId: z.string().optional().default(''),
-  channel: z.enum(['IN_APP', 'EMAIL', 'SMS']),
+  channel: z.enum(['IN_APP', 'EMAIL']),
   subject: z.string().min(3).max(200),
   body: z.string().min(3),
   templateId: z.string().optional().default(''),

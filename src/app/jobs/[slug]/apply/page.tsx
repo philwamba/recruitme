@@ -6,6 +6,7 @@ import { getPublishedJobBySlug } from '@/lib/services/jobs'
 import { saveApplicationDraft, submitApplication } from '@/app/actions/applications'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
 export const dynamic = 'force-dynamic'
@@ -69,8 +70,9 @@ export default async function ApplyPage({
           <CardContent>
             <form className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Cover letter</label>
+                <Label htmlFor="coverLetter">Cover letter</Label>
                 <Textarea
+                  id="coverLetter"
                   name="coverLetter"
                   rows={8}
                   defaultValue={existingApplication?.coverLetter ?? ''}
@@ -79,8 +81,9 @@ export default async function ApplyPage({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Application source</label>
+                <Label htmlFor="source">Application source</Label>
                 <input
+                  id="source"
                   name="source"
                   defaultValue={existingApplication?.source ?? 'Website'}
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm"
@@ -88,13 +91,14 @@ export default async function ApplyPage({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">CV</label>
-                <input name="cvFile" type="file" accept=".pdf,.doc,.docx" className="w-full text-sm" />
+                <Label htmlFor="cvFile" required>CV</Label>
+                <input id="cvFile" name="cvFile" type="file" accept=".pdf,.doc,.docx" className="w-full text-sm" required />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Supporting documents</label>
+                <Label htmlFor="supportingDocuments">Supporting documents</Label>
                 <input
+                  id="supportingDocuments"
                   name="supportingDocuments"
                   type="file"
                   multiple
@@ -104,9 +108,9 @@ export default async function ApplyPage({
               </div>
 
               <label className="flex items-start gap-3 rounded-md border p-3 text-sm text-muted-foreground">
-                <input name="consentAccepted" type="checkbox" value="true" defaultChecked={Boolean(existingApplication?.consentAcceptedAt)} />
+                <input name="consentAccepted" type="checkbox" value="true" defaultChecked={Boolean(existingApplication?.consentAcceptedAt)} required />
                 <span>
-                  I consent to RecruitMe storing and processing my candidate data for this application.
+                  I consent to RecruitMe storing and processing my candidate data for this application. <span className="text-destructive">*</span>
                 </span>
               </label>
 

@@ -70,7 +70,6 @@ export default async function AdminTemplatesPage() {
               <select name="channel" defaultValue="EMAIL" className="w-full rounded-md border px-3 py-2 text-sm">
                 <option value="EMAIL">EMAIL</option>
                 <option value="IN_APP">IN_APP</option>
-                <option value="SMS">SMS</option>
               </select>
               <input name="subject" placeholder="Subject" className="w-full rounded-md border px-3 py-2 text-sm" />
               <textarea name="body" placeholder="Message body" className="min-h-24 w-full rounded-md border px-3 py-2 text-sm" />

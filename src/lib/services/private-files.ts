@@ -1,11 +1,36 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdir, readFile, stat, unlink, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3'
+import { env } from '@/lib/env'
 
 // Configurable storage root with fallback for development
-const STORAGE_ROOT = process.env.PRIVATE_FILES_ROOT ?? '/tmp/recruitme-private-files'
+const STORAGE_ROOT = env.privateFilesRoot
+const STORAGE_DRIVER = env.privateStorageDriver.toLowerCase()
+const OBJECT_STORAGE_CONFIGURED =
+  Boolean(env.cloudflareAccountId) &&
+  Boolean(env.cloudflareR2AccessKeyId) &&
+  Boolean(env.cloudflareR2SecretAccessKey) &&
+  Boolean(env.cloudflareR2BucketName)
 
-if (process.env.NODE_ENV === 'production' && STORAGE_ROOT.startsWith('/tmp')) {
+const s3Client =
+  STORAGE_DRIVER === 'r2' && OBJECT_STORAGE_CONFIGURED
+    ? new S3Client({
+        region: 'auto',
+        endpoint: `https://${env.cloudflareAccountId}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: env.cloudflareR2AccessKeyId!,
+          secretAccessKey: env.cloudflareR2SecretAccessKey!,
+        },
+      })
+    : null
+
+if (process.env.NODE_ENV === 'production' && STORAGE_DRIVER === 'local' && STORAGE_ROOT.startsWith('/tmp')) {
   console.warn('WARNING: Using ephemeral /tmp storage in production. Set PRIVATE_FILES_ROOT to a persistent path.')
 }
 
@@ -50,6 +75,10 @@ function getSecurePath(storageKey: string): string {
   return resolvedPath
 }
 
+function isObjectStorageEnabled() {
+  return STORAGE_DRIVER === 'r2' && Boolean(s3Client)
+}
+
 export function validatePrivateUpload(file: File) {
   if (!ALLOWED_FILE_TYPES.has(file.type)) {
     throw new Error('Unsupported file type. Use PDF, DOC, DOCX, PNG, or JPEG.')
@@ -71,11 +100,22 @@ export async function savePrivateFile(file: File) {
 
   const hash = createHash('sha256').update(buffer).digest('hex')
   const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-  const storageKey = `${randomUUID()}-${safeName}`
+  const storageKey = `private/${randomUUID()}-${safeName}`
 
-  await mkdir(STORAGE_ROOT, { recursive: true })
-  const securePath = getSecurePath(storageKey)
-  await writeFile(securePath, buffer)
+  if (isObjectStorageEnabled()) {
+    await s3Client!.send(
+      new PutObjectCommand({
+        Bucket: env.cloudflareR2BucketName!,
+        Key: storageKey,
+        Body: buffer,
+        ContentType: file.type || 'application/octet-stream',
+      })
+    )
+  } else {
+    await mkdir(STORAGE_ROOT, { recursive: true })
+    const securePath = getSecurePath(storageKey)
+    await writeFile(securePath, buffer)
+  }
 
   return {
     storageKey,
@@ -87,16 +127,68 @@ export async function savePrivateFile(file: File) {
 }
 
 export async function readPrivateFile(storageKey: string) {
+  if (isObjectStorageEnabled()) {
+    const response = await s3Client!.send(
+      new GetObjectCommand({
+        Bucket: env.cloudflareR2BucketName!,
+        Key: storageKey,
+      })
+    )
+
+    if (!response.Body) {
+      const error = new Error('Object body missing')
+      ;(error as NodeJS.ErrnoException).code = 'ENOENT'
+      throw error
+    }
+
+    const bytes = await response.Body.transformToByteArray()
+    return Buffer.from(bytes)
+  }
+
   const securePath = getSecurePath(storageKey)
   return readFile(securePath)
 }
 
 export async function getPrivateFileStats(storageKey: string) {
+  if (isObjectStorageEnabled()) {
+    const file = await readPrivateFile(storageKey)
+    return {
+      size: file.byteLength,
+    }
+  }
+
   const securePath = getSecurePath(storageKey)
   return stat(securePath)
 }
 
 export async function removePrivateFile(storageKey: string) {
+  if (isObjectStorageEnabled()) {
+    await s3Client!.send(
+      new DeleteObjectCommand({
+        Bucket: env.cloudflareR2BucketName!,
+        Key: storageKey,
+      })
+    ).catch(() => undefined)
+    return
+  }
+
   const securePath = getSecurePath(storageKey)
   await unlink(securePath).catch(() => undefined)
+}
+
+export function getPrivateStorageHealth() {
+  const persistentLocalStorage =
+    STORAGE_DRIVER === 'local' && !STORAGE_ROOT.startsWith('/tmp')
+
+  const ok =
+    isObjectStorageEnabled() ||
+    process.env.NODE_ENV !== 'production' ||
+    persistentLocalStorage
+
+  return {
+    ok,
+    driver: isObjectStorageEnabled() ? 'r2' : 'local',
+    persistent: isObjectStorageEnabled() || persistentLocalStorage,
+    root: isObjectStorageEnabled() ? null : STORAGE_ROOT,
+  }
 }
