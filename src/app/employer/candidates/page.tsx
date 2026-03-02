@@ -96,7 +96,7 @@ export default async function EmployerCandidatesPage() {
           </p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/app/api/employer/candidates/export">Export CSV</Link>
+          <Link href="/api/employer/candidates/export">Export CSV</Link>
         </Button>
       </div>
 
@@ -269,7 +269,7 @@ export default async function EmployerCandidatesPage() {
                       {application.documents.map((document) => (
                         <a
                           key={document.id}
-                          href={`/app/api/documents/${document.id}/download`}
+                          href={`/api/documents/${document.id}/download`}
                           className="block rounded-md border px-3 py-2 text-primary hover:underline"
                         >
                           {document.originalFileName}

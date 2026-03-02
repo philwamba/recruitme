@@ -8,6 +8,9 @@ import {
   User,
   FileText,
   Briefcase,
+  Bell,
+  ClipboardCheck,
+  Shield,
   Settings,
   LogOut,
   ChevronLeft,
@@ -46,11 +49,25 @@ const mainNavItems: NavItem[] = [
     title: 'Applications',
     href: ROUTES.APPLICANT.APPLICATIONS,
     icon: Briefcase,
-    badge: 'Soon',
+  },
+  {
+    title: 'Assessments',
+    href: ROUTES.APPLICANT.ASSESSMENTS,
+    icon: ClipboardCheck,
+  },
+  {
+    title: 'Notifications',
+    href: ROUTES.APPLICANT.NOTIFICATIONS,
+    icon: Bell,
   },
 ]
 
 const secondaryNavItems: NavItem[] = [
+  {
+    title: 'Privacy',
+    href: ROUTES.APPLICANT.COMPLIANCE,
+    icon: Shield,
+  },
   {
     title: 'Settings',
     href: ROUTES.APPLICANT.SETTINGS,
@@ -70,7 +87,7 @@ export function ApplicantSidebar({ isCollapsed = false, onToggle }: ApplicantSid
   return (
     <div
       className={cn(
-        'relative flex h-full flex-col border-r bg-card transition-all duration-300',
+        'relative flex h-full flex-col border-r bg-card',
         isCollapsed ? 'w-16' : 'w-64'
       )}
     >
@@ -90,10 +107,12 @@ export function ApplicantSidebar({ isCollapsed = false, onToggle }: ApplicantSid
             size="icon"
             className="ml-auto h-8 w-8"
             onClick={onToggle}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <ChevronLeft
+              aria-hidden="true"
               className={cn(
-                'h-4 w-4 transition-transform',
+                'h-4 w-4',
                 isCollapsed && 'rotate-180'
               )}
             />
@@ -161,8 +180,9 @@ function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
   return (
     <Link
       href={item.badge ? '#' : item.href}
+      aria-label={isCollapsed ? item.title : undefined}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
         isActive
           ? 'bg-primary/10 text-primary'
           : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -170,7 +190,7 @@ function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
         item.badge && 'cursor-not-allowed opacity-60'
       )}
     >
-      <Icon className="h-4 w-4 flex-shrink-0" />
+      <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
       {!isCollapsed && (
         <>
           <span className="flex-1">{item.title}</span>

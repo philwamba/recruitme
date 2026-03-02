@@ -18,20 +18,20 @@ export function SignUpForm() {
     <form action={formAction} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="firstName">First name</Label>
+          <Label htmlFor="firstName" required>First name</Label>
           <Input id="firstName" name="firstName" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lastName">Last name</Label>
+          <Label htmlFor="lastName" required>Last name</Label>
           <Input id="lastName" name="lastName" required />
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" required>Email</Label>
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" required>Password</Label>
         <Input
           id="password"
           name="password"

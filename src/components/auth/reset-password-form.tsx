@@ -18,7 +18,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="token" value={token} />
       <div className="space-y-2">
-        <Label htmlFor="password">New password</Label>
+        <Label htmlFor="password" required>New password</Label>
         <Input
           id="password"
           name="password"

@@ -14,6 +14,7 @@ import {
   stageMoveSchema,
 } from '@/lib/validations/application'
 import { savePrivateFile } from '@/lib/services/private-files'
+import { createNotification } from '@/lib/services/notifications'
 
 function createTrackingId() {
   return `APP-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
@@ -193,6 +194,14 @@ export async function saveApplicationDraft(jobId: string, formData: FormData) {
 
     revalidatePath('/applicant/applications')
     revalidatePath(`/jobs`)
+
+    await createNotification({
+      userId: user.id,
+      channel: 'IN_APP',
+      applicationId: application.id,
+      subject: `Draft saved for ${jobId}`,
+      body: `Your application draft ${application.trackingId} has been saved.`,
+    })
   } catch (error) {
     reportError(error, {
       scope: 'applications.save-draft',
@@ -258,10 +267,31 @@ export async function submitApplication(jobId: string, formData: FormData) {
       },
     })
 
+    await prisma.consentRecord.create({
+      data: {
+        userId: user.id,
+        applicationId: application.id,
+        consentType: 'APPLICATION_PROCESSING',
+      },
+    })
+
+    await createNotification({
+      userId: user.id,
+      channel: 'IN_APP',
+      applicationId: application.id,
+      subject: `Application submitted: ${application.trackingId}`,
+      body: 'Your application has been submitted successfully.',
+    })
+
     revalidatePath('/applicant/applications')
     revalidatePath(`/jobs`)
     redirect(`/applicant/applications?status=submitted&trackingId=${application.trackingId}`)
   } catch (error) {
+    // Re-throw Next.js redirect errors (they use NEXT_REDIRECT digest)
+    if (error instanceof Error && 'digest' in error && String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')) {
+      throw error
+    }
+
     reportError(error, {
       scope: 'applications.submit',
       userId: user.id,
@@ -322,6 +352,23 @@ export async function moveApplicationStage(formData: FormData) {
         },
       }),
     ])
+
+    const updatedApplication = await prisma.application.findUnique({
+      where: { id: application.id },
+      include: {
+        user: true,
+      },
+    })
+
+    if (updatedApplication) {
+      await createNotification({
+        userId: updatedApplication.userId,
+        channel: 'EMAIL',
+        applicationId: updatedApplication.id,
+        subject: `Application status updated to ${stage.name}`,
+        body: `Your application ${updatedApplication.trackingId} moved to ${stage.name}.`,
+      })
+    }
 
     revalidatePath('/employer/candidates')
 

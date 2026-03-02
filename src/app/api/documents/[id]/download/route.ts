@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { reportError } from '@/lib/observability/error-reporting'
 import { readPrivateFile } from '@/lib/services/private-files'
 
 export async function GET(
@@ -44,13 +45,38 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const file = await readPrivateFile(document.storageKey)
+  // Sanitize filename for Content-Disposition header
+  function sanitizeFilename(filename: string, fallbackId: string): string {
+    // Remove CRLF characters and double quotes
+    let sanitized = filename.replace(/[\r\n"]/g, '')
+    // If empty after sanitization, use a fallback
+    if (!sanitized.trim()) {
+      sanitized = `document-${fallbackId}`
+    }
+    return sanitized
+  }
 
-  return new NextResponse(file, {
-    status: 200,
-    headers: {
-      'Content-Type': document.mimeType,
-      'Content-Disposition': `attachment; filename="${document.originalFileName}"`,
-    },
-  })
+  try {
+    const file = await readPrivateFile(document.storageKey)
+    const safeFilename = sanitizeFilename(document.originalFileName, document.id)
+
+    return new NextResponse(file, {
+      status: 200,
+      headers: {
+        'Content-Type': document.mimeType,
+        'Content-Disposition': `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(safeFilename)}`,
+      },
+    })
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException
+    if (err.code === 'ENOENT') {
+      return NextResponse.json({ error: 'File not found' }, { status: 404 })
+    }
+    reportError(error, {
+      scope: 'documents.download',
+      userId: user.id,
+      metadata: { documentId: document.id },
+    })
+    return NextResponse.json({ error: 'Failed to read file' }, { status: 500 })
+  }
 }

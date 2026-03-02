@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next'
 
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
@@ -7,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: ['/jobs', '/'],
       disallow: ['/applicant', '/employer', '/admin', '/api'],
     },
-    sitemap: 'http://localhost:3000/sitemap.xml',
+    sitemap: `${baseUrl}/sitemap.xml`,
   }
 }

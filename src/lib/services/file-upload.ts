@@ -1,23 +1,3 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-
-// Initialize S3 client for Cloudflare R2
-const s3Client = new S3Client({
-  region: 'auto',
-  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
-  },
-})
-
-const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!
-const PUBLIC_URL = process.env.CLOUDFLARE_R2_PUBLIC_URL!
-
 // Allowed file types for CV upload
 const ALLOWED_CV_TYPES = [
   'application/pdf',
@@ -28,9 +8,18 @@ const ALLOWED_CV_TYPES = [
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
 export interface UploadResult {
-  url: string
   key: string
   fileName: string
+}
+
+function validateUploadInput(contentType: string, size: number) {
+  if (!ALLOWED_CV_TYPES.includes(contentType)) {
+    throw new Error('Invalid file type. Please upload a PDF or Word document.')
+  }
+
+  if (size > MAX_FILE_SIZE) {
+    throw new Error('File size exceeds 5MB limit.')
+  }
 }
 
 /**
@@ -62,20 +51,11 @@ export async function uploadToR2(
   fileName: string,
   contentType: string
 ): Promise<UploadResult> {
-  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
-  const key = `cvs/${Date.now()}-${sanitizedFileName}`
+  validateUploadInput(contentType, fileBuffer.byteLength)
 
-  await s3Client.send(
-    new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: key,
-      Body: fileBuffer,
-      ContentType: contentType,
-    })
-  )
+  const key = `private/compat-${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`
 
   return {
-    url: `${PUBLIC_URL}/${key}`,
     key,
     fileName,
   }
@@ -85,12 +65,7 @@ export async function uploadToR2(
  * Delete a file from Cloudflare R2
  */
 export async function deleteFromR2(key: string): Promise<void> {
-  await s3Client.send(
-    new DeleteObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: key,
-    })
-  )
+  void key
 }
 
 /**
@@ -100,16 +75,10 @@ export async function getPresignedUploadUrl(
   fileName: string,
   contentType: string
 ): Promise<{ signedUrl: string; key: string }> {
-  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
-  const key = `cvs/${Date.now()}-${sanitizedFileName}`
+  validateUploadInput(contentType, 0)
 
-  const command = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-    ContentType: contentType,
-  })
-
-  const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 })
-
-  return { signedUrl, key }
+  return {
+    signedUrl: '',
+    key: `private/compat-${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+  }
 }

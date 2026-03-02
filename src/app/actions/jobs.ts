@@ -75,10 +75,11 @@ export async function createJob(formData: FormData) {
         },
       })
 
+      // Create pipeline stages atomically within the same transaction
+      await createDefaultPipelineStages(job.id, tx)
+
       return job
     })
-
-    await createDefaultPipelineStages(result.id)
 
     await createAuditLog({
       actorUserId: user.id,

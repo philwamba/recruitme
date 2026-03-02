@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { EmploymentType, WorkplaceType } from '@prisma/client'
 import { getPublishedJobs } from '@/lib/services/jobs'
-import { jobSearchSchema } from '@/lib/validations/jobs'
+import { jobSearchSchema, type JobSearchInput } from '@/lib/validations/jobs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -34,7 +34,17 @@ export default async function JobsPage({
     page: typeof raw.page === 'string' ? raw.page : '1',
   }
 
-  const search = jobSearchSchema.parse(normalized)
+  const parsed = jobSearchSchema.safeParse(normalized)
+  const search: JobSearchInput = parsed.success
+    ? parsed.data
+    : {
+        q: '',
+        department: '',
+        employmentType: undefined,
+        workplaceType: undefined,
+        location: '',
+        page: 1,
+      }
   const result = await getPublishedJobs(search)
 
   return (

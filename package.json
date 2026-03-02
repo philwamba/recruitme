@@ -12,6 +12,7 @@
     "ci": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "seed:rbac": "node --experimental-strip-types scripts/seed-rbac.ts",
     "bootstrap:admin": "node --experimental-strip-types scripts/bootstrap-admin.ts",
+    "process:outbox": "node --experimental-strip-types scripts/process-outbox.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

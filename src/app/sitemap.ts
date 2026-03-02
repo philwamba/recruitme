@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const jobs = await prisma.job.findMany({
     where: { status: 'PUBLISHED' },
@@ -9,15 +11,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: 'http://localhost:3000/',
+      url: `${baseUrl}/`,
       lastModified: new Date(),
     },
     {
-      url: 'http://localhost:3000/jobs',
+      url: `${baseUrl}/jobs`,
       lastModified: new Date(),
     },
     ...jobs.map((job) => ({
-      url: `http://localhost:3000/jobs/${job.slug}`,
+      url: `${baseUrl}/jobs/${job.slug}`,
       lastModified: job.updatedAt,
     })),
   ]
