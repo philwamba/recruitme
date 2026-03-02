@@ -47,7 +47,6 @@ export default async function AdminUsersPage() {
 async function UsersSection() {
     const users = await prisma.user.findMany({
         include: {
-            applicantProfile: true,
             _count: {
                 select: {
                     applications: true,

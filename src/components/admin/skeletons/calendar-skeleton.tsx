@@ -59,11 +59,11 @@ export function CalendarSkeleton({ className }: CalendarSkeletonProps) {
                                     className="border-b border-r last:border-r-0 min-h-[120px] p-2"
                                 >
                                     <Skeleton className="h-5 w-5 mb-2" />
-                                    {/* Random events */}
-                                    {Math.random() > 0.6 && (
+                                    {/* Deterministic events based on position */}
+                                    {((weekIndex * 7 + dayIndex) % 10) > 6 && (
                                         <div className="space-y-1">
                                             <Skeleton className="h-6 w-full rounded" />
-                                            {Math.random() > 0.5 && (
+                                            {((weekIndex * 7 + dayIndex) % 5) > 2 && (
                                                 <Skeleton className="h-6 w-full rounded" />
                                             )}
                                         </div>

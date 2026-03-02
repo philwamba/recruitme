@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { endOfMonth } from 'date-fns'
 import { Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import { requireCurrentUser } from '@/lib/auth'
 import { getInterviews, getInterviewStats } from '@/lib/admin/queries/interviews'
@@ -101,7 +102,7 @@ async function InterviewsCalendarSection() {
     const now = new Date()
     const { interviews } = await getInterviews({
         startDate: new Date(now.getFullYear(), now.getMonth(), 1),
-        endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0),
+        endDate: endOfMonth(new Date(now.getFullYear(), now.getMonth())),
     })
     return <InterviewsCalendar interviews={interviews} />
 }

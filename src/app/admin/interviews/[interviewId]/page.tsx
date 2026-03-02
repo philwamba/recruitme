@@ -91,15 +91,15 @@ export default async function InterviewDetailPage({ params }: PageProps) {
                     <div className="flex items-center gap-2">
                         {interview.status === 'SCHEDULED' && (
                             <>
-                                <Button variant="outline">Reschedule</Button>
-                                <Button>
+                                <Button variant="outline" disabled title="Action not yet implemented">Reschedule</Button>
+                                <Button disabled title="Action not yet implemented">
                                     <CheckCircle className="mr-2 h-4 w-4" />
                                     Mark Complete
                                 </Button>
                             </>
                         )}
                         {interview.status === 'COMPLETED' && interview.feedbacks.length === 0 && (
-                            <Button>
+                            <Button disabled title="Action not yet implemented">
                                 <MessageSquare className="mr-2 h-4 w-4" />
                                 Add Feedback
                             </Button>
@@ -111,10 +111,10 @@ export default async function InterviewDetailPage({ params }: PageProps) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Edit Interview</DropdownMenuItem>
-                                <DropdownMenuItem>Send Reminder</DropdownMenuItem>
+                                <DropdownMenuItem disabled title="Action not yet implemented">Edit Interview</DropdownMenuItem>
+                                <DropdownMenuItem disabled title="Action not yet implemented">Send Reminder</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">
+                                <DropdownMenuItem className="text-destructive" disabled title="Action not yet implemented">
                                     Cancel Interview
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -235,7 +235,7 @@ export default async function InterviewDetailPage({ params }: PageProps) {
                                                         {participant.user?.email || participant.email}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground capitalize">
-                                                        {participant.role.toLowerCase().replace('_', ' ')}
+                                                        {participant.role.toLowerCase().replaceAll('_', ' ')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -258,7 +258,7 @@ export default async function InterviewDetailPage({ params }: PageProps) {
                                 </CardDescription>
                             </div>
                             {interview.status === 'COMPLETED' && (
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" disabled title="Action not yet implemented">
                                     <MessageSquare className="mr-2 h-4 w-4" />
                                     Add Feedback
                                 </Button>

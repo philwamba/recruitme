@@ -15,7 +15,7 @@ export default async function AdminAnalyticsPage() {
         permission: 'VIEW_ANALYTICS',
     })
 
-    const analyticsPromise = getRecruitmentAnalytics()
+    const analytics = await getRecruitmentAnalytics()
 
     return (
         <div className="space-y-6">
@@ -24,24 +24,17 @@ export default async function AdminAnalyticsPage() {
                 description="Monitor recruitment performance and conversion metrics"
             />
 
-            <Suspense fallback={<StatCardGridSkeleton count={4} />}>
-                <StatsSection analyticsPromise={analyticsPromise} />
-            </Suspense>
+            <StatsSection analytics={analytics} />
 
             <div className="grid gap-6 lg:grid-cols-2">
-                <Suspense fallback={<ChartSkeleton />}>
-                    <ApplicationsPerJobSection analyticsPromise={analyticsPromise} />
-                </Suspense>
-                <Suspense fallback={<ChartSkeleton />}>
-                    <StageConversionSection analyticsPromise={analyticsPromise} />
-                </Suspense>
+                <ApplicationsPerJobSection analytics={analytics} />
+                <StageConversionSection analytics={analytics} />
             </div>
         </div>
     )
 }
 
-async function StatsSection({ analyticsPromise }: { analyticsPromise: Promise<Awaited<ReturnType<typeof getRecruitmentAnalytics>>> }) {
-    const analytics = await analyticsPromise
+function StatsSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -77,8 +70,7 @@ async function StatsSection({ analyticsPromise }: { analyticsPromise: Promise<Aw
     )
 }
 
-async function ApplicationsPerJobSection({ analyticsPromise }: { analyticsPromise: Promise<Awaited<ReturnType<typeof getRecruitmentAnalytics>>> }) {
-    const analytics = await analyticsPromise
+function ApplicationsPerJobSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
 
     const maxCount = Math.max(...analytics.applicationsPerJob.map(j => j.count), 1)
 
@@ -107,8 +99,7 @@ async function ApplicationsPerJobSection({ analyticsPromise }: { analyticsPromis
     )
 }
 
-async function StageConversionSection({ analyticsPromise }: { analyticsPromise: Promise<Awaited<ReturnType<typeof getRecruitmentAnalytics>>> }) {
-    const analytics = await analyticsPromise
+function StageConversionSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
 
     const stageLabels: Record<string, string> = {
         SUBMITTED: 'Submitted',
