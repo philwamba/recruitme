@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -453,7 +452,7 @@ export default async function CandidateDetailPage({ params }: PageProps) {
                                     Internal notes about this candidate
                                 </CardDescription>
                             </div>
-                            <Button>
+                            <Button disabled title="Action not yet implemented">
                                 <MessageSquare className="mr-2 h-4 w-4" />
                                 Add Note
                             </Button>

@@ -215,18 +215,18 @@ const columns: ColumnDef<InterviewRow>[] = [
                                 View Details
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Edit Interview</DropdownMenuItem>
+                        <DropdownMenuItem disabled title="Action not yet implemented">Edit Interview</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {interview.status === 'SCHEDULED' && (
                             <>
-                                <DropdownMenuItem>Mark as Completed</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">
+                                <DropdownMenuItem disabled title="Action not yet implemented">Mark as Completed</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" disabled title="Action not yet implemented">
                                     Cancel Interview
                                 </DropdownMenuItem>
                             </>
                         )}
                         {interview.status === 'COMPLETED' && (
-                            <DropdownMenuItem>Add Feedback</DropdownMenuItem>
+                            <DropdownMenuItem disabled title="Action not yet implemented">Add Feedback</DropdownMenuItem>
                         )}
                     </DropdownMenuContent>
                 </DropdownMenu>

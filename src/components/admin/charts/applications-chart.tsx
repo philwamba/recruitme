@@ -50,7 +50,7 @@ export function ApplicationsChart({ data }: ApplicationsChartProps) {
                                 axisLine={false}
                                 tickMargin={8}
                                 tick={{ fontSize: 12 }}
-                                tickFormatter={(value) => format(parseISO(value), 'MMM d')}
+                                tickFormatter={value => format(parseISO(value), 'MMM d')}
                                 interval="preserveStartEnd"
                             />
                             <YAxis

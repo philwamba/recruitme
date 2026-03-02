@@ -41,12 +41,16 @@ export function ChartGridSkeleton({
     height = 300,
     className,
 }: ChartGridSkeletonProps) {
+    // Normalize and validate props
+    const safeCount = Math.max(0, Math.floor(count))
+    const safeColumns = Math.max(1, Math.min(Math.floor(columns), safeCount))
+
     return (
         <div
             className={cn('grid gap-6', className)}
-            style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: `repeat(${safeColumns}, minmax(0, 1fr))` }}
         >
-            {Array.from({ length: count }).map((_, i) => (
+            {Array.from({ length: safeCount }).map((_, i) => (
                 <ChartSkeleton key={i} height={height} />
             ))}
         </div>

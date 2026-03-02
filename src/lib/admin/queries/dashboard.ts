@@ -28,7 +28,10 @@ export async function getDashboardStats() {
         prisma.job.count({
             where: {
                 status: 'PUBLISHED',
-                publishedAt: { lt: thirtyDaysAgo },
+                publishedAt: {
+                    gte: sixtyDaysAgo,
+                    lt: thirtyDaysAgo,
+                },
             },
         }),
         // Total candidates (submitted applications)

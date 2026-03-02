@@ -15,6 +15,8 @@ export default async function AdminAnalyticsPage() {
         permission: 'VIEW_ANALYTICS',
     })
 
+    const analytics = await getRecruitmentAnalytics()
+
     return (
         <div className="space-y-6">
             <AdminPageHeader
@@ -22,24 +24,17 @@ export default async function AdminAnalyticsPage() {
                 description="Monitor recruitment performance and conversion metrics"
             />
 
-            <Suspense fallback={<StatCardGridSkeleton count={4} />}>
-                <StatsSection />
-            </Suspense>
+            <StatsSection analytics={analytics} />
 
             <div className="grid gap-6 lg:grid-cols-2">
-                <Suspense fallback={<ChartSkeleton />}>
-                    <ApplicationsPerJobSection />
-                </Suspense>
-                <Suspense fallback={<ChartSkeleton />}>
-                    <StageConversionSection />
-                </Suspense>
+                <ApplicationsPerJobSection analytics={analytics} />
+                <StageConversionSection analytics={analytics} />
             </div>
         </div>
     )
 }
 
-async function StatsSection() {
-    const analytics = await getRecruitmentAnalytics()
+function StatsSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -75,8 +70,7 @@ async function StatsSection() {
     )
 }
 
-async function ApplicationsPerJobSection() {
-    const analytics = await getRecruitmentAnalytics()
+function ApplicationsPerJobSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
 
     const maxCount = Math.max(...analytics.applicationsPerJob.map(j => j.count), 1)
 
@@ -105,8 +99,7 @@ async function ApplicationsPerJobSection() {
     )
 }
 
-async function StageConversionSection() {
-    const analytics = await getRecruitmentAnalytics()
+function StageConversionSection({ analytics }: { analytics: Awaited<ReturnType<typeof getRecruitmentAnalytics>> }) {
 
     const stageLabels: Record<string, string> = {
         SUBMITTED: 'Submitted',

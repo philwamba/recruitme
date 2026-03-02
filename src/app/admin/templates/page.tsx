@@ -117,7 +117,6 @@ async function CreateTemplateForm() {
 
 async function TemplatesList() {
     const templates = await prisma.emailTemplate.findMany({
-        include: { job: true },
         orderBy: { updatedAt: 'desc' },
         take: 100,
     })

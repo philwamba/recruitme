@@ -79,10 +79,10 @@ export function InterviewsCalendar({ interviews }: InterviewsCalendarProps) {
                 {/* Calendar Header */}
                 <div className="flex items-center justify-between border-b px-4 py-3">
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
+                        <Button variant="outline" size="icon" onClick={goToPreviousMonth} aria-label="Previous month">
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" onClick={goToNextMonth}>
+                        <Button variant="outline" size="icon" onClick={goToNextMonth} aria-label="Next month">
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                         <h2 className="text-lg font-semibold ml-2">

@@ -16,13 +16,17 @@ export function AdminShell({
     children: React.ReactNode
     user: AuthenticatedUser
 }) {
-    const [sidebarCollapsed, setSidebarCollapsed] = React.useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true'
-        }
-        return false
-    })
+    const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
     const [mobileNavOpen, setMobileNavOpen] = React.useState(false)
+
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY)
+            if (stored === 'true') {
+                setSidebarCollapsed(true)
+            }
+        }
+    }, [])
 
     const handleToggleSidebar = React.useCallback(() => {
         setSidebarCollapsed(prev => {

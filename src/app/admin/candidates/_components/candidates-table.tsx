@@ -84,7 +84,8 @@ function getInitials(candidate: CandidateApplication): string {
 
 const columns: ColumnDef<CandidateApplication>[] = [
     {
-        accessorKey: 'name',
+        id: 'candidate',
+        accessorFn: row => getCandidateName(row),
         header: ({ column }) => (
             <DataTableColumnHeader column={column} title="Candidate" />
         ),
@@ -265,7 +266,7 @@ export function CandidatesTable({ candidates }: CandidatesTableProps) {
         <DataTable
             columns={columns}
             data={candidates}
-            searchKey="name"
+            searchKey="candidate"
             searchPlaceholder="Search candidates..."
         />
     )

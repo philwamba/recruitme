@@ -31,7 +31,7 @@ export default async function PipelineKanbanPage({ params }: PageProps) {
     const totalCandidates = data.stages.reduce(
         (sum, stage) => sum + stage.applications.length,
         0,
-    )
+    ) + data.unassigned.length
 
     return (
         <div className="space-y-6">

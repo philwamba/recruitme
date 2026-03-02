@@ -98,19 +98,19 @@ export default async function JobDetailPage({ params }: PageProps) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem disabled title="Action not yet implemented">
                                     <ExternalLink className="mr-2 h-4 w-4" />
                                     View Public Page
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>Duplicate Job</DropdownMenuItem>
+                                <DropdownMenuItem disabled title="Action not yet implemented">Duplicate Job</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {job.status === 'PUBLISHED' && (
-                                    <DropdownMenuItem>Close Job</DropdownMenuItem>
+                                    <DropdownMenuItem disabled title="Action not yet implemented">Close Job</DropdownMenuItem>
                                 )}
                                 {job.status === 'DRAFT' && (
-                                    <DropdownMenuItem>Publish Job</DropdownMenuItem>
+                                    <DropdownMenuItem disabled title="Action not yet implemented">Publish Job</DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem className="text-destructive">
+                                <DropdownMenuItem className="text-destructive" disabled title="Action not yet implemented">
                                     Delete Job
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

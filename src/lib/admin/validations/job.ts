@@ -15,7 +15,7 @@ export const jobFormSchema = z.object({
     departmentId: z.string().optional().nullable(),
     status: z.enum(['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED']).optional(),
 }).refine(
-    (data) => {
+    data => {
         if (data.salaryMin && data.salaryMax) {
             return data.salaryMin <= data.salaryMax
         }
