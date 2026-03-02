@@ -14,7 +14,7 @@ import {
     signUpSchema,
 } from '@/lib/validations/auth'
 import { hashPassword, verifyPassword } from '@/lib/security/password'
-import { assertRateLimit } from '@/lib/security/rate-limit'
+import { assertRateLimitAsync } from '@/lib/security/rate-limit'
 import { createOpaqueToken, hashToken } from '@/lib/security/token'
 import { getRequestContext } from '@/lib/request-context'
 import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
@@ -61,7 +61,14 @@ export async function signIn(
 
         // Use email as fallback key when IP is unavailable
         const rateLimitKey = ipAddress ?? `email:${email}`
-        assertRateLimit(`signin:${rateLimitKey}`, 10, 1000 * 60 * 15)
+        try {
+            await assertRateLimitAsync(`signin:${rateLimitKey}`, 10, 1000 * 60 * 15)
+        } catch {
+            return {
+                success: false,
+                message: 'Too many sign-in attempts. Please try again later.',
+            }
+        }
         const user = await prisma.user.findUnique({
             where: { email },
         })
@@ -225,7 +232,15 @@ export async function signUp(
         const email = parsed.data.email.toLowerCase()
 
         const rateLimitKey = ipAddress ?? `email:${email}`
-        assertRateLimit(`signup:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        try {
+            await assertRateLimitAsync(`signup:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        } catch {
+            return {
+                success: false,
+                message: 'Too many sign-up attempts. Please try again later.',
+            }
+        }
+
         const existingUser = await prisma.user.findUnique({
             where: { email },
         })
@@ -375,7 +390,15 @@ export async function requestPasswordReset(
 
         // Use email as fallback key when IP is unavailable
         const rateLimitKey = ipAddress ?? `email:${email}`
-        assertRateLimit(`password-reset:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        try {
+            await assertRateLimitAsync(`password-reset:${rateLimitKey}`, 5, 1000 * 60 * 15)
+        } catch {
+            return {
+                success: false,
+                message: 'Too many password reset requests. Please try again later.',
+            }
+        }
+
         const user = await prisma.user.findUnique({
             where: { email },
         })
@@ -523,6 +546,9 @@ export async function resetPassword(
                     failedSignInAttempts: 0,
                     lockedUntil: null,
                 },
+            }),
+            prisma.session.deleteMany({
+                where: { userId: tokenRecord.userId },
             }),
             prisma.authSecurityEvent.create({
                 data: {

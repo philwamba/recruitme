@@ -16,6 +16,7 @@ export default async function AdminTemplatesPage() {
         prisma.emailTemplate.findMany({
             include: { job: true },
             orderBy: { updatedAt: 'desc' },
+            take: 100,
         }),
         prisma.user.findMany({
             orderBy: { createdAt: 'desc' },

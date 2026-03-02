@@ -24,6 +24,7 @@ export default async function ApplicantAssessmentsPage() {
             },
         },
         orderBy: { createdAt: 'desc' },
+        take: 50,
     })
 
     return (

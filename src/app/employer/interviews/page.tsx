@@ -33,6 +33,7 @@ export default async function EmployerInterviewsPage() {
             },
         },
         orderBy: { updatedAt: 'desc' },
+        take: 100,
     })
 
     return (

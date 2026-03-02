@@ -29,6 +29,7 @@ export default async function EmployerAssessmentsPage() {
             },
         },
         orderBy: { updatedAt: 'desc' },
+        take: 100,
     })
 
     return (

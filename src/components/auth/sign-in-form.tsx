@@ -8,26 +8,38 @@ import { GoogleAuthButton } from '@/components/auth/google-auth-button'
 import { LinkedInAuthButton } from '@/components/auth/linkedin-auth-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { OAuthConfig } from '@/lib/oauth/config'
 
 const initialState = {
     success: false,
     message: '',
 }
 
-export function SignInForm({ nextPath = '' }: { nextPath?: string }) {
+export function SignInForm({
+    nextPath = '',
+    oauth,
+}: {
+    nextPath?: string
+    oauth: OAuthConfig
+}) {
     const [state, formAction] = useActionState(signIn, initialState)
+    const hasSocialLogin = oauth.google || oauth.linkedin
 
     return (
         <div className="space-y-4">
-            <div className="space-y-3">
-                <GoogleAuthButton nextPath={nextPath} label="Continue with Google" />
-                <LinkedInAuthButton nextPath={nextPath} label="Continue with LinkedIn" />
-            </div>
-            <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="h-px flex-1 bg-border" />
-                <span className="uppercase tracking-widest">or</span>
-                <div className="h-px flex-1 bg-border" />
-            </div>
+            {hasSocialLogin && (
+                <>
+                    <div className="space-y-3">
+                        {oauth.google && <GoogleAuthButton nextPath={nextPath} label="Continue with Google" />}
+                        {oauth.linkedin && <LinkedInAuthButton nextPath={nextPath} label="Continue with LinkedIn" />}
+                    </div>
+                    <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
+                        <div className="h-px flex-1 bg-border" />
+                        <span className="uppercase tracking-widest">or</span>
+                        <div className="h-px flex-1 bg-border" />
+                    </div>
+                </>
+            )}
             <form action={formAction} className="space-y-4">
                 <input type="hidden" name="next" value={nextPath} />
                 <div className="space-y-2">

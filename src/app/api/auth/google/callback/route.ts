@@ -35,7 +35,9 @@ export async function GET(request: Request) {
             })
 
             if (existingByGoogle) {
-                if (existingByGoogle.email !== profile.email) {
+                const emailChanged = existingByGoogle.email !== profile.email
+
+                if (emailChanged) {
                     const emailConflict = await tx.user.findUnique({
                         where: { email: profile.email },
                     })
@@ -48,7 +50,11 @@ export async function GET(request: Request) {
                     where: { id: existingByGoogle.id },
                     data: {
                         email: profile.email,
-                        emailVerified: existingByGoogle.emailVerified ?? new Date(),
+                        // If email changed, re-verify with new Google email (always verified)
+                        // Otherwise preserve existing verification status
+                        emailVerified: emailChanged
+                            ? new Date()
+                            : (existingByGoogle.emailVerified ?? new Date()),
                     },
                 })
             }

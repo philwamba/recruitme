@@ -84,6 +84,7 @@ export default async function EmployerCandidatesPage() {
             },
         },
         orderBy: { updatedAt: 'desc' },
+        take: 100,
     })
 
     return (

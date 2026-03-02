@@ -1,5 +1,6 @@
 'use server'
 
+import { randomBytes } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
@@ -18,7 +19,7 @@ import { savePrivateFile } from '@/lib/services/private-files'
 import { createNotification } from '@/lib/services/notifications'
 
 function createTrackingId() {
-    return `APP-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+    return `APP-${randomBytes(8).toString('hex').toUpperCase()}`
 }
 
 async function upsertApplicationRecord(params: {
@@ -94,7 +95,7 @@ async function storeUploadedFiles({
   supportingDocuments: File[]
 }) {
     if (cvFile && cvFile.size > 0) {
-        const stored = await savePrivateFile(cvFile)
+        const stored = await savePrivateFile(cvFile, { scan: true })
 
         await prisma.candidateDocument.create({
             data: {
@@ -107,7 +108,7 @@ async function storeUploadedFiles({
                 mimeType: stored.mimeType,
                 sizeBytes: stored.sizeBytes,
                 sha256: stored.sha256,
-                scanStatus: 'PENDING',
+                scanStatus: stored.scanStatus,
             },
         })
 
@@ -125,7 +126,7 @@ async function storeUploadedFiles({
     for (const document of supportingDocuments) {
         if (!document || document.size === 0) continue
 
-        const stored = await savePrivateFile(document)
+        const stored = await savePrivateFile(document, { scan: true })
         await prisma.candidateDocument.create({
             data: {
                 applicationId,
@@ -137,7 +138,7 @@ async function storeUploadedFiles({
                 mimeType: stored.mimeType,
                 sizeBytes: stored.sizeBytes,
                 sha256: stored.sha256,
-                scanStatus: 'PENDING',
+                scanStatus: stored.scanStatus,
             },
         })
     }

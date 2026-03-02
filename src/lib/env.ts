@@ -51,4 +51,7 @@ export const env = {
     googleClientId: readOptional('GOOGLE_CLIENT_ID'),
     googleClientSecret: readOptional('GOOGLE_CLIENT_SECRET'),
     googleRedirectUri: readOptional('GOOGLE_REDIRECT_URI'),
+    redisUrl: readOptional('REDIS_URL'),
+    clamavHost: readOptional('CLAMAV_HOST'),
+    clamavPort: readOptional('CLAMAV_PORT', '3310'),
 } as const

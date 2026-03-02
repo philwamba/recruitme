@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/auth'
+import { getOAuthConfig } from '@/lib/oauth/config'
 import { AuthCard } from '@/components/auth/auth-card'
 import { SignInForm } from '@/components/auth/sign-in-form'
 
@@ -21,6 +22,8 @@ export default async function SignInPage({
         )
     }
 
+    const oauthConfig = getOAuthConfig()
+
     return (
         <AuthCard
             title="Sign in"
@@ -29,7 +32,7 @@ export default async function SignInPage({
             footerLinkLabel="Create one"
             footerLinkHref="/sign-up"
         >
-            <SignInForm nextPath={params.next ?? ''} />
+            <SignInForm nextPath={params.next ?? ''} oauth={oauthConfig} />
         </AuthCard>
     )
 }

@@ -44,6 +44,13 @@ export async function GET(
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    if (document.scanStatus === 'REJECTED') {
+        return NextResponse.json(
+            { error: 'This document has been blocked due to security concerns' },
+            { status: 403 },
+        )
+    }
+
     function sanitizeFilename(filename: string, fallbackId: string): string {
         let sanitized = filename
             .replace(/[\x00-\x1f\x7f]/g, '') // Control characters
