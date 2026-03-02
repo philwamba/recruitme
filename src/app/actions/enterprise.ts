@@ -326,9 +326,7 @@ export async function reviewAssessment(formData: FormData) {
         redirect('/employer/assessments?error=invalid-review')
     }
 
-    // Run both updates in a single transaction for atomicity
     await prisma.$transaction(async tx => {
-        // Load submission with job ownership info for authorization
         const existing = await tx.assessmentSubmission.findUnique({
             where: { id: parsed.data.submissionId },
             include: {
