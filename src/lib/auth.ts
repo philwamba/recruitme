@@ -19,213 +19,213 @@ export type AuthenticatedUser = Pick<
 >
 
 export async function getSessionCookieValue() {
-  const cookieStore = await cookies()
-  return cookieStore.get(env.sessionCookieName)?.value
+    const cookieStore = await cookies()
+    return cookieStore.get(env.sessionCookieName)?.value
 }
 
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
-  const rawToken = await getSessionCookieValue()
+    const rawToken = await getSessionCookieValue()
 
-  if (!rawToken) {
-    return null
-  }
+    if (!rawToken) {
+        return null
+    }
 
-  const session = await prisma.session.findUnique({
-    where: {
-      sessionTokenHash: hashToken(rawToken),
-    },
-    include: {
-      user: true,
-    },
-  })
+    const session = await prisma.session.findUnique({
+        where: {
+            sessionTokenHash: hashToken(rawToken),
+        },
+        include: {
+            user: true,
+        },
+    })
 
-  if (!session) {
-    return null
-  }
+    if (!session) {
+        return null
+    }
 
-  if (session.expiresAt <= new Date()) {
-    await prisma.session.delete({
-      where: { id: session.id },
-    }).catch(() => undefined)
-    await clearSessionCookie()
-    return null
-  }
+    if (session.expiresAt <= new Date()) {
+        await prisma.session.delete({
+            where: { id: session.id },
+        }).catch(() => undefined)
+        await clearSessionCookie()
+        return null
+    }
 
-  if (session.expiresAt.getTime() - Date.now() <= SESSION_EXTENSION_THRESHOLD_MS) {
-    const nextExpiry = getSessionExpiryDate()
-    await prisma.session.update({
-      where: { id: session.id },
-      data: {
-        expiresAt: nextExpiry,
-        lastUsedAt: new Date(),
-      },
-    }).catch((error: unknown) => {
-      reportError(error, {
-        scope: 'auth.extend-session',
-        userId: session.userId,
-      })
+    if (session.expiresAt.getTime() - Date.now() <= SESSION_EXTENSION_THRESHOLD_MS) {
+        const nextExpiry = getSessionExpiryDate()
+        await prisma.session.update({
+            where: { id: session.id },
+            data: {
+                expiresAt: nextExpiry,
+                lastUsedAt: new Date(),
+            },
+        }).catch((error: unknown) => {
+            reportError(error, {
+                scope: 'auth.extend-session',
+                userId: session.userId,
+            })
+        })
+
+        const cookieStore = await cookies()
+        cookieStore.set(env.sessionCookieName, rawToken, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            expires: nextExpiry,
+        })
+    }
+
+    return {
+        id: session.user.id,
+        email: session.user.email,
+        role: session.user.role,
+        emailVerified: session.user.emailVerified,
+        lockedUntil: session.user.lockedUntil,
+    }
+}
+
+export async function requireCurrentUser(
+    options?: {
+    roles?: UserRole[]
+    permission?: Permission
+    redirectTo?: string
+  },
+): Promise<AuthenticatedUser> {
+    const user = await getCurrentUser()
+
+    if (!user) {
+        redirect(options?.redirectTo ?? '/sign-in')
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+        redirect('/sign-in?error=locked')
+    }
+
+    if (options?.roles && !options.roles.includes(user.role)) {
+        await recordUnauthorizedAccess(user.id, user.email, {
+            roles: options.roles,
+            permission: options.permission,
+        })
+        redirect('/unauthorized')
+    }
+
+    if (options?.permission && !roleHasPermission(user.role, options.permission)) {
+        await recordUnauthorizedAccess(user.id, user.email, {
+            roles: options.roles,
+            permission: options.permission,
+        })
+        redirect('/unauthorized')
+    }
+
+    return user
+}
+
+export async function createUserSession(user: AuthenticatedUser) {
+    const rawToken = createOpaqueToken(32)
+    const { ipAddress, userAgent } = await getRequestContext()
+
+    await prisma.session.create({
+        data: {
+            sessionTokenHash: hashToken(rawToken),
+            userId: user.id,
+            expiresAt: getSessionExpiryDate(),
+            ipAddress,
+            userAgent,
+        },
     })
 
     const cookieStore = await cookies()
     cookieStore.set(env.sessionCookieName, rawToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      expires: nextExpiry,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        expires: getSessionExpiryDate(),
     })
-  }
 
-  return {
-    id: session.user.id,
-    email: session.user.email,
-    role: session.user.role,
-    emailVerified: session.user.emailVerified,
-    lockedUntil: session.user.lockedUntil,
-  }
-}
-
-export async function requireCurrentUser(
-  options?: {
-    roles?: UserRole[]
-    permission?: Permission
-    redirectTo?: string
-  }
-): Promise<AuthenticatedUser> {
-  const user = await getCurrentUser()
-
-  if (!user) {
-    redirect(options?.redirectTo ?? '/sign-in')
-  }
-
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    redirect('/sign-in?error=locked')
-  }
-
-  if (options?.roles && !options.roles.includes(user.role)) {
-    await recordUnauthorizedAccess(user.id, user.email, {
-      roles: options.roles,
-      permission: options.permission,
+    await createAuditLog({
+        actorUserId: user.id,
+        action: 'session.created',
+        targetType: 'Session',
+        metadata: {
+            role: user.role,
+        },
+        ipAddress,
+        userAgent,
     })
-    redirect('/unauthorized')
-  }
-
-  if (options?.permission && !roleHasPermission(user.role, options.permission)) {
-    await recordUnauthorizedAccess(user.id, user.email, {
-      roles: options.roles,
-      permission: options.permission,
-    })
-    redirect('/unauthorized')
-  }
-
-  return user
-}
-
-export async function createUserSession(user: AuthenticatedUser) {
-  const rawToken = createOpaqueToken(32)
-  const { ipAddress, userAgent } = await getRequestContext()
-
-  await prisma.session.create({
-    data: {
-      sessionTokenHash: hashToken(rawToken),
-      userId: user.id,
-      expiresAt: getSessionExpiryDate(),
-      ipAddress,
-      userAgent,
-    },
-  })
-
-  const cookieStore = await cookies()
-  cookieStore.set(env.sessionCookieName, rawToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    expires: getSessionExpiryDate(),
-  })
-
-  await createAuditLog({
-    actorUserId: user.id,
-    action: 'session.created',
-    targetType: 'Session',
-    metadata: {
-      role: user.role,
-    },
-    ipAddress,
-    userAgent,
-  })
 }
 
 export async function signOutCurrentUser() {
-  const rawToken = await getSessionCookieValue()
-  const user = await getCurrentUser()
-  const { ipAddress, userAgent } = await getRequestContext()
+    const rawToken = await getSessionCookieValue()
+    const user = await getCurrentUser()
+    const { ipAddress, userAgent } = await getRequestContext()
 
-  if (rawToken) {
-    await prisma.session.deleteMany({
-      where: {
-        sessionTokenHash: hashToken(rawToken),
-      },
-    })
-  }
+    if (rawToken) {
+        await prisma.session.deleteMany({
+            where: {
+                sessionTokenHash: hashToken(rawToken),
+            },
+        })
+    }
 
-  await clearSessionCookie()
+    await clearSessionCookie()
 
-  if (user) {
-    await createAuditLog({
-      actorUserId: user.id,
-      action: 'session.destroyed',
-      targetType: 'Session',
-      metadata: {
-        role: user.role,
-      },
-      ipAddress,
-      userAgent,
-    })
+    if (user) {
+        await createAuditLog({
+            actorUserId: user.id,
+            action: 'session.destroyed',
+            targetType: 'Session',
+            metadata: {
+                role: user.role,
+            },
+            ipAddress,
+            userAgent,
+        })
 
-    await createActivityLog({
-      actorUserId: user.id,
-      description: 'Signed out',
-    })
-  }
+        await createActivityLog({
+            actorUserId: user.id,
+            description: 'Signed out',
+        })
+    }
 }
 
 async function clearSessionCookie() {
-  const cookieStore = await cookies()
-  cookieStore.set(env.sessionCookieName, '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 0,
-  })
+    const cookieStore = await cookies()
+    cookieStore.set(env.sessionCookieName, '', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: 0,
+    })
 }
 
 function getSessionExpiryDate() {
-  return new Date(Date.now() + env.sessionTtlHours * 60 * 60 * 1000)
+    return new Date(Date.now() + env.sessionTtlHours * 60 * 60 * 1000)
 }
 
 async function recordUnauthorizedAccess(
-  userId: string,
-  email: string,
-  metadata: Record<string, unknown>
+    userId: string,
+    email: string,
+    metadata: Record<string, unknown>,
 ) {
-  const { ipAddress, userAgent } = await getRequestContext()
+    const { ipAddress, userAgent } = await getRequestContext()
 
-  await prisma.authSecurityEvent.create({
-    data: {
-      userId,
-      email,
-      type: 'UNAUTHORIZED_ACCESS_ATTEMPT',
-      ipAddress,
-      userAgent,
-      metadata: metadata as Prisma.InputJsonValue,
-    },
-  }).catch((error: unknown) => {
-    reportError(error, {
-      scope: 'auth.unauthorized-access',
-      userId,
-      metadata,
+    await prisma.authSecurityEvent.create({
+        data: {
+            userId,
+            email,
+            type: 'UNAUTHORIZED_ACCESS_ATTEMPT',
+            ipAddress,
+            userAgent,
+            metadata: metadata as Prisma.InputJsonValue,
+        },
+    }).catch((error: unknown) => {
+        reportError(error, {
+            scope: 'auth.unauthorized-access',
+            userId,
+            metadata,
+        })
     })
-  })
 }

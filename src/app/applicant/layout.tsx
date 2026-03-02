@@ -4,14 +4,14 @@ import { ApplicantShell } from '@/components/layout/applicant-shell'
 export const dynamic = 'force-dynamic'
 
 export default async function ApplicantLayout({
-  children,
+    children,
 }: {
   children: React.ReactNode
 }) {
-  const user = await requireCurrentUser({
-    roles: ['APPLICANT'],
-    permission: 'VIEW_APPLICANT_DASHBOARD',
-  })
+    const user = await requireCurrentUser({
+        roles: ['APPLICANT'],
+        permission: 'VIEW_APPLICANT_DASHBOARD',
+    })
 
-  return <ApplicantShell user={user}>{children}</ApplicantShell>
+    return <ApplicantShell user={user}>{children}</ApplicantShell>
 }
