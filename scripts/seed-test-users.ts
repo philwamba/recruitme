@@ -3,7 +3,7 @@ import { hashPassword } from '../src/lib/security/password'
 
 const prisma = new PrismaClient()
 
-const ALLOW_PRODUCTION_SEED = process.env.ALLOW_TEST_SEED === 'true'
+const ALLOW_TEST_SEED = process.env.ALLOW_TEST_SEED === 'true'
 const SHOW_SECRETS = process.env.SHOW_SECRETS === 'true' || process.argv.includes('--show-secrets')
 
 const TEST_USERS = [
@@ -31,9 +31,9 @@ const TEST_USERS = [
 ]
 
 async function main() {
-    if (process.env.NODE_ENV === 'production' && !ALLOW_PRODUCTION_SEED) {
-        console.error('ERROR: Refusing to seed test users in production.')
-        console.error('Set ALLOW_TEST_SEED=true to override this check.')
+    if (!ALLOW_TEST_SEED) {
+        console.error('ERROR: Refusing to seed test users without explicit opt-in.')
+        console.error('Set ALLOW_TEST_SEED=true to run this script.')
         process.exit(1)
     }
 
