@@ -56,7 +56,7 @@ export default function Home() {
                                 </p>
                             </div>
                         </div>
-                        <div className="relative aspect-[16/9] lg:aspect-auto lg:h-[400px]">
+                        <div className="relative aspect-video lg:aspect-auto lg:h-[400px]">
                             <Image
                                 src="/counselling.png"
                                 alt="Career Counselling Session"
@@ -71,7 +71,7 @@ export default function Home() {
                 {/* Training Section */}
                 <div className="mx-auto max-w-7xl px-6 lg:px-8 py-24 sm:py-32">
                     <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2 lg:items-center">
-                        <div className="relative order-last lg:order-first aspect-[16/9] lg:aspect-auto lg:h-[400px]">
+                        <div className="relative order-last lg:order-first aspect-video lg:aspect-auto lg:h-[400px]">
                             <Image
                                 src="/training.png"
                                 alt="Professional Training Workshop"

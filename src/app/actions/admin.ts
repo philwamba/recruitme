@@ -6,6 +6,7 @@ import { UserRole } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createAuditLog } from '@/lib/observability/audit'
+import { reportError } from '@/lib/observability/error-reporting'
 import { retryOutboxJob } from '@/lib/services/outbox'
 
 export async function updateUserRole(formData: FormData) {
@@ -75,7 +76,12 @@ export async function retryFailedOutboxJob(formData: FormData) {
 
     try {
         await retryOutboxJob(jobId)
-    } catch {
+    } catch (error) {
+        reportError(error, {
+            scope: 'admin.retry-outbox-job',
+            userId: user.id,
+            metadata: { jobId },
+        })
         redirect('/admin/operations?error=retry-failed')
     }
 
