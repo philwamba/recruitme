@@ -51,7 +51,6 @@ export async function GET(request: Request) {
                     where: { id: existingByLinkedIn.id },
                     data: {
                         email: profile.email,
-                        // Keep existing verification or set if LinkedIn verifies
                         emailVerified: existingByLinkedIn.emailVerified ?? (profile.emailVerified ? new Date() : null),
                     },
                 })
@@ -68,7 +67,6 @@ export async function GET(request: Request) {
                     where: { id: existingByEmail.id },
                     data: {
                         linkedinId: profile.linkedinId,
-                        // Keep existing verification or set if LinkedIn verifies
                         emailVerified: existingByEmail.emailVerified ?? (profile.emailVerified ? new Date() : null),
                     },
                 })

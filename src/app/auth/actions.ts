@@ -524,7 +524,6 @@ export async function resetPassword(
                     lockedUntil: null,
                 },
             }),
-            // Invalidate all existing sessions for security
             prisma.session.deleteMany({
                 where: { userId: tokenRecord.userId },
             }),

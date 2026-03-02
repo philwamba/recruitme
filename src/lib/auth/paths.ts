@@ -22,12 +22,10 @@ function sanitizeRedirectPath(path: string | null, defaultPath: string): string 
         return defaultPath
     }
 
-    // Must start with single slash (not //)
     if (!path.startsWith('/') || path.startsWith('//')) {
         return defaultPath
     }
 
-    // Try to decode and validate
     let decoded: string
     try {
         decoded = decodeURIComponent(path)
@@ -35,17 +33,14 @@ function sanitizeRedirectPath(path: string | null, defaultPath: string): string 
         return defaultPath
     }
 
-    // Reject control characters, backslashes, and path traversal
     if (/[\x00-\x1f\x7f\\]/.test(decoded) || /\.\./.test(decoded)) {
         return defaultPath
     }
 
-    // Also check the original (in case of double-encoding tricks)
     if (/[\x00-\x1f\x7f\\]/.test(path) || /\.\./.test(path)) {
         return defaultPath
     }
 
-    // Allow only safe characters in the path
     if (!/^\/[a-zA-Z0-9\-_./]*$/.test(decoded)) {
         return defaultPath
     }

@@ -19,7 +19,6 @@ import { savePrivateFile } from '@/lib/services/private-files'
 import { createNotification } from '@/lib/services/notifications'
 
 function createTrackingId() {
-    // Use cryptographically secure random bytes
     return `APP-${randomBytes(4).toString('hex').toUpperCase()}`
 }
 

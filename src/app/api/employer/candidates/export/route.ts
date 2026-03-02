@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-// Max records per export to prevent memory exhaustion
 const MAX_EXPORT_RECORDS = 10000
 
 export async function GET(request: Request) {
@@ -12,7 +11,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Support pagination via query params
     const url = new URL(request.url)
     const limitParam = url.searchParams.get('limit')
     const offsetParam = url.searchParams.get('offset')
