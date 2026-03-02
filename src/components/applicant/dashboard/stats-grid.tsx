@@ -24,8 +24,8 @@ export function StatsGrid({ stats, isLoading = false }: StatsGridProps) {
       variant: 'primary' as const,
     },
     {
-      title: 'Pending',
-      value: stats.pendingApplications,
+      title: 'Submitted',
+      value: stats.submittedApplications,
       icon: Clock,
       variant: 'default' as const,
     },

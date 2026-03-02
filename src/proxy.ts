@@ -19,7 +19,7 @@ function isPublicPath(pathname: string) {
   return pathname.startsWith('/_next') || pathname === '/favicon.ico'
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const cookieName = process.env.SESSION_COOKIE_NAME ?? 'recruitme_session'
   const hasSession = Boolean(request.cookies.get(cookieName)?.value)
@@ -32,10 +32,6 @@ export function middleware(request: NextRequest) {
     const signInUrl = new URL('/sign-in', request.url)
     signInUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(signInUrl)
-  }
-
-  if (hasSession && (pathname === '/sign-in' || pathname === '/sign-up')) {
-    return NextResponse.redirect(new URL('/applicant/dashboard', request.url))
   }
 
   if (isPublicPath(pathname)) {

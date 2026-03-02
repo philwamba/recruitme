@@ -25,11 +25,49 @@ enum Permission {
 }
 
 enum ApplicationStatus {
-  PENDING
-  REVIEWING
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
   SHORTLISTED
+  INTERVIEW_PHASE_1
+  INTERVIEW_PHASE_2
+  ASSESSMENT
+  OFFER
   REJECTED
   HIRED
+  WITHDRAWN
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  TEMPORARY
+}
+
+enum WorkplaceType {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum DocumentType {
+  CV
+  SUPPORTING_DOCUMENT
+}
+
+enum DocumentScanStatus {
+  PENDING
+  CLEAN
+  REJECTED
 }
 
 enum AuthSecurityEventType {
@@ -73,6 +111,11 @@ model User {
   authSecurityEvents AuthSecurityEvent[]
   auditLogsAsActor  AuditLog[] @relation("AuditActor")
   activityLogsAsActor ActivityLog[] @relation("ActivityActor")
+  jobsCreated       Job[] @relation("JobCreator")
+  applicationNotes  ApplicationNote[]
+  applicationStageEvents ApplicationStageEvent[] @relation("StageChangedBy")
+  applicationRatings ApplicationRating[]
+  candidateDocuments CandidateDocument[]
 }
 
 model RolePermission {
@@ -213,6 +256,7 @@ model ApplicantProfile {
   workExperiences WorkExperience[]
   educations      Education[]
   certifications  Certification[]
+  candidateDocuments CandidateDocument[]
 }
 
 // Work Experience
@@ -272,36 +316,184 @@ model Certification {
   @@index([applicantProfileId])
 }
 
-// Job posting
-model Job {
-  id           String  @id @default(cuid())
-  title        String
-  company      String
-  location     String?
-  description  String  @db.Text
-  requirements String? @db.Text
-  salary       String?
-  isActive     Boolean @default(true)
-
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  applications Application[]
+  jobs Job[]
+}
+
+// Job posting
+model Job {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  title          String
+  company        String
+  location       String?
+  description    String         @db.Text
+  requirements   String?        @db.Text
+  benefits       String?        @db.Text
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String?
+  employmentType EmploymentType
+  workplaceType  WorkplaceType
+  status         JobStatus      @default(DRAFT)
+  departmentId   String?
+  department     Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdByUserId String?
+  createdBy      User?          @relation("JobCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  publishedAt    DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  applications   Application[]
+  pipelineStages JobPipelineStage[]
+
+  @@index([status, publishedAt])
+  @@index([departmentId])
+  @@index([employmentType, workplaceType])
 }
 
 // Job Application
 model Application {
-  id          String            @id @default(cuid())
-  userId      String
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobId       String
-  job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  status      ApplicationStatus @default(PENDING)
-  coverLetter String?           @db.Text
-  appliedAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id             String            @id @default(cuid())
+  trackingId     String            @unique
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId          String
+  job            Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status         ApplicationStatus @default(DRAFT)
+  currentStageId String?
+  currentStage   JobPipelineStage? @relation("CurrentApplicationStage", fields: [currentStageId], references: [id], onDelete: SetNull)
+  coverLetter    String?           @db.Text
+  source         String?
+  consentAcceptedAt DateTime?
+  submittedAt    DateTime?
+  appliedAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  stageEvents    ApplicationStageEvent[]
+  notes          ApplicationNote[]
+  tags           ApplicationTag[]
+  ratings        ApplicationRating[]
+  documents      CandidateDocument[]
 
   @@unique([userId, jobId])
   @@index([userId])
   @@index([jobId])
+  @@index([status, currentStageId])
+}
+
+model JobPipelineStage {
+  id          String       @id @default(cuid())
+  jobId        String
+  job         Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  name        String
+  order       Int
+  isDefault   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  applications       Application[] @relation("CurrentApplicationStage")
+  stageEventsFrom    ApplicationStageEvent[] @relation("StageEventFrom")
+  stageEventsTo      ApplicationStageEvent[] @relation("StageEventTo")
+
+  @@unique([jobId, order])
+  @@index([jobId])
+}
+
+model ApplicationStageEvent {
+  id            String            @id @default(cuid())
+  applicationId String
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStageId   String?
+  fromStage     JobPipelineStage? @relation("StageEventFrom", fields: [fromStageId], references: [id], onDelete: SetNull)
+  toStageId     String?
+  toStage       JobPipelineStage? @relation("StageEventTo", fields: [toStageId], references: [id], onDelete: SetNull)
+  changedByUserId String?
+  changedBy     User?             @relation("StageChangedBy", fields: [changedByUserId], references: [id], onDelete: SetNull)
+  note          String?           @db.Text
+  createdAt     DateTime          @default(now())
+
+  @@index([applicationId])
+  @@index([changedByUserId])
+}
+
+model ApplicationNote {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  authorUserId  String
+  author        User        @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+  body          String      @db.Text
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([authorUserId])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applicationTags ApplicationTag[]
+}
+
+model ApplicationTag {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  tagId         String
+  tag           Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, tagId])
+  @@index([tagId])
+}
+
+model ApplicationRating {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  authorUserId  String
+  author        User        @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+  score         Int
+  comment       String?     @db.Text
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([authorUserId])
+}
+
+model CandidateDocument {
+  id                 String             @id @default(cuid())
+  applicationId      String?
+  application        Application?       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicantProfileId String?
+  applicantProfile   ApplicantProfile?  @relation(fields: [applicantProfileId], references: [id], onDelete: Cascade)
+  uploadedByUserId   String
+  uploadedByUser     User               @relation(fields: [uploadedByUserId], references: [id], onDelete: Cascade)
+  documentType       DocumentType
+  storageKey         String             @unique
+  originalFileName   String
+  mimeType           String
+  sizeBytes          Int
+  sha256             String
+  scanStatus         DocumentScanStatus @default(PENDING)
+  isPrivate          Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([applicationId])
+  @@index([applicantProfileId])
+  @@index([uploadedByUserId])
 }

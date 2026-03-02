@@ -4,12 +4,14 @@ import { hashPassword } from '../src/lib/security/password'
 const prisma = new PrismaClient()
 
 async function main() {
-  const email = process.env.BOOTSTRAP_ADMIN_EMAIL
+  const rawEmail = process.env.BOOTSTRAP_ADMIN_EMAIL
   const password = process.env.BOOTSTRAP_ADMIN_PASSWORD
 
-  if (!email || !password) {
+  if (!rawEmail || !password) {
     throw new Error('BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD are required')
   }
+
+  const email = rawEmail.trim().toLowerCase()
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -22,7 +24,7 @@ async function main() {
   const adminUser = await prisma.user.create({
     data: {
       email,
-      passwordHash: hashPassword(password),
+      passwordHash: await hashPassword(password),
       role: 'ADMIN',
       emailVerified: new Date(),
       passwordChangedAt: new Date(),

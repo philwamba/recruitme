@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { env } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,8 +22,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  void env
-
   return (
     <html lang="en">
       <body
