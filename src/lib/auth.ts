@@ -1,6 +1,6 @@
 import 'server-only'
 
-import type { Permission, User, UserRole } from '@prisma/client'
+import type { Permission, Prisma, User, UserRole } from '@prisma/client'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
@@ -219,7 +219,7 @@ async function recordUnauthorizedAccess(
       type: 'UNAUTHORIZED_ACCESS_ATTEMPT',
       ipAddress,
       userAgent,
-      metadata,
+      metadata: metadata as Prisma.InputJsonValue,
     },
   }).catch((error: unknown) => {
     reportError(error, {

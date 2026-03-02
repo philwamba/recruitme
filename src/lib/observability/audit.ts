@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { reportError } from '@/lib/observability/error-reporting'
 
@@ -25,7 +26,7 @@ export async function createAuditLog(input: AuditInput) {
         action: input.action,
         targetType: input.targetType,
         targetId: input.targetId ?? null,
-        metadata: input.metadata,
+        metadata: input.metadata as Prisma.InputJsonValue | undefined,
         ipAddress: input.ipAddress ?? null,
         userAgent: input.userAgent ?? null,
       },
@@ -49,7 +50,7 @@ export async function createActivityLog(input: ActivityInput) {
       data: {
         actorUserId: input.actorUserId ?? null,
         description: input.description,
-        metadata: input.metadata,
+        metadata: input.metadata as Prisma.InputJsonValue | undefined,
       },
     })
   } catch (error) {

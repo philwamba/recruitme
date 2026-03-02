@@ -15,14 +15,17 @@ export async function addToWaitlist(
   formData: FormData
 ) {
   try {
-    const { ipAddress } = await getRequestContext()
-    assertRateLimit(`waitlist:${ipAddress}`, 5, 1000 * 60 * 15)
-
-    const email = formData.get('email') as string
+    const rawEmail = formData.get('email') as string
+    const email = (rawEmail || '').trim().toLowerCase()
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return { message: 'Please enter a valid email address.', success: false }
     }
+
+    const { ipAddress } = await getRequestContext()
+    // Use email as fallback key when IP is unavailable
+    const rateLimitKey = ipAddress ?? `email:${email}`
+    assertRateLimit(`waitlist:${rateLimitKey}`, 5, 1000 * 60 * 15)
 
     await prisma.waitlist.create({
       data: { email },

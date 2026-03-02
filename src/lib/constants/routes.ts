@@ -1,6 +1,9 @@
 export const ROUTES = {
   // Public routes
   HOME: '/',
+  JOBS: '/jobs',
+  SIGN_IN: '/sign-in',
+  SIGN_UP: '/sign-up',
 
   // Applicant routes
   APPLICANT: {
@@ -11,7 +14,7 @@ export const ROUTES = {
     SETTINGS: '/applicant/settings',
   },
 
-  // Employer routes (future)
+  // Employer routes
   EMPLOYER: {
     DASHBOARD: '/employer/dashboard',
     JOBS: '/employer/jobs',

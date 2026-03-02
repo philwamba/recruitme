@@ -14,11 +14,11 @@ export default function Home() {
               <span className="text-xl font-bold tracking-tight text-gray-900">RecruitMe</span>
             </Link>
           </div>
-          <div className="hidden lg:flex lg:items-center lg:gap-3">
-            <Button asChild variant="ghost">
+          <div className="flex items-center gap-2 lg:gap-3">
+            <Button asChild variant="ghost" size="sm" className="lg:size-default">
               <Link href="/sign-in">Sign in</Link>
             </Button>
-            <Button asChild>
+            <Button asChild size="sm" className="lg:size-default">
               <Link href="/sign-up">Create account</Link>
             </Button>
           </div>
@@ -51,6 +51,9 @@ export default function Home() {
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <WaitlistForm />
+              <Button asChild variant="outline">
+                <Link href="/jobs">Browse Jobs</Link>
+              </Button>
             </div>
           </div>
         </div>

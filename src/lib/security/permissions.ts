@@ -1,7 +1,7 @@
 import type { Permission, UserRole } from '@prisma/client'
 
-const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  ADMIN: [
+const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>> = Object.freeze({
+  ADMIN: Object.freeze([
     'VIEW_APPLICANT_DASHBOARD',
     'MANAGE_SELF_PROFILE',
     'MANAGE_JOBS',
@@ -9,19 +9,20 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'MANAGE_USERS',
     'VIEW_AUDIT_LOGS',
     'MANAGE_SYSTEM_SETTINGS',
-  ],
-  EMPLOYER: [
+  ] as const),
+  EMPLOYER: Object.freeze([
     'MANAGE_JOBS',
     'MANAGE_APPLICATIONS',
-  ],
-  APPLICANT: [
+  ] as const),
+  APPLICANT: Object.freeze([
     'VIEW_APPLICANT_DASHBOARD',
     'MANAGE_SELF_PROFILE',
-  ],
-}
+  ] as const),
+})
 
 export function getPermissionsForRole(role: UserRole): Permission[] {
-  return ROLE_PERMISSIONS[role]
+  // Return a defensive copy so callers cannot mutate internal state
+  return [...ROLE_PERMISSIONS[role]]
 }
 
 export function roleHasPermission(role: UserRole, permission: Permission): boolean {

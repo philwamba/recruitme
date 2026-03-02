@@ -18,7 +18,7 @@ export default async function DashboardPage() {
 
   const stats = dashboardData?.stats ?? {
     totalApplications: 0,
-    pendingApplications: 0,
+    submittedApplications: 0,
     reviewingApplications: 0,
     shortlistedApplications: 0,
     rejectedApplications: 0,

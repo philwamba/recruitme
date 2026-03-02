@@ -42,8 +42,6 @@ export async function signIn(
   let destination: string | null = null
 
   try {
-    assertRateLimit(`signin:${ipAddress}`, 10, 1000 * 60 * 15)
-
     const parsed = signInSchema.safeParse({
       email: formData.get('email'),
       password: formData.get('password'),
@@ -57,6 +55,10 @@ export async function signIn(
     }
 
     const email = parsed.data.email.toLowerCase()
+
+    // Use email as fallback key when IP is unavailable
+    const rateLimitKey = ipAddress ?? `email:${email}`
+    assertRateLimit(`signin:${rateLimitKey}`, 10, 1000 * 60 * 15)
     const user = await prisma.user.findUnique({
       where: { email },
     })
@@ -87,19 +89,28 @@ export async function signIn(
       }
     }
 
-    const passwordMatches = verifyPassword(parsed.data.password, user.passwordHash)
+    const passwordMatches = await verifyPassword(parsed.data.password, user.passwordHash)
 
     if (!passwordMatches) {
-      const failedAttempts = user.failedSignInAttempts + 1
-      const shouldLock = failedAttempts >= MAX_SIGN_IN_ATTEMPTS
-
-      await prisma.user.update({
+      // Atomic increment to prevent race conditions
+      const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: {
-          failedSignInAttempts: failedAttempts,
-          lockedUntil: shouldLock ? new Date(Date.now() + 1000 * 60 * 15) : null,
+          failedSignInAttempts: { increment: 1 },
         },
       })
+
+      const failedAttempts = updatedUser.failedSignInAttempts
+      const shouldLock = failedAttempts >= MAX_SIGN_IN_ATTEMPTS
+
+      if (shouldLock) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            lockedUntil: new Date(Date.now() + 1000 * 60 * 15),
+          },
+        })
+      }
 
       await prisma.authSecurityEvent.create({
         data: {
@@ -194,8 +205,6 @@ export async function signUp(
   const { ipAddress, userAgent } = await getRequestContext()
 
   try {
-    assertRateLimit(`signup:${ipAddress}`, 5, 1000 * 60 * 15)
-
     const parsed = signUpSchema.safeParse({
       firstName: formData.get('firstName'),
       lastName: formData.get('lastName'),
@@ -211,6 +220,10 @@ export async function signUp(
     }
 
     const email = parsed.data.email.toLowerCase()
+
+    // Use email as fallback key when IP is unavailable
+    const rateLimitKey = ipAddress ?? `email:${email}`
+    assertRateLimit(`signup:${rateLimitKey}`, 5, 1000 * 60 * 15)
     const existingUser = await prisma.user.findUnique({
       where: { email },
     })
@@ -224,11 +237,13 @@ export async function signUp(
 
     const verificationToken = createOpaqueToken(24)
 
+    const passwordHash = await hashPassword(parsed.data.password)
+
     const user = await prisma.$transaction(async (tx) => {
       const createdUser = await tx.user.create({
         data: {
           email,
-          passwordHash: hashPassword(parsed.data.password),
+          passwordHash,
           role: 'APPLICANT',
           passwordChangedAt: new Date(),
         },
@@ -281,10 +296,17 @@ export async function signUp(
       description: 'Created account',
     })
 
+    // Log token fingerprint for auditing, full URL only in dev console
     reportOperationalEvent('Email verification token generated', {
       email: user.email,
-      verificationUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/verify-email?token=${verificationToken}`,
+      tokenIssued: true,
+      tokenFingerprint: hashToken(verificationToken).slice(0, 16),
     })
+
+    // Development only: log full URL to console (not persisted in reportOperationalEvent)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[DEV] Verification URL: ${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/verify-email?token=${verificationToken}`)
+    }
 
     return {
       success: true,
@@ -311,8 +333,6 @@ export async function requestPasswordReset(
   const { ipAddress, userAgent } = await getRequestContext()
 
   try {
-    assertRateLimit(`password-reset:${ipAddress}`, 5, 1000 * 60 * 15)
-
     const parsed = requestPasswordResetSchema.safeParse({
       email: formData.get('email'),
     })
@@ -325,12 +345,28 @@ export async function requestPasswordReset(
     }
 
     const email = parsed.data.email.toLowerCase()
+
+    // Use email as fallback key when IP is unavailable
+    const rateLimitKey = ipAddress ?? `email:${email}`
+    assertRateLimit(`password-reset:${rateLimitKey}`, 5, 1000 * 60 * 15)
     const user = await prisma.user.findUnique({
       where: { email },
     })
 
     if (user) {
       const resetToken = createOpaqueToken(24)
+
+      // Invalidate any prior active tokens for this user
+      await prisma.passwordResetToken.updateMany({
+        where: {
+          userId: user.id,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        data: {
+          expiresAt: new Date(), // Expire immediately
+        },
+      })
 
       await prisma.passwordResetToken.create({
         data: {
@@ -350,10 +386,17 @@ export async function requestPasswordReset(
         },
       })
 
+      // Log token fingerprint for auditing, full URL only in dev console
       reportOperationalEvent('Password reset token generated', {
         email: user.email,
-        resetUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/reset-password?token=${resetToken}`,
+        tokenIssued: true,
+        tokenFingerprint: hashToken(resetToken).slice(0, 16),
       })
+
+      // Development only: log full URL to console (not persisted in reportOperationalEvent)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV] Reset URL: ${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/reset-password?token=${resetToken}`)
+      }
     }
 
     return {
@@ -391,40 +434,51 @@ export async function resetPassword(
       }
     }
 
-    const tokenRecord = await prisma.passwordResetToken.findUnique({
+    const tokenHash = hashToken(parsed.data.token)
+    const now = new Date()
+
+    // Atomically consume the token - check and mark used in one operation
+    const consumeResult = await prisma.passwordResetToken.updateMany({
       where: {
-        tokenHash: hashToken(parsed.data.token),
+        tokenHash,
+        usedAt: null,
+        expiresAt: { gt: now },
       },
-      include: {
-        user: true,
+      data: {
+        usedAt: now,
       },
     })
 
-    if (
-      !tokenRecord ||
-      tokenRecord.usedAt ||
-      tokenRecord.expiresAt <= new Date()
-    ) {
+    if (consumeResult.count === 0) {
       return {
         success: false,
         message: 'That reset token is invalid or expired.',
       }
     }
 
+    // Token was successfully consumed, now get user info and update password
+    const tokenRecord = await prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    })
+
+    if (!tokenRecord) {
+      return {
+        success: false,
+        message: 'That reset token is invalid or expired.',
+      }
+    }
+
+    const newPasswordHash = await hashPassword(parsed.data.password)
+
     await prisma.$transaction([
       prisma.user.update({
         where: { id: tokenRecord.userId },
         data: {
-          passwordHash: hashPassword(parsed.data.password),
+          passwordHash: newPasswordHash,
           passwordChangedAt: new Date(),
           failedSignInAttempts: 0,
           lockedUntil: null,
-        },
-      }),
-      prisma.passwordResetToken.update({
-        where: { id: tokenRecord.id },
-        data: {
-          usedAt: new Date(),
         },
       }),
       prisma.authSecurityEvent.create({
@@ -453,16 +507,32 @@ export async function resetPassword(
 }
 
 export async function verifyEmail(token: string) {
-  const tokenRecord = await prisma.verificationToken.findUnique({
+  const tokenHash = hashToken(token)
+  const now = new Date()
+
+  // Atomically consume the token - check and mark used in one operation
+  const consumeResult = await prisma.verificationToken.updateMany({
     where: {
-      tokenHash: hashToken(token),
+      tokenHash,
+      usedAt: null,
+      expiresAt: { gt: now },
     },
-    include: {
-      user: true,
+    data: {
+      usedAt: now,
     },
   })
 
-  if (!tokenRecord || tokenRecord.usedAt || tokenRecord.expiresAt <= new Date()) {
+  if (consumeResult.count === 0) {
+    return false
+  }
+
+  // Token was successfully consumed, get user info and verify email
+  const tokenRecord = await prisma.verificationToken.findUnique({
+    where: { tokenHash },
+    include: { user: true },
+  })
+
+  if (!tokenRecord) {
     return false
   }
 
@@ -471,12 +541,6 @@ export async function verifyEmail(token: string) {
       where: { id: tokenRecord.userId },
       data: {
         emailVerified: new Date(),
-      },
-    }),
-    prisma.verificationToken.update({
-      where: { id: tokenRecord.id },
-      data: {
-        usedAt: new Date(),
       },
     }),
     prisma.authSecurityEvent.create({
@@ -498,7 +562,8 @@ export async function signOut() {
 }
 
 function getPostSignInPath(role: 'ADMIN' | 'EMPLOYER' | 'APPLICANT', nextPath: string | null) {
-  if (nextPath && nextPath.startsWith('/')) {
+  // Validate nextPath: must start with '/' but NOT '//' (protocol-relative URLs)
+  if (nextPath && nextPath.startsWith('/') && !nextPath.startsWith('//')) {
     return nextPath
   }
 

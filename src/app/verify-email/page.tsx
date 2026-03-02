@@ -10,7 +10,15 @@ export default async function VerifyEmailPage({
 }) {
   const params = await searchParams
   const token = params.token ?? ''
-  const success = token ? await verifyEmail(token) : false
+
+  let success = false
+  if (token) {
+    try {
+      success = await verifyEmail(token)
+    } catch {
+      success = false
+    }
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/20 px-4 py-10">

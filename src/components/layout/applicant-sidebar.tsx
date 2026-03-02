@@ -134,12 +134,13 @@ export function ApplicantSidebar({ isCollapsed = false, onToggle }: ApplicantSid
           <Button
             type="submit"
             variant="ghost"
+            aria-label={isCollapsed ? 'Sign out' : undefined}
             className={cn(
               'w-full justify-start gap-3 text-muted-foreground hover:text-foreground',
               isCollapsed && 'justify-center px-2'
             )}
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4" aria-hidden="true" />
             {!isCollapsed && <span>Sign out</span>}
           </Button>
         </form>
