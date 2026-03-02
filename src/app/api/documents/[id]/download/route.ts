@@ -36,21 +36,31 @@ export async function GET(
     document.applicantProfile?.userId === user.id
 
     const canRecruiterAccess =
-    (user.role === 'EMPLOYER' || user.role === 'ADMIN') &&
-    (!!document.application?.job.createdByUserId
-        ? document.application.job.createdByUserId === user.id || user.role === 'ADMIN'
-        : false)
+        user.role === 'ADMIN' ||
+        (user.role === 'EMPLOYER' &&
+            document.application?.job.createdByUserId === user.id)
 
     if (!ownsDocument && !canRecruiterAccess) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Sanitize filename for Content-Disposition header
     function sanitizeFilename(filename: string, fallbackId: string): string {
-    // Remove CRLF characters and double quotes
-        let sanitized = filename.replace(/[\r\n"]/g, '')
-        // If empty after sanitization, use a fallback
-        if (!sanitized.trim()) {
+        let sanitized = filename
+            .replace(/[\x00-\x1f\x7f]/g, '') // Control characters
+            .replace(/["\\/:<>|?*]/g, '-') // Filesystem-sensitive characters
+            .replace(/\s+/g, '_') // Collapse whitespace
+            .trim()
+
+        if (sanitized.length > 200) {
+            const ext = sanitized.lastIndexOf('.')
+            if (ext > 0 && ext > sanitized.length - 10) {
+                sanitized = sanitized.slice(0, 190) + sanitized.slice(ext)
+            } else {
+                sanitized = sanitized.slice(0, 200)
+            }
+        }
+
+        if (!sanitized) {
             sanitized = `document-${fallbackId}`
         }
         return sanitized

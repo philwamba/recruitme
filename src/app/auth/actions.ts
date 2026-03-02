@@ -224,7 +224,6 @@ export async function signUp(
 
         const email = parsed.data.email.toLowerCase()
 
-        // Use email as fallback key when IP is unavailable
         const rateLimitKey = ipAddress ?? `email:${email}`
         assertRateLimit(`signup:${rateLimitKey}`, 5, 1000 * 60 * 15)
         const existingUser = await prisma.user.findUnique({
@@ -233,8 +232,8 @@ export async function signUp(
 
         if (existingUser) {
             return {
-                success: false,
-                message: 'An account with that email already exists.',
+                success: true,
+                message: 'Account created. Check your email for the verification link.',
             }
         }
 
@@ -299,7 +298,6 @@ export async function signUp(
             description: 'Created account',
         })
 
-        // Log token fingerprint for auditing, full URL only in dev console
         reportOperationalEvent('Email verification token generated', {
             email: user.email,
             tokenIssued: true,
@@ -320,7 +318,6 @@ export async function signUp(
         }
         const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}`
 
-        // Best-effort email - don't fail account creation if email fails
         try {
             await sendEmail({
                 to: user.email,
@@ -416,7 +413,6 @@ export async function requestPasswordReset(
                 },
             })
 
-            // Log token fingerprint for auditing, full URL only in dev console
             reportOperationalEvent('Password reset token generated', {
                 email: user.email,
                 tokenIssued: true,
@@ -430,11 +426,9 @@ export async function requestPasswordReset(
                     userId: user.id,
                     metadata: { rawValue: process.env.NEXT_PUBLIC_APP_URL },
                 })
-                // Don't send email with invalid URL - continue to return success message
             } else {
                 const resetUrl = `${appUrl}/reset-password?token=${resetToken}`
 
-                // Best-effort email - don't fail if email delivery fails
                 try {
                     await sendEmail({
                         to: user.email,
@@ -488,7 +482,6 @@ export async function resetPassword(
         const tokenHash = hashToken(parsed.data.token)
         const now = new Date()
 
-        // Atomically consume the token - check and mark used in one operation
         const consumeResult = await prisma.passwordResetToken.updateMany({
             where: {
                 tokenHash,
@@ -507,7 +500,6 @@ export async function resetPassword(
             }
         }
 
-        // Token was successfully consumed, now get user info and update password
         const tokenRecord = await prisma.passwordResetToken.findUnique({
             where: { tokenHash },
             include: { user: true },
@@ -561,7 +553,6 @@ export async function verifyEmail(token: string) {
     const tokenHash = hashToken(token)
     const now = new Date()
 
-    // Atomically consume the token - check and mark used in one operation
     const consumeResult = await prisma.verificationToken.updateMany({
         where: {
             tokenHash,
@@ -577,7 +568,6 @@ export async function verifyEmail(token: string) {
         return false
     }
 
-    // Token was successfully consumed, get user info and verify email
     const tokenRecord = await prisma.verificationToken.findUnique({
         where: { tokenHash },
         include: { user: true },

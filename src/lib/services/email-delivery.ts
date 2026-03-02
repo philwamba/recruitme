@@ -25,8 +25,14 @@ function maskEmail(email: string): string {
     return `${maskedLocal}@${domain}`
 }
 
+const SUPPORTED_PROVIDERS = ['resend', 'log'] as const
+
 export async function sendEmail(input: SendEmailInput): Promise<EmailDeliveryResult> {
     const provider = env.emailProvider.toLowerCase()
+
+    if (!SUPPORTED_PROVIDERS.includes(provider as typeof SUPPORTED_PROVIDERS[number])) {
+        throw new Error(`Unsupported email provider: ${provider}. Supported providers: ${SUPPORTED_PROVIDERS.join(', ')}`)
+    }
 
     if (provider === 'resend') {
         if (!env.resendApiKey || !env.emailFrom) {

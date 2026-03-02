@@ -161,19 +161,29 @@ export async function getPrivateFileStats(storageKey: string) {
     return stat(securePath)
 }
 
-export async function removePrivateFile(storageKey: string) {
-    if (isObjectStorageEnabled()) {
-        await s3Client!.send(
-            new DeleteObjectCommand({
-                Bucket: env.cloudflareR2BucketName!,
-                Key: storageKey,
-            }),
-        ).catch(() => undefined)
-        return
-    }
+export async function removePrivateFile(storageKey: string): Promise<boolean> {
+    try {
+        if (isObjectStorageEnabled()) {
+            await s3Client!.send(
+                new DeleteObjectCommand({
+                    Bucket: env.cloudflareR2BucketName!,
+                    Key: storageKey,
+                }),
+            )
+            return true
+        }
 
-    const securePath = getSecurePath(storageKey)
-    await unlink(securePath).catch(() => undefined)
+        const securePath = getSecurePath(storageKey)
+        await unlink(securePath)
+        return true
+    } catch (error) {
+        // ENOENT means file doesn't exist - treat as success (already deleted)
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return true
+        }
+        // For actual errors, return false to signal failure
+        return false
+    }
 }
 
 export function getPrivateStorageHealth() {

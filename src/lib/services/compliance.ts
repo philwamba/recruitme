@@ -59,7 +59,6 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         })
     }
 
-    // Get documents to delete (needed for file cleanup after DB transaction)
     const documents = await prisma.candidateDocument.findMany({
         where: {
             OR: [
@@ -70,8 +69,6 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         select: { storageKey: true },
     })
 
-    // First: Run DB transaction to delete all records
-    // Set status to PROCESSING first, then COMPLETED after file cleanup
     await prisma.$transaction([
         prisma.notification.deleteMany({ where: { userId: request.userId } }),
         prisma.candidateDocument.deleteMany({
@@ -93,27 +90,24 @@ export async function processDeletionRequest(requestId: string, approve: boolean
         }),
     ])
 
-    // Second: Delete files from storage (after DB transaction succeeds)
     const failedDeletions: string[] = []
     for (const document of documents) {
-        try {
-            await removePrivateFile(document.storageKey)
-        } catch (error) {
+        const success = await removePrivateFile(document.storageKey)
+        if (!success) {
             failedDeletions.push(document.storageKey)
-            reportError(error, {
+            reportError(new Error('File deletion failed'), {
                 scope: 'compliance.file-deletion',
                 metadata: { requestId, storageKey: document.storageKey },
             })
         }
     }
 
-    // Third: Update status to COMPLETED (or FAILED if file deletions failed)
-    const finalStatus = failedDeletions.length === 0 ? 'COMPLETED' : 'COMPLETED'
+    const finalStatus = failedDeletions.length > 0 ? 'FAILED' : 'COMPLETED'
     const finalNotes = failedDeletions.length > 0
         ? `${notes ?? ''}\nWarning: ${failedDeletions.length} file(s) could not be deleted from storage.`.trim()
         : notes ?? null
 
-    await prisma.dataDeletionRequest.update({
+    return prisma.dataDeletionRequest.update({
         where: { id: requestId },
         data: {
             status: finalStatus,
@@ -121,6 +115,4 @@ export async function processDeletionRequest(requestId: string, approve: boolean
             notes: finalNotes,
         },
     })
-
-    return request
 }

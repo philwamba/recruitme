@@ -19,13 +19,14 @@ export function SignInForm({ nextPath = '' }: { nextPath?: string }) {
 
     return (
         <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-3">
                 <GoogleAuthButton nextPath={nextPath} label="Continue with Google" />
                 <LinkedInAuthButton nextPath={nextPath} label="Continue with LinkedIn" />
             </div>
-            <div className="relative text-center text-xs uppercase text-muted-foreground">
-                <span className="bg-background px-2">Or sign in with email</span>
-                <div className="absolute inset-x-0 top-1/2 -z-10 h-px -translate-y-1/2 bg-border" />
+            <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="h-px flex-1 bg-border" />
+                <span className="uppercase tracking-widest">or</span>
+                <div className="h-px flex-1 bg-border" />
             </div>
             <form action={formAction} className="space-y-4">
                 <input type="hidden" name="next" value={nextPath} />

@@ -190,7 +190,7 @@ function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
                 item.badge && 'cursor-not-allowed opacity-60',
             )}
         >
-            <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             {!isCollapsed && (
                 <>
                     <span className="flex-1">{item.title}</span>
