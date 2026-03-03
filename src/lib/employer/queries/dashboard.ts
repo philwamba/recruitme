@@ -80,6 +80,7 @@ export async function getEmployerDashboardStats(userId: string) {
         prisma.application.count({
             where: {
                 status: 'OFFER',
+                updatedAt: { gte: thirtyDaysAgo },
                 job: { createdByUserId: userId },
             },
         }),

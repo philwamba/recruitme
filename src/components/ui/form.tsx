@@ -105,10 +105,10 @@ function FormLabel({
             data-error={!!error}
             className={cn('data-[error=true]:text-destructive', className)}
             htmlFor={formItemId}
+            required={required}
             {...props}
         >
             {children}
-            {required && <span className="text-primary">*</span>}
         </Label>
     )
 }
