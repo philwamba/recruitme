@@ -117,7 +117,7 @@ async function AssessmentsSection() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {assessments.map((assessment) => (
+                    {assessments.map(assessment => (
                         <div
                             key={assessment.id}
                             className="flex items-start justify-between rounded-lg border p-4"
