@@ -35,7 +35,7 @@ export async function createJob(data: JobFormData) {
         { name: 'Offer', order: 5 },
     ]
 
-    const job = await prisma.$transaction(async (tx) => {
+    const job = await prisma.$transaction(async tx => {
         const newJob = await tx.job.create({
             data: {
                 ...validated,
