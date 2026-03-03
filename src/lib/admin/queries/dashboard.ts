@@ -18,13 +18,10 @@ export async function getDashboardStats() {
         pendingReviews,
         hiredCount,
         offeredCount,
-        rejectedAfterOfferCount,
     ] = await Promise.all([
-        // Active jobs (current)
         prisma.job.count({
             where: { status: 'PUBLISHED' },
         }),
-        // Active jobs (previous period for trend)
         prisma.job.count({
             where: {
                 status: 'PUBLISHED',
@@ -34,14 +31,12 @@ export async function getDashboardStats() {
                 },
             },
         }),
-        // Total candidates (submitted applications)
         prisma.application.count({
             where: {
                 status: { not: 'DRAFT' },
                 submittedAt: { gte: thirtyDaysAgo },
             },
         }),
-        // Previous period candidates
         prisma.application.count({
             where: {
                 status: { not: 'DRAFT' },
@@ -51,7 +46,6 @@ export async function getDashboardStats() {
                 },
             },
         }),
-        // Interviews this week
         prisma.interview.count({
             where: {
                 scheduledAt: {
@@ -61,33 +55,22 @@ export async function getDashboardStats() {
                 status: 'SCHEDULED',
             },
         }),
-        // Pending reviews
         prisma.application.count({
             where: { status: 'SUBMITTED' },
         }),
-        // Hired count
         prisma.application.count({
             where: {
                 status: 'HIRED',
                 updatedAt: { gte: thirtyDaysAgo },
             },
         }),
-        // Offered count
         prisma.application.count({
             where: {
                 status: 'OFFER',
             },
         }),
-        // Rejected after offer (for acceptance rate)
-        prisma.application.count({
-            where: {
-                status: 'REJECTED',
-                updatedAt: { gte: thirtyDaysAgo },
-            },
-        }),
     ])
 
-    // Calculate trends
     const jobsTrend = activeJobsPrevious > 0
         ? Math.round(((activeJobs - activeJobsPrevious) / activeJobsPrevious) * 100)
         : 0
@@ -96,10 +79,12 @@ export async function getDashboardStats() {
         ? Math.round(((totalCandidates - totalCandidatesPrevious) / totalCandidatesPrevious) * 100)
         : 0
 
-    // Offer acceptance rate
-    const totalOfferDecisions = hiredCount + rejectedAfterOfferCount
-    const offerAcceptanceRate = totalOfferDecisions > 0
-        ? Math.round((hiredCount / totalOfferDecisions) * 100)
+    // Offer conversion rate = hired / (hired + current pending offers)
+    // This shows how well offers convert to hires
+    // Note: Does not track historical offer rejections due to schema limitations
+    const totalOffers = hiredCount + offeredCount
+    const offerAcceptanceRate = totalOffers > 0
+        ? Math.round((hiredCount / totalOffers) * 100)
         : 0
 
     return {
@@ -131,16 +116,13 @@ export async function getApplicationsOverTime(days: number = 30) {
         },
     })
 
-    // Group by date
     const groupedByDate = new Map<string, number>()
 
-    // Initialize all dates with 0
     for (let i = days; i >= 0; i--) {
         const date = format(subDays(now, i), 'yyyy-MM-dd')
         groupedByDate.set(date, 0)
     }
 
-    // Count applications per date
     for (const app of applications) {
         if (app.submittedAt) {
             const date = format(app.submittedAt, 'yyyy-MM-dd')

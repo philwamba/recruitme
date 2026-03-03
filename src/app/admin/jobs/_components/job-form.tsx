@@ -107,7 +107,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                                 name="title"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Job Title</FormLabel>
+                                        <FormLabel required>Job Title</FormLabel>
                                         <FormControl>
                                             <Input placeholder="e.g. Senior Software Engineer" {...field} />
                                         </FormControl>
@@ -120,7 +120,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                                 name="company"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Company</FormLabel>
+                                        <FormLabel required>Company</FormLabel>
                                         <FormControl>
                                             <Input placeholder="e.g. Acme Inc." {...field} />
                                         </FormControl>
@@ -183,7 +183,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                                 name="employmentType"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Employment Type</FormLabel>
+                                        <FormLabel required>Employment Type</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
@@ -207,7 +207,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                                 name="workplaceType"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Workplace Type</FormLabel>
+                                        <FormLabel required>Workplace Type</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
@@ -320,7 +320,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description</FormLabel>
+                                    <FormLabel required>Description</FormLabel>
                                     <FormControl>
                                         <Textarea
                                             placeholder="Describe the role and responsibilities..."

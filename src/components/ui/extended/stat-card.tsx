@@ -102,20 +102,20 @@ export function StatCard({
     return (
         <Card className={className}>
             <CardContent className="p-6">
-                <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4">
                     <div
                         className={cn(
-                            'flex h-12 w-12 items-center justify-center rounded-xl',
+                            'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl',
                             styles.icon,
                         )}
                     >
                         <Icon className="h-6 w-6" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-muted-foreground truncate">
+                    <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">
                             {title}
                         </p>
-                        <div className="flex items-baseline gap-2 mt-0.5">
+                        <div className="flex items-baseline gap-2 flex-wrap">
                             <p className="text-3xl font-bold tracking-tight">{value}</p>
                             {trend && (
                                 <span
@@ -134,7 +134,7 @@ export function StatCard({
                             )}
                         </div>
                         {description && (
-                            <p className="text-xs text-muted-foreground mt-1.5">{description}</p>
+                            <p className="text-xs text-muted-foreground">{description}</p>
                         )}
                     </div>
                 </div>

@@ -18,7 +18,6 @@ export async function getEmployerDashboardStats(userId: string) {
         pendingReviews,
         hiredCount,
         offeredCount,
-        rejectedAfterOfferCount,
     ] = await Promise.all([
         prisma.job.count({
             where: {
@@ -84,15 +83,9 @@ export async function getEmployerDashboardStats(userId: string) {
                 job: { createdByUserId: userId },
             },
         }),
-        prisma.application.count({
-            where: {
-                status: 'REJECTED',
-                updatedAt: { gte: thirtyDaysAgo },
-                job: { createdByUserId: userId },
-            },
-        }),
     ])
 
+    // Calculate trends
     const jobsTrend = activeJobsPrevious > 0
         ? Math.round(((activeJobs - activeJobsPrevious) / activeJobsPrevious) * 100)
         : 0
@@ -101,9 +94,12 @@ export async function getEmployerDashboardStats(userId: string) {
         ? Math.round(((totalCandidates - totalCandidatesPrevious) / totalCandidatesPrevious) * 100)
         : 0
 
-    const totalOfferDecisions = hiredCount + rejectedAfterOfferCount
-    const offerAcceptanceRate = totalOfferDecisions > 0
-        ? Math.round((hiredCount / totalOfferDecisions) * 100)
+    // Offer conversion rate = hired / (hired + current pending offers)
+    // This shows how well offers convert to hires
+    // Note: Does not track historical offer rejections due to schema limitations
+    const totalOffers = hiredCount + offeredCount
+    const offerAcceptanceRate = totalOffers > 0
+        ? Math.round((hiredCount / totalOffers) * 100)
         : 0
 
     return {
@@ -194,8 +190,6 @@ export async function getEmployerPipelineDistribution(userId: string) {
 }
 
 export async function getEmployerRecentActivity(userId: string, limit: number = 10) {
-    // Get activity logs for actions performed by the employer
-    // This shows the employer's own actions on jobs, candidates, interviews, etc.
     const activities = await prisma.activityLog.findMany({
         where: {
             actorUserId: userId,
@@ -214,7 +208,6 @@ export async function getEmployerRecentActivity(userId: string, limit: number = 
     })
 
     return activities.map(activity => {
-        // Mask email for privacy - only show first 2 chars + domain
         const maskEmail = (email: string) => {
             const [localPart, domain] = email.split('@')
             return `${localPart.slice(0, 2)}***@${domain}`

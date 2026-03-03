@@ -125,7 +125,7 @@ export function CertificationFormDialog({
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Certification Name *</FormLabel>
+                                    <FormLabel required>Certification Name</FormLabel>
                                     <FormControl>
                                         <Input placeholder="e.g., AWS Solutions Architect" {...field} />
                                     </FormControl>
