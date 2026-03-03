@@ -10,7 +10,8 @@ import { EmptyState } from '@/components/ui/extended/empty-state'
 interface ActivityItem {
     id: string
     description: string
-    actorEmail: string
+    actorEmail?: string // For backward compatibility
+    actorDisplayName?: string // Privacy-friendly display name
     createdAt: Date
 }
 
@@ -45,22 +46,25 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
             <CardContent>
                 <ScrollArea className="h-[320px] pr-4">
                     <div className="space-y-4">
-                        {activities.map((activity) => (
-                            <div key={activity.id} className="flex items-start gap-3">
-                                <Avatar className="h-9 w-9">
-                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                        {activity.actorEmail.slice(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 space-y-0.5">
-                                    <p className="text-sm">{activity.description}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {activity.actorEmail} &middot;{' '}
-                                        {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
-                                    </p>
+                        {activities.map((activity) => {
+                            const displayName = activity.actorDisplayName || activity.actorEmail || 'System'
+                            return (
+                                <div key={activity.id} className="flex items-start gap-3">
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                            {displayName.slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 space-y-0.5">
+                                        <p className="text-sm">{activity.description}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {displayName} &middot;{' '}
+                                            {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </ScrollArea>
             </CardContent>

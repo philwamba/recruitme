@@ -117,7 +117,6 @@ export const adminNavGroups: NavGroup[] = [
                 title: 'Settings',
                 href: ROUTES.ADMIN.SETTINGS,
                 icon: Settings,
-                badge: 'Soon',
             },
         ],
     },
