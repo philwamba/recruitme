@@ -9,17 +9,7 @@ import {
     TrendingUp,
 } from 'lucide-react'
 import { StatCard } from '@/components/ui/extended/stat-card'
-
-interface DashboardStats {
-    activeJobs: number
-    jobsTrend: number
-    totalCandidates: number
-    candidatesTrend: number
-    interviewsThisWeek: number
-    pendingReviews: number
-    hiredCount: number
-    offerAcceptanceRate: number
-}
+import type { DashboardStats } from '@/types/dashboard'
 
 interface StatsCardsProps {
     stats: DashboardStats

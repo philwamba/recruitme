@@ -67,6 +67,7 @@ export async function getDashboardStats() {
         prisma.application.count({
             where: {
                 status: 'OFFER',
+                updatedAt: { gte: thirtyDaysAgo },
             },
         }),
     ])
