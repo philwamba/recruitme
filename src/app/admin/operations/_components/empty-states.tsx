@@ -1,6 +1,6 @@
 'use client'
 
-import { RefreshCw, Mail, Activity, Calendar } from 'lucide-react'
+import { RefreshCw, Mail, Activity, Shield } from 'lucide-react'
 import { EmptyState } from '@/components/ui/extended/empty-state'
 
 export function NoOutboxJobsEmptyState() {
@@ -28,7 +28,7 @@ export function NoDeliveryLogsEmptyState() {
 export function NoAuditLogsEmptyState() {
     return (
         <EmptyState
-            icon={Activity}
+            icon={Shield}
             title="No audit logs"
             description="No audit events recorded"
             variant="compact"
@@ -39,7 +39,7 @@ export function NoAuditLogsEmptyState() {
 export function NoActivityLogsEmptyState() {
     return (
         <EmptyState
-            icon={Calendar}
+            icon={Activity}
             title="No activity logs"
             description="No user activity recorded"
             variant="compact"
