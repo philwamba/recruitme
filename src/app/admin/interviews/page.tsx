@@ -1,14 +1,14 @@
 import { Suspense } from 'react'
 import { endOfMonth } from 'date-fns'
-import { Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import { requireCurrentUser } from '@/lib/auth'
 import { getInterviews, getInterviewStats } from '@/lib/admin/queries/interviews'
 import { AdminPageHeader, TableSkeleton, StatCardGridSkeleton } from '@/components/admin'
-import { StatCard } from '@/components/ui/extended/stat-card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InterviewsTable } from './_components/interviews-table'
 import { InterviewsCalendar } from './_components/interviews-calendar'
+import { InterviewStatsCards } from './_components/stats-cards'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,38 +59,7 @@ export default async function AdminInterviewsPage() {
 
 async function StatsSection() {
     const stats = await getInterviewStats()
-
-    return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-                title="This Week"
-                value={stats.thisWeek}
-                icon={Calendar}
-                variant="primary"
-                description="Scheduled"
-            />
-            <StatCard
-                title="Upcoming"
-                value={stats.scheduled}
-                icon={Clock}
-                variant="info"
-                description="Total scheduled"
-            />
-            <StatCard
-                title="Completed"
-                value={stats.completed}
-                icon={CheckCircle}
-                variant="success"
-            />
-            <StatCard
-                title="Pending Feedback"
-                value={stats.pendingFeedback}
-                icon={AlertCircle}
-                variant={stats.pendingFeedback > 0 ? 'warning' : 'default'}
-                description="Awaiting review"
-            />
-        </div>
-    )
+    return <InterviewStatsCards stats={stats} />
 }
 
 async function InterviewsTableSection() {

@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { format } from 'date-fns'
-import { Shield, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { processDeletionRequestAction } from '@/app/actions/enterprise'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { EmptyState } from '@/components/ui/extended/empty-state'
+import { NoRequestsEmptyState } from './_components/empty-states'
 import type { DataDeletionRequestStatus } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
@@ -59,11 +59,7 @@ async function DeletionRequestsSection() {
         return (
             <Card>
                 <CardContent className="pt-6">
-                    <EmptyState
-                        icon={Shield}
-                        title="No deletion requests"
-                        description="No data deletion requests have been submitted yet"
-                    />
+                    <NoRequestsEmptyState />
                 </CardContent>
             </Card>
         )

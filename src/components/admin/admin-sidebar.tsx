@@ -50,9 +50,9 @@ export function AdminSidebar({ isCollapsed = false, onToggle }: AdminSidebarProp
                             <Image
                                 src="/logo.png"
                                 alt="RecruitMe"
-                                width={130}
-                                height={36}
-                                className="h-8 w-auto"
+                                width={162}
+                                height={45}
+                                className="h-10 w-auto"
                             />
                         )}
                     </Link>

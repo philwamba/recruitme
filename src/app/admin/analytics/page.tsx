@@ -1,11 +1,10 @@
 import { Suspense } from 'react'
-import { Briefcase, Users, Clock, TrendingUp } from 'lucide-react'
 import { requireCurrentUser } from '@/lib/auth'
 import { getRecruitmentAnalytics } from '@/lib/services/analytics'
 import { AdminPageHeader, StatCardGridSkeleton, ChartSkeleton } from '@/components/admin'
-import { StatCard } from '@/components/ui/extended/stat-card'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { AnalyticsStatsCards } from './_components/stats-cards'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,38 +36,19 @@ export default async function AdminAnalyticsPage() {
 }
 
 function StatsSection({ analytics }: { analytics: Analytics }) {
+    const conversionRate = analytics.totalApplications > 0
+        ? `${Math.round((analytics.conversionByStage.HIRED || 0) / analytics.totalApplications * 100)}%`
+        : '0%'
 
     return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-                title="Total Jobs"
-                value={analytics.jobs}
-                icon={Briefcase}
-                variant="primary"
-            />
-            <StatCard
-                title="Total Applications"
-                value={analytics.totalApplications}
-                icon={Users}
-                variant="info"
-            />
-            <StatCard
-                title="Avg Time to Hire"
-                value={`${analytics.avgTimeToHireDays} days`}
-                icon={Clock}
-                variant="success"
-            />
-            <StatCard
-                title="Conversion Rate"
-                value={analytics.totalApplications > 0
-                    ? `${Math.round((analytics.conversionByStage.HIRED || 0) / analytics.totalApplications * 100)}%`
-                    : '0%'
-                }
-                icon={TrendingUp}
-                variant="primary"
-                description="Applications to hire"
-            />
-        </div>
+        <AnalyticsStatsCards
+            stats={{
+                jobs: analytics.jobs,
+                totalApplications: analytics.totalApplications,
+                avgTimeToHireDays: analytics.avgTimeToHireDays,
+                conversionRate,
+            }}
+        />
     )
 }
 

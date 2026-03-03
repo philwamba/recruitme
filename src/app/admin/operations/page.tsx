@@ -8,7 +8,12 @@ import { AdminPageHeader, CardSkeleton } from '@/components/admin'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { EmptyState } from '@/components/ui/extended/empty-state'
+import {
+    NoOutboxJobsEmptyState,
+    NoDeliveryLogsEmptyState,
+    NoAuditLogsEmptyState,
+    NoActivityLogsEmptyState,
+} from './_components/empty-states'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,12 +79,7 @@ async function OutboxJobsSection() {
             </CardHeader>
             <CardContent className="space-y-3">
                 {outboxJobs.length === 0 ? (
-                    <EmptyState
-                        icon={RefreshCw}
-                        title="No outbox jobs"
-                        description="No background jobs in the queue"
-                        variant="compact"
-                    />
+                    <NoOutboxJobsEmptyState />
                 ) : (
                     outboxJobs.map(job => {
                         const style = statusStyles[job.status] ?? statusStyles.PENDING
@@ -141,12 +141,7 @@ async function DeliveryLogsSection() {
             </CardHeader>
             <CardContent className="space-y-3">
                 {deliveryLogs.length === 0 ? (
-                    <EmptyState
-                        icon={Mail}
-                        title="No delivery logs"
-                        description="No message deliveries recorded yet"
-                        variant="compact"
-                    />
+                    <NoDeliveryLogsEmptyState />
                 ) : (
                     deliveryLogs.map(log => {
                         const style = statusStyles[log.status] ?? statusStyles.PENDING
@@ -199,12 +194,7 @@ async function AuditLogsSection() {
             </CardHeader>
             <CardContent className="space-y-3">
                 {auditLogs.length === 0 ? (
-                    <EmptyState
-                        icon={Shield}
-                        title="No audit logs"
-                        description="No sensitive actions recorded yet"
-                        variant="compact"
-                    />
+                    <NoAuditLogsEmptyState />
                 ) : (
                     auditLogs.map(log => (
                         <div key={log.id} className="rounded-lg border p-3 text-sm space-y-1">
@@ -252,12 +242,7 @@ async function ActivityLogsSection() {
             </CardHeader>
             <CardContent className="space-y-3">
                 {activityLogs.length === 0 ? (
-                    <EmptyState
-                        icon={Activity}
-                        title="No activity logs"
-                        description="No user activity recorded yet"
-                        variant="compact"
-                    />
+                    <NoActivityLogsEmptyState />
                 ) : (
                     activityLogs.map(log => (
                         <div key={log.id} className="rounded-lg border p-3 text-sm space-y-1">
