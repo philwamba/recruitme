@@ -130,7 +130,7 @@ export function EducationFormDialog({
                             name="institution"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Institution *</FormLabel>
+                                    <FormLabel required>Institution</FormLabel>
                                     <FormControl>
                                         <Input placeholder="University or school name" {...field} />
                                     </FormControl>
@@ -144,7 +144,7 @@ export function EducationFormDialog({
                             name="degree"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Degree *</FormLabel>
+                                    <FormLabel required>Degree</FormLabel>
                                     <FormControl>
                                         <Input placeholder="e.g., Bachelor of Science" {...field} />
                                     </FormControl>

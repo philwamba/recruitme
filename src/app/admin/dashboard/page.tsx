@@ -1,15 +1,6 @@
 import { Suspense } from 'react'
-import {
-    Briefcase,
-    Users,
-    Calendar,
-    Clock,
-    CheckCircle,
-    TrendingUp,
-} from 'lucide-react'
 import { requireCurrentUser } from '@/lib/auth'
 import { AdminPageHeader, StatCardGridSkeleton, ChartSkeleton } from '@/components/admin'
-import { StatCard } from '@/components/ui/extended/stat-card'
 import {
     getDashboardStats,
     getApplicationsOverTime,
@@ -25,6 +16,7 @@ import {
 } from '@/components/admin/charts'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { StatsCards } from './_components/stats-cards'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,60 +60,7 @@ export default async function AdminDashboardPage() {
 
 async function StatsSection() {
     const stats = await getDashboardStats()
-
-    return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <StatCard
-                title="Active Jobs"
-                value={stats.activeJobs}
-                icon={Briefcase}
-                variant="primary"
-                trend={stats.jobsTrend !== 0 ? {
-                    value: Math.abs(stats.jobsTrend),
-                    direction: stats.jobsTrend > 0 ? 'up' : 'down',
-                } : undefined}
-            />
-            <StatCard
-                title="Candidates"
-                value={stats.totalCandidates}
-                icon={Users}
-                variant="info"
-                description="Last 30 days"
-                trend={stats.candidatesTrend !== 0 ? {
-                    value: Math.abs(stats.candidatesTrend),
-                    direction: stats.candidatesTrend > 0 ? 'up' : 'down',
-                } : undefined}
-            />
-            <StatCard
-                title="Interviews"
-                value={stats.interviewsThisWeek}
-                icon={Calendar}
-                variant="success"
-                description="This week"
-            />
-            <StatCard
-                title="Pending Review"
-                value={stats.pendingReviews}
-                icon={Clock}
-                variant={stats.pendingReviews > 10 ? 'warning' : 'default'}
-                description="Awaiting action"
-            />
-            <StatCard
-                title="Hired"
-                value={stats.hiredCount}
-                icon={CheckCircle}
-                variant="success"
-                description="Last 30 days"
-            />
-            <StatCard
-                title="Offer Rate"
-                value={`${stats.offerAcceptanceRate}%`}
-                icon={TrendingUp}
-                variant="primary"
-                description="Acceptance rate"
-            />
-        </div>
-    )
+    return <StatsCards stats={stats} />
 }
 
 async function ApplicationsChartSection() {

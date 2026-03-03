@@ -143,7 +143,7 @@ export function ExperienceFormDialog({
                             name="company"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Company *</FormLabel>
+                                    <FormLabel required>Company</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Company name" {...field} />
                                     </FormControl>
@@ -157,7 +157,7 @@ export function ExperienceFormDialog({
                             name="role"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Role *</FormLabel>
+                                    <FormLabel required>Role</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Job title" {...field} />
                                     </FormControl>
@@ -186,7 +186,7 @@ export function ExperienceFormDialog({
                                 name="startDate"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
-                                        <FormLabel>Start Date *</FormLabel>
+                                        <FormLabel required>Start Date</FormLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <FormControl>
