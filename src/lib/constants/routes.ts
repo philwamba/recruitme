@@ -24,6 +24,8 @@ export const ROUTES = {
         CANDIDATES: '/employer/candidates',
         INTERVIEWS: '/employer/interviews',
         ASSESSMENTS: '/employer/assessments',
+        NOTIFICATIONS: '/employer/notifications',
+        SETTINGS: '/employer/settings',
     },
 
     // Admin routes

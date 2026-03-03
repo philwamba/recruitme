@@ -42,7 +42,6 @@ async function main() {
     for (const testUser of TEST_USERS) {
         const passwordHash = await hashPassword(testUser.password)
 
-        // Use transaction for atomic writes
         await prisma.$transaction(async (tx) => {
             const user = await tx.user.upsert({
                 where: { email: testUser.email },
@@ -59,7 +58,6 @@ async function main() {
                 },
             })
 
-            // Create applicant profile for applicants
             if (testUser.role === 'APPLICANT') {
                 await tx.applicantProfile.upsert({
                     where: { userId: user.id },

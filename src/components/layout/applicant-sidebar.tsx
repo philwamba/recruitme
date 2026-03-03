@@ -73,7 +73,6 @@ const secondaryNavItems: NavItem[] = [
         title: 'Settings',
         href: ROUTES.APPLICANT.SETTINGS,
         icon: Settings,
-        badge: 'Soon',
     },
 ]
 

@@ -28,33 +28,25 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 
-interface AdminHeaderProps {
+interface EmployerHeaderProps {
     user: AuthenticatedUser
     onMenuClick?: () => void
 }
 
 const breadcrumbLabels: Record<string, string> = {
-    admin: 'Admin',
+    employer: 'Employer',
     dashboard: 'Dashboard',
     jobs: 'Jobs',
     candidates: 'Candidates',
-    pipeline: 'Pipeline',
     interviews: 'Interviews',
     assessments: 'Assessments',
-    users: 'Users',
-    analytics: 'Analytics',
-    templates: 'Templates',
-    compliance: 'Compliance',
-    operations: 'Operations',
+    notifications: 'Notifications',
     settings: 'Settings',
-    'audit-logs': 'Audit Logs',
-    'activity-logs': 'Activity Logs',
-    'delivery-logs': 'Delivery Logs',
     new: 'Create New',
     edit: 'Edit',
 }
 
-export function AdminHeader({ user, onMenuClick }: AdminHeaderProps) {
+export function EmployerHeader({ user, onMenuClick }: EmployerHeaderProps) {
     const pathname = usePathname()
     const initials = user.email.slice(0, 2).toUpperCase()
 
@@ -71,7 +63,7 @@ export function AdminHeader({ user, onMenuClick }: AdminHeaderProps) {
         return { href, label, isLast, segment }
     })
 
-    // Skip 'admin' from breadcrumbs display (it's redundant)
+    // Skip 'employer' from breadcrumbs display (it's redundant)
     const displayBreadcrumbs = breadcrumbs.slice(1)
 
     return (
@@ -92,9 +84,9 @@ export function AdminHeader({ user, onMenuClick }: AdminHeaderProps) {
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
-                            <Link href={ROUTES.ADMIN.DASHBOARD} className="flex items-center gap-1">
+                            <Link href={ROUTES.EMPLOYER.DASHBOARD} className="flex items-center gap-1">
                                 <Home className="h-4 w-4" />
-                                <span className="sr-only">Admin Home</span>
+                                <span className="sr-only">Employer Home</span>
                             </Link>
                         </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -130,7 +122,7 @@ export function AdminHeader({ user, onMenuClick }: AdminHeaderProps) {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         type="search"
-                        placeholder="Search candidates, jobs..."
+                        placeholder="Search candidates, applications..."
                         className="pl-9"
                         disabled
                     />
@@ -140,8 +132,16 @@ export function AdminHeader({ user, onMenuClick }: AdminHeaderProps) {
             {/* Right side actions */}
             <div className="flex items-center gap-2">
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
-                    <Bell className="h-5 w-5" />
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative"
+                    aria-label="Notifications"
+                    asChild
+                >
+                    <Link href={ROUTES.EMPLOYER.NOTIFICATIONS}>
+                        <Bell className="h-5 w-5" />
+                    </Link>
                 </Button>
 
                 {/* User menu */}
@@ -167,7 +167,7 @@ export function AdminHeader({ user, onMenuClick }: AdminHeaderProps) {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                            <Link href={ROUTES.ADMIN.SETTINGS}>Settings</Link>
+                            <Link href={ROUTES.EMPLOYER.SETTINGS}>Settings</Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild className="text-destructive focus:text-destructive">
