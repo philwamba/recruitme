@@ -114,6 +114,7 @@ export async function getEmployerDashboardStats(userId: string) {
         interviewsThisWeek,
         pendingReviews,
         hiredCount,
+        offeredCount,
         offerAcceptanceRate,
     }
 }
@@ -193,28 +194,11 @@ export async function getEmployerPipelineDistribution(userId: string) {
 }
 
 export async function getEmployerRecentActivity(userId: string, limit: number = 10) {
-    const employerJobs = await prisma.job.findMany({
-        where: { createdByUserId: userId },
-        select: { id: true },
-    })
-
-    const jobIds = employerJobs.map(j => j.id)
-
-    if (jobIds.length === 0) {
-        return []
-    }
-
+    // Get activity logs for actions performed by the employer
+    // This shows the employer's own actions on jobs, candidates, interviews, etc.
     const activities = await prisma.activityLog.findMany({
         where: {
-            OR: [
-                { actorUserId: userId },
-                {
-                    metadata: {
-                        path: ['jobId'],
-                        in: jobIds,
-                    },
-                },
-            ],
+            actorUserId: userId,
         },
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -230,6 +214,7 @@ export async function getEmployerRecentActivity(userId: string, limit: number = 
     })
 
     return activities.map(activity => {
+        // Mask email for privacy - only show first 2 chars + domain
         const maskEmail = (email: string) => {
             const [localPart, domain] = email.split('@')
             return `${localPart.slice(0, 2)}***@${domain}`
