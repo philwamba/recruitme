@@ -15,7 +15,7 @@ export const rankGradeFormSchema = z
         isActive: z.boolean(),
     })
     .refine(
-        (data) => {
+        data => {
             if (data.minSalary && data.maxSalary) {
                 return data.minSalary <= data.maxSalary
             }
@@ -24,7 +24,7 @@ export const rankGradeFormSchema = z
         {
             message: 'Minimum salary must be less than or equal to maximum salary',
             path: ['maxSalary'],
-        }
+        },
     )
 
 export type RankGradeFormData = z.infer<typeof rankGradeFormSchema>

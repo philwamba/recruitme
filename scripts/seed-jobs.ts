@@ -1113,7 +1113,7 @@ async function main() {
 }
 
 main()
-    .catch((error) => {
+    .catch(error => {
         console.error('Error seeding jobs:', error)
         process.exit(1)
     })

@@ -24,7 +24,7 @@ export default async function PipelineSelectPage() {
             />
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {jobs.map((job) => (
+                {jobs.map(job => (
                     <Link key={job.id} href={`${ROUTES.ADMIN.PIPELINE}/${job.id}`}>
                         <Card className="h-full transition-colors hover:bg-muted/50">
                             <CardHeader>

@@ -28,9 +28,13 @@ export default async function JobsPage({
     const normalized = {
         q: typeof raw.q === 'string' ? raw.q : '',
         department: typeof raw.department === 'string' ? raw.department : '',
+        category: typeof raw.category === 'string' ? raw.category : '',
         employmentType: typeof raw.employmentType === 'string' ? raw.employmentType : undefined,
         workplaceType: typeof raw.workplaceType === 'string' ? raw.workplaceType : undefined,
         location: typeof raw.location === 'string' ? raw.location : '',
+        salaryMin: typeof raw.salaryMin === 'string' ? raw.salaryMin : undefined,
+        salaryMax: typeof raw.salaryMax === 'string' ? raw.salaryMax : undefined,
+        postedWithin: typeof raw.postedWithin === 'string' ? raw.postedWithin : '',
         page: typeof raw.page === 'string' ? raw.page : '1',
     }
 
@@ -40,9 +44,13 @@ export default async function JobsPage({
         : {
             q: '',
             department: '',
+            category: '',
             employmentType: undefined,
             workplaceType: undefined,
             location: '',
+            salaryMin: undefined,
+            salaryMax: undefined,
+            postedWithin: '',
             page: 1,
         }
     const result = await getPublishedJobs(search)
@@ -61,13 +69,18 @@ export default async function JobsPage({
                     <CardContent className="pt-6">
                         <JobFilters
                             departments={result.departments}
-                            locations={result.locations.filter((loc): loc is string => loc !== null)}
+                            categories={result.categories}
+                            locations={result.locations}
                             defaultValues={{
-                                q: search.q,
-                                department: search.department,
+                                q: search.q ?? '',
+                                department: search.department ?? '',
+                                category: search.category ?? '',
                                 employmentType: search.employmentType ?? '',
                                 workplaceType: search.workplaceType ?? '',
-                                location: search.location,
+                                location: search.location ?? '',
+                                salaryMin: search.salaryMin?.toString() ?? '',
+                                salaryMax: search.salaryMax?.toString() ?? '',
+                                postedWithin: search.postedWithin ?? '',
                             }}
                         />
                     </CardContent>
@@ -101,14 +114,19 @@ export default async function JobsPage({
                                         <span className="rounded-full border px-2 py-1">
                                             {job.department?.name ?? 'General'}
                                         </span>
+                                        {job.category && (
+                                            <span className="rounded-full border bg-primary/5 px-2 py-1">
+                                                {job.category.name}
+                                            </span>
+                                        )}
                                         <span className="rounded-full border px-2 py-1">
                                             {job.employmentType.replaceAll('_', ' ')}
                                         </span>
-                                        {job.salaryMin || job.salaryMax ? (
+                                        {(job.salaryMin || job.salaryMax) && (
                                             <span className="rounded-full border px-2 py-1">
-                                                {job.salaryCurrency} {job.salaryMin ?? 0} - {job.salaryMax ?? 'Open'}
+                                                {job.salaryCurrency} {job.salaryMin?.toLocaleString() ?? 0} - {job.salaryMax?.toLocaleString() ?? 'Open'}
                                             </span>
-                                        ) : null}
+                                        )}
                                     </div>
                                     <p className="line-clamp-3 text-sm text-muted-foreground">{job.description}</p>
                                 </CardContent>
@@ -132,11 +150,15 @@ export default async function JobsPage({
                                     <Link
                                         href={buildPageHref(
                                             {
-                                                q: search.q,
-                                                department: search.department,
+                                                q: search.q ?? '',
+                                                department: search.department ?? '',
+                                                category: search.category ?? '',
                                                 employmentType: search.employmentType ?? '',
                                                 workplaceType: search.workplaceType ?? '',
-                                                location: search.location,
+                                                location: search.location ?? '',
+                                                salaryMin: search.salaryMin?.toString() ?? '',
+                                                salaryMax: search.salaryMax?.toString() ?? '',
+                                                postedWithin: search.postedWithin ?? '',
                                             },
                                             Math.max(1, result.page - 1),
                                         )}
@@ -154,11 +176,15 @@ export default async function JobsPage({
                                     <Link
                                         href={buildPageHref(
                                             {
-                                                q: search.q,
-                                                department: search.department,
+                                                q: search.q ?? '',
+                                                department: search.department ?? '',
+                                                category: search.category ?? '',
                                                 employmentType: search.employmentType ?? '',
                                                 workplaceType: search.workplaceType ?? '',
-                                                location: search.location,
+                                                location: search.location ?? '',
+                                                salaryMin: search.salaryMin?.toString() ?? '',
+                                                salaryMax: search.salaryMax?.toString() ?? '',
+                                                postedWithin: search.postedWithin ?? '',
                                             },
                                             Math.min(result.totalPages, result.page + 1),
                                         )}

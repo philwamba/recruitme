@@ -219,7 +219,7 @@ export default async function InterviewDetailPage({ params }: PageProps) {
                         <CardContent>
                             {interview.participants.length > 0 ? (
                                 <div className="space-y-3">
-                                    {interview.participants.map((participant) => (
+                                    {interview.participants.map(participant => (
                                         <div
                                             key={participant.id}
                                             className="flex items-center justify-between"
@@ -267,7 +267,7 @@ export default async function InterviewDetailPage({ params }: PageProps) {
                         <CardContent>
                             {interview.feedbacks.length > 0 ? (
                                 <div className="space-y-4">
-                                    {interview.feedbacks.map((feedback) => (
+                                    {interview.feedbacks.map(feedback => (
                                         <div key={feedback.id} className="space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">

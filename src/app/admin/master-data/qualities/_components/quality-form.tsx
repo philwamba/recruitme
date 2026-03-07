@@ -148,7 +148,7 @@ export function QualityForm({ quality }: QualityFormProps) {
                                         </FormControl>
                                         <SelectContent>
                                             <SelectItem value="">None</SelectItem>
-                                            {qualityCategories.map((cat) => (
+                                            {qualityCategories.map(cat => (
                                                 <SelectItem key={cat.value} value={cat.value}>
                                                     {cat.label}
                                                 </SelectItem>

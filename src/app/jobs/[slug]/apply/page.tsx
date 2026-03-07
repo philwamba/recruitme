@@ -394,7 +394,7 @@ export default function ApplyPage({
                                         <Input
                                             id="firstName"
                                             value={formData.firstName}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                                             placeholder="John"
                                             aria-invalid={!!errors.firstName}
                                         />
@@ -409,7 +409,7 @@ export default function ApplyPage({
                                         <Input
                                             id="lastName"
                                             value={formData.lastName}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                                             placeholder="Doe"
                                             aria-invalid={!!errors.lastName}
                                         />
@@ -427,7 +427,7 @@ export default function ApplyPage({
                                             id="email"
                                             type="email"
                                             value={formData.email}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                             placeholder="john@example.com"
                                             aria-invalid={!!errors.email}
                                         />
@@ -441,7 +441,7 @@ export default function ApplyPage({
                                             id="phone"
                                             type="tel"
                                             value={formData.phone}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                                             placeholder="+254 712 345 678"
                                         />
                                     </div>
@@ -463,7 +463,7 @@ export default function ApplyPage({
                                     required
                                     accept=".pdf,.doc,.docx"
                                     value={formData.cvFile}
-                                    onChange={(f) => {
+                                    onChange={f => {
                                         setFormData(prev => ({ ...prev, cvFile: f as File | null }))
                                         if (errors.cvFile) {
                                             setErrors(prev => ({ ...prev, cvFile: undefined }))
@@ -478,9 +478,9 @@ export default function ApplyPage({
                                     accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                                     multiple
                                     value={formData.supportingDocuments}
-                                    onChange={(f) => setFormData(prev => ({
+                                    onChange={f => setFormData(prev => ({
                                         ...prev,
-                                        supportingDocuments: f as File[]
+                                        supportingDocuments: f as File[],
                                     }))}
                                     description="Certificates, portfolios, or other relevant documents (optional)"
                                 />
@@ -498,7 +498,7 @@ export default function ApplyPage({
                             <CardContent>
                                 <Textarea
                                     value={formData.coverLetter}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, coverLetter: e.target.value }))}
+                                    onChange={e => setFormData(prev => ({ ...prev, coverLetter: e.target.value }))}
                                     placeholder="I am excited to apply for this position because..."
                                     rows={6}
                                 />
@@ -512,7 +512,7 @@ export default function ApplyPage({
                                     <Checkbox
                                         id="consent"
                                         checked={formData.consentAccepted}
-                                        onCheckedChange={(checked) => {
+                                        onCheckedChange={checked => {
                                             setFormData(prev => ({ ...prev, consentAccepted: checked === true }))
                                             if (errors.consentAccepted) {
                                                 setErrors(prev => ({ ...prev, consentAccepted: undefined }))

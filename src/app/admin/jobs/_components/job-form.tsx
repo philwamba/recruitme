@@ -164,7 +164,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {departments.map((dept) => (
+                                                {departments.map(dept => (
                                                     <SelectItem key={dept.id} value={dept.id}>
                                                         {dept.name}
                                                     </SelectItem>
@@ -191,7 +191,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {employmentTypes.map((type) => (
+                                                {employmentTypes.map(type => (
                                                     <SelectItem key={type.value} value={type.value}>
                                                         {type.label}
                                                     </SelectItem>
@@ -215,7 +215,7 @@ export function JobForm({ job, departments }: JobFormProps) {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {workplaceTypes.map((type) => (
+                                                {workplaceTypes.map(type => (
                                                     <SelectItem key={type.value} value={type.value}>
                                                         {type.label}
                                                     </SelectItem>

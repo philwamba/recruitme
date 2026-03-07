@@ -204,6 +204,7 @@ model User {
   emailTemplatesCreated EmailTemplate[] @relation("EmailTemplateCreator")
   consentRecords ConsentRecord[]
   deletionRequests DataDeletionRequest[]
+  savedSearches SavedSearch[]
 }
 
 model RolePermission {
@@ -901,4 +902,18 @@ model DataDeletionRequest {
   updatedAt     DateTime                  @updatedAt
 
   @@index([userId, status])
+}
+
+// Saved searches for candidate search
+model SavedSearch {
+  id        String   @id @default(cuid())
+  name      String
+  filters   Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

@@ -200,13 +200,13 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                 <select
                     name="department"
                     defaultValue={defaultValues.department}
-                    onChange={(e) => updateFilter('department', e.target.value)}
+                    onChange={e => updateFilter('department', e.target.value)}
                     disabled={isPending}
                     aria-label="Filter by department"
                     className={selectClassName}
                 >
                     <option value="">All departments</option>
-                    {departments.map((department) => (
+                    {departments.map(department => (
                         <option key={department.id} value={department.slug}>
                             {department.name}
                         </option>
@@ -216,13 +216,13 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                 <select
                     name="category"
                     defaultValue={defaultValues.category}
-                    onChange={(e) => updateFilter('category', e.target.value)}
+                    onChange={e => updateFilter('category', e.target.value)}
                     disabled={isPending}
                     aria-label="Filter by category"
                     className={selectClassName}
                 >
                     <option value="">All categories</option>
-                    {categories.map((category) => (
+                    {categories.map(category => (
                         <option key={category.id} value={category.code}>
                             {category.name}
                         </option>
@@ -232,13 +232,13 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                 <select
                     name="employmentType"
                     defaultValue={defaultValues.employmentType}
-                    onChange={(e) => updateFilter('employmentType', e.target.value)}
+                    onChange={e => updateFilter('employmentType', e.target.value)}
                     disabled={isPending}
                     aria-label="Filter by job type"
                     className={selectClassName}
                 >
                     <option value="">All job types</option>
-                    {Object.values(EmploymentType).map((option) => (
+                    {Object.values(EmploymentType).map(option => (
                         <option key={option} value={option}>
                             {option.replaceAll('_', ' ')}
                         </option>
@@ -248,13 +248,13 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                 <select
                     name="workplaceType"
                     defaultValue={defaultValues.workplaceType}
-                    onChange={(e) => updateFilter('workplaceType', e.target.value)}
+                    onChange={e => updateFilter('workplaceType', e.target.value)}
                     disabled={isPending}
                     aria-label="Filter by workplace type"
                     className={selectClassName}
                 >
                     <option value="">All workplace types</option>
-                    {Object.values(WorkplaceType).map((option) => (
+                    {Object.values(WorkplaceType).map(option => (
                         <option key={option} value={option}>
                             {option.replaceAll('_', ' ')}
                         </option>
@@ -285,13 +285,13 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                         <select
                             name="location"
                             defaultValue={defaultValues.location}
-                            onChange={(e) => updateFilter('location', e.target.value)}
+                            onChange={e => updateFilter('location', e.target.value)}
                             disabled={isPending}
                             aria-label="Filter by location"
                             className={selectClassName}
                         >
                             <option value="">All locations</option>
-                            {locations.map((location) => (
+                            {locations.map(location => (
                                 <option key={location} value={location}>
                                     {location}
                                 </option>
@@ -301,12 +301,12 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                         <select
                             name="postedWithin"
                             defaultValue={defaultValues.postedWithin}
-                            onChange={(e) => updateFilter('postedWithin', e.target.value)}
+                            onChange={e => updateFilter('postedWithin', e.target.value)}
                             disabled={isPending}
                             aria-label="Filter by posting date"
                             className={selectClassName}
                         >
-                            {postedWithinOptions.map((option) => (
+                            {postedWithinOptions.map(option => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
                                 </option>
@@ -319,7 +319,7 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                                 type="number"
                                 name="salaryMin"
                                 defaultValue={defaultValues.salaryMin}
-                                onChange={(e) => handleSalaryChange('salaryMin', e.target.value)}
+                                onChange={e => handleSalaryChange('salaryMin', e.target.value)}
                                 placeholder="e.g. 50000"
                                 disabled={isPending}
                                 className="h-10"
@@ -332,7 +332,7 @@ export function JobFilters({ departments, categories, locations, defaultValues }
                                 type="number"
                                 name="salaryMax"
                                 defaultValue={defaultValues.salaryMax}
-                                onChange={(e) => handleSalaryChange('salaryMax', e.target.value)}
+                                onChange={e => handleSalaryChange('salaryMax', e.target.value)}
                                 placeholder="e.g. 150000"
                                 disabled={isPending}
                                 className="h-10"

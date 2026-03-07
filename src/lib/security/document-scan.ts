@@ -43,7 +43,7 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
 
     const port = parseInt(env.clamavPort!, 10)
 
-    return new Promise<ScanResult>((resolve) => {
+    return new Promise<ScanResult>(resolve => {
         const socket = new Socket()
         const chunks: Buffer[] = []
         let resolved = false
@@ -60,7 +60,7 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
             resolve({ status: 'ERROR', details: 'ClamAV scan timed out' })
         }, CLAMAV_TIMEOUT_MS)
 
-        socket.on('data', (chunk) => {
+        socket.on('data', chunk => {
             chunks.push(chunk)
         })
 
@@ -82,7 +82,7 @@ async function scanWithClamAV(buffer: Buffer): Promise<ScanResult> {
             }
         })
 
-        socket.on('error', (err) => {
+        socket.on('error', err => {
             clearTimeout(timeout)
             cleanup()
             resolve({ status: 'ERROR', details: `ClamAV connection error: ${err.message}` })

@@ -62,7 +62,7 @@ export function PipelineBoard({ stages, jobId }: PipelineBoardProps) {
     return (
         <ScrollArea className="w-full whitespace-nowrap pb-4">
             <div className="flex gap-4">
-                {stages.map((stage) => (
+                {stages.map(stage => (
                     <PipelineColumn key={stage.id} stage={stage} />
                 ))}
             </div>
@@ -104,7 +104,7 @@ function PipelineColumn({ stage }: { stage: PipelineStage }) {
                             No candidates in this stage
                         </div>
                     ) : (
-                        stage.applications.map((candidate) => (
+                        stage.applications.map(candidate => (
                             <CandidateKanbanCard key={candidate.id} candidate={candidate} />
                         ))
                     )}

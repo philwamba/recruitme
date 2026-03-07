@@ -1,12 +1,22 @@
 import 'server-only'
 
 import { prisma } from '@/lib/prisma'
-import type { ApplicationStatus } from '@prisma/client'
+import type { ApplicationStatus, Prisma } from '@prisma/client'
 
 export interface CandidatesQueryParams {
     status?: ApplicationStatus
     jobId?: string
     search?: string
+    skills?: string[]
+    tags?: string[]
+    minRating?: number
+    maxRating?: number
+    minExperience?: number
+    maxExperience?: number
+    location?: string
+    appliedAfter?: string
+    appliedBefore?: string
+    hasDocuments?: boolean
     page?: number
     limit?: number
 }
@@ -92,7 +102,7 @@ export async function getCandidates(params: CandidatesQueryParams = {}) {
     ])
 
     // Calculate average rating for each application
-    const applicationsWithRating = applications.map((app) => {
+    const applicationsWithRating = applications.map(app => {
         const avgRating =
             app.ratings.length > 0
                 ? app.ratings.reduce((sum, r) => sum + r.score, 0) / app.ratings.length

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         if (!parseResult.success) {
             return NextResponse.json(
                 { message: parseResult.error.errors[0]?.message || 'Invalid form data' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         if (!data.consentAccepted) {
             return NextResponse.json(
                 { message: 'You must accept the data processing consent' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         if (!job || job.status !== 'PUBLISHED') {
             return NextResponse.json(
                 { message: 'This job is no longer accepting applications' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         if (!(cvFile instanceof File) || cvFile.size === 0) {
             return NextResponse.json(
                 { message: 'CV is required to submit your application' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         if (user && user.role !== 'APPLICANT') {
             return NextResponse.json(
                 { message: 'This email is associated with a non-applicant account. Please use a different email or sign in.' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
             if (existingApplication) {
                 return NextResponse.json(
                     { message: 'You have already applied for this position. Sign in to view your application.' },
-                    { status: 400 }
+                    { status: 400 },
                 )
             }
         }
@@ -270,13 +270,13 @@ export async function POST(request: NextRequest) {
         if (error instanceof Error && error.message.includes('File')) {
             return NextResponse.json(
                 { message: error.message },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
         return NextResponse.json(
             { message: 'An error occurred while submitting your application. Please try again.' },
-            { status: 500 }
+            { status: 500 },
         )
     }
 }

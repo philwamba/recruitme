@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
     _request: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params }: { params: Promise<{ slug: string }> },
 ) {
     const { slug } = await params
 
@@ -40,7 +40,7 @@ export async function GET(
     if (!job) {
         return NextResponse.json(
             { error: 'Job not found' },
-            { status: 404 }
+            { status: 404 },
         )
     }
 

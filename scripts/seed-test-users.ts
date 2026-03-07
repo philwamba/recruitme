@@ -42,7 +42,7 @@ async function main() {
     for (const testUser of TEST_USERS) {
         const passwordHash = await hashPassword(testUser.password)
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async tx => {
             const user = await tx.user.upsert({
                 where: { email: testUser.email },
                 update: {

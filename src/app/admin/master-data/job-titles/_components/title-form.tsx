@@ -144,7 +144,7 @@ export function TitleForm({ title, categories, rankGrades }: TitleFormProps) {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {categories.map((cat) => (
+                                                {categories.map(cat => (
                                                     <SelectItem key={cat.id} value={cat.id}>
                                                         {cat.name}
                                                     </SelectItem>
@@ -172,7 +172,7 @@ export function TitleForm({ title, categories, rankGrades }: TitleFormProps) {
                                             </FormControl>
                                             <SelectContent>
                                                 <SelectItem value="">None</SelectItem>
-                                                {rankGrades.map((grade) => (
+                                                {rankGrades.map(grade => (
                                                     <SelectItem key={grade.id} value={grade.id}>
                                                         {grade.name} (Level {grade.level})
                                                     </SelectItem>
