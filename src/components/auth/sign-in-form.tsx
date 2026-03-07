@@ -7,6 +7,7 @@ import { FormSubmitButton } from '@/components/auth/form-submit-button'
 import { GoogleAuthButton } from '@/components/auth/google-auth-button'
 import { LinkedInAuthButton } from '@/components/auth/linkedin-auth-button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import type { OAuthConfig } from '@/lib/oauth/config'
 
@@ -48,10 +49,9 @@ export function SignInForm({
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password" required>Password</Label>
-                    <Input
+                    <PasswordInput
                         id="password"
                         name="password"
-                        type="password"
                         autoComplete="current-password"
                         required
                     />
