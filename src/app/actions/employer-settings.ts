@@ -32,7 +32,7 @@ export async function createDepartmentAction(formData: FormData) {
         },
     })
 
-    revalidatePath('/employer/settings')
+    revalidatePath('/employer/settings/departments')
     revalidatePath('/employer/jobs')
 }
 
@@ -58,7 +58,7 @@ export async function updateDepartmentAction(formData: FormData) {
         },
     })
 
-    revalidatePath('/employer/settings')
+    revalidatePath('/employer/settings/departments')
     revalidatePath('/employer/jobs')
 }
 
@@ -72,7 +72,6 @@ export async function deleteDepartmentAction(formData: FormData) {
         throw new Error('Department ID is required')
     }
 
-    // Check if department has jobs
     const department = await prisma.department.findUnique({
         where: { id },
         include: { _count: { select: { jobs: true } } },
@@ -86,19 +85,21 @@ export async function deleteDepartmentAction(formData: FormData) {
         where: { id },
     })
 
-    revalidatePath('/employer/settings')
+    revalidatePath('/employer/settings/departments')
     revalidatePath('/employer/jobs')
 }
 
-export async function getEmployerJobMetadata() {
+export async function getEmployerJobMetadata(targetUserId?: string) {
     const user = await requireCurrentUser({
         roles: ['EMPLOYER', 'ADMIN'],
     })
 
+    const whereClause = user.role === 'ADMIN'
+        ? targetUserId ? { createdByUserId: targetUserId } : {}
+        : { createdByUserId: user.id }
+
     const jobs = await prisma.job.findMany({
-        where: {
-            createdByUserId: user.id,
-        },
+        where: whereClause,
         select: {
             company: true,
             location: true,
@@ -111,7 +112,6 @@ export async function getEmployerJobMetadata() {
     return { companies, locations }
 }
 
-// Get all departments (requires authentication)
 export async function getDepartments() {
     await requireCurrentUser({
         roles: ['EMPLOYER', 'ADMIN'],

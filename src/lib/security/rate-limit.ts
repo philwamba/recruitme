@@ -57,8 +57,19 @@ function getRedisClient(): Redis | null {
             globalForRateLimit.__recruitmeRedisAvailable = true
         })
 
+        client.on('end', () => {
+            globalForRateLimit.__recruitmeRedisAvailable = false
+        })
+
         globalForRateLimit.__recruitmeRedisClient = client
-        globalForRateLimit.__recruitmeRedisAvailable = true
+        // Start with false until connection is established (lazyConnect: true)
+        globalForRateLimit.__recruitmeRedisAvailable = false
+
+        // Initiate connection attempt
+        client.connect().catch(() => {
+            globalForRateLimit.__recruitmeRedisAvailable = false
+        })
+
         return client
     } catch {
         globalForRateLimit.__recruitmeRedisClient = null

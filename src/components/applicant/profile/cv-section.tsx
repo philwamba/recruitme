@@ -63,7 +63,7 @@ export function CVSection({ cvDocument, cvFileName }: CVSectionProps) {
                     <FileUpload
                         accept=".pdf,.doc,.docx"
                         value={file}
-                        onChange={(f) => setFile(f as File | null)}
+                        onChange={f => setFile(f as File | null)}
                         description="PDF or Word documents (Max 5MB)"
                         maxSize={5 * 1024 * 1024}
                         disabled={isUploading}

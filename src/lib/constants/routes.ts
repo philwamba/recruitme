@@ -26,6 +26,12 @@ export const ROUTES = {
         ASSESSMENTS: '/employer/assessments',
         NOTIFICATIONS: '/employer/notifications',
         SETTINGS: '/employer/settings',
+        // Configuration routes
+        CONFIG: {
+            DEPARTMENTS: '/employer/settings/departments',
+            COMPANIES: '/employer/settings/companies',
+            LOCATIONS: '/employer/settings/locations',
+        },
     },
 
     // Admin routes

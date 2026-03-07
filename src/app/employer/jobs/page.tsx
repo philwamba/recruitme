@@ -1,4 +1,4 @@
-import { Briefcase, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { EmploymentType, JobStatus, WorkplaceType } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { EmptyState } from '@/components/admin'
+import { NoJobsEmptyState } from '../_components/empty-states'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,12 +55,12 @@ export default async function EmployerJobsPage() {
                 <CardContent>
                     <form action={createJob} className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="title">Job Title *</Label>
+                            <Label htmlFor="title">Job Title<span className="text-destructive ml-1">*</span></Label>
                             <Input id="title" name="title" placeholder="e.g., Senior Software Engineer" required />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="company">Company *</Label>
+                            <Label htmlFor="company">Company<span className="text-destructive ml-1">*</span></Label>
                             <Input
                                 id="company"
                                 name="company"
@@ -76,7 +76,7 @@ export default async function EmployerJobsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="location">Location *</Label>
+                            <Label htmlFor="location">Location<span className="text-destructive ml-1">*</span></Label>
                             <Input
                                 id="location"
                                 name="location"
@@ -92,7 +92,7 @@ export default async function EmployerJobsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="departmentName">Department *</Label>
+                            <Label htmlFor="departmentName">Department<span className="text-destructive ml-1">*</span></Label>
                             <Input
                                 id="departmentName"
                                 name="departmentName"
@@ -108,7 +108,7 @@ export default async function EmployerJobsPage() {
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="description">Role Overview *</Label>
+                            <Label htmlFor="description">Role Overview<span className="text-destructive ml-1">*</span></Label>
                             <Textarea
                                 id="description"
                                 name="description"
@@ -119,7 +119,7 @@ export default async function EmployerJobsPage() {
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="requirements">Requirements *</Label>
+                            <Label htmlFor="requirements">Requirements<span className="text-destructive ml-1">*</span></Label>
                             <Textarea
                                 id="requirements"
                                 name="requirements"
@@ -218,11 +218,7 @@ export default async function EmployerJobsPage() {
             </Card>
 
             {jobs.length === 0 ? (
-                <EmptyState
-                    icon={Briefcase}
-                    title="No jobs yet"
-                    description="Create your first job posting to start receiving applications."
-                />
+                <NoJobsEmptyState />
             ) : (
                 <div className="grid gap-4">
                     {jobs.map(job => (

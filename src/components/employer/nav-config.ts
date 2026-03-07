@@ -6,6 +6,9 @@ import {
     ClipboardCheck,
     Bell,
     Settings,
+    Building2,
+    MapPin,
+    FolderKanban,
     type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/lib/constants/routes'
@@ -60,6 +63,29 @@ export const employerNavGroups: NavGroup[] = [
                 href: ROUTES.EMPLOYER.ASSESSMENTS,
                 icon: ClipboardCheck,
                 matchPaths: ['/employer/assessments'],
+            },
+        ],
+    },
+    {
+        title: 'Configuration',
+        items: [
+            {
+                title: 'Departments',
+                href: ROUTES.EMPLOYER.CONFIG.DEPARTMENTS,
+                icon: FolderKanban,
+                matchPaths: ['/employer/settings/departments'],
+            },
+            {
+                title: 'Companies',
+                href: ROUTES.EMPLOYER.CONFIG.COMPANIES,
+                icon: Building2,
+                matchPaths: ['/employer/settings/companies'],
+            },
+            {
+                title: 'Locations',
+                href: ROUTES.EMPLOYER.CONFIG.LOCATIONS,
+                icon: MapPin,
+                matchPaths: ['/employer/settings/locations'],
             },
         ],
     },
