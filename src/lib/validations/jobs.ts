@@ -4,9 +4,13 @@ import { EmploymentType, JobStatus, WorkplaceType } from '@prisma/client'
 export const jobSearchSchema = z.object({
     q: z.string().optional().default(''),
     department: z.string().optional().default(''),
+    category: z.string().optional().default(''),
     employmentType: z.nativeEnum(EmploymentType).optional(),
     workplaceType: z.nativeEnum(WorkplaceType).optional(),
     location: z.string().optional().default(''),
+    salaryMin: z.coerce.number().int().min(0).optional(),
+    salaryMax: z.coerce.number().int().min(0).optional(),
+    postedWithin: z.enum(['7', '14', '30', '90', '']).optional().default(''),
     page: z.coerce.number().int().min(1).default(1),
 })
 

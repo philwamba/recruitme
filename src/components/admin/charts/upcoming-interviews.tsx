@@ -45,7 +45,7 @@ export function UpcomingInterviews({ interviews }: UpcomingInterviewsProps) {
                 <CardTitle>Upcoming Interviews</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-                {interviews.map((interview) => (
+                {interviews.map(interview => (
                     <Link
                         key={interview.id}
                         href={`${ROUTES.ADMIN.INTERVIEWS}/${interview.id}`}

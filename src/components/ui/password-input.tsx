@@ -24,7 +24,7 @@ function PasswordInput({
             <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                onPointerDown={(e) => e.preventDefault()}
+                onPointerDown={e => e.preventDefault()}
                 disabled={disabled}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showPassword}

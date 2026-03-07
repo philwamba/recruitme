@@ -46,7 +46,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
             <CardContent>
                 <ScrollArea className="h-[320px] pr-4">
                     <div className="space-y-4">
-                        {activities.map((activity) => {
+                        {activities.map(activity => {
                             const displayName = activity.actorDisplayName || activity.actorEmail || 'System'
                             return (
                                 <div key={activity.id} className="flex items-start gap-3">

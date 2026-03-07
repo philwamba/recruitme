@@ -17,9 +17,11 @@ const initialState = {
 
 export function SignUpForm({
     nextPath = '',
+    defaultEmail,
     oauth,
 }: {
     nextPath?: string
+    defaultEmail?: string
     oauth: OAuthConfig
 }) {
     const [state, formAction] = useActionState(signUp, initialState)
@@ -54,7 +56,7 @@ export function SignUpForm({
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="email" required>Email</Label>
-                    <Input id="email" name="email" type="email" autoComplete="email" required />
+                    <Input id="email" name="email" type="email" autoComplete="email" defaultValue={defaultEmail} required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password" required>Password</Label>

@@ -90,7 +90,7 @@ export default function UploadCVPage() {
                                 <FileUpload
                                     accept=".pdf,.doc,.docx"
                                     value={file}
-                                    onChange={(f) => setFile(f as File | null)}
+                                    onChange={f => setFile(f as File | null)}
                                     description="PDF or Word documents work best for parsing"
                                     maxSize={5 * 1024 * 1024}
                                 />

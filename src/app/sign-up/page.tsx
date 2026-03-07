@@ -7,7 +7,7 @@ import { SignUpForm } from '@/components/auth/sign-up-form'
 export default async function SignUpPage({
     searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>
+  searchParams: Promise<{ next?: string; email?: string }>
 }) {
     const user = await getCurrentUser()
     const params = await searchParams
@@ -32,7 +32,7 @@ export default async function SignUpPage({
             footerLinkLabel="Sign in"
             footerLinkHref="/sign-in"
         >
-            <SignUpForm nextPath={params.next ?? ''} oauth={oauthConfig} />
+            <SignUpForm nextPath={params.next ?? ''} defaultEmail={params.email} oauth={oauthConfig} />
         </AuthCard>
     )
 }

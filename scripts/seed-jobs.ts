@@ -1081,7 +1081,6 @@ async function main() {
                 workplaceType: job.workplaceType,
                 status: 'PUBLISHED',
                 departmentId,
-                publishedAt: new Date(),
                 expiresAt,
             },
             create: {
@@ -1108,13 +1107,13 @@ async function main() {
     }
 
     console.log('\n--- Seeding Complete ---')
-    console.log(`Departments created: ${DEPARTMENTS.length}`)
-    console.log(`Jobs created: ${JOBS.length}`)
+    console.log(`Departments upserted: ${DEPARTMENTS.length}`)
+    console.log(`Jobs upserted: ${JOBS.length}`)
     console.log('------------------------\n')
 }
 
 main()
-    .catch((error) => {
+    .catch(error => {
         console.error('Error seeding jobs:', error)
         process.exit(1)
     })

@@ -359,7 +359,7 @@ export default async function CandidateDetailPage({ params }: PageProps) {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-3">
-                                        {profile.certifications.map((cert) => (
+                                        {profile.certifications.map(cert => (
                                             <div key={cert.id} className="space-y-0.5">
                                                 <p className="font-medium text-sm">{cert.name}</p>
                                                 {cert.issuingOrg && (
@@ -414,7 +414,7 @@ export default async function CandidateDetailPage({ params }: PageProps) {
                         <CardContent>
                             {application.documents.length > 0 ? (
                                 <div className="space-y-3">
-                                    {application.documents.map((doc) => (
+                                    {application.documents.map(doc => (
                                         <div
                                             key={doc.id}
                                             className="flex items-center gap-3 rounded-lg border p-3"
@@ -460,7 +460,7 @@ export default async function CandidateDetailPage({ params }: PageProps) {
                         <CardContent>
                             {application.notes.length > 0 ? (
                                 <div className="space-y-4">
-                                    {application.notes.map((note) => (
+                                    {application.notes.map(note => (
                                         <div key={note.id} className="space-y-2">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium text-sm">
@@ -546,7 +546,7 @@ export default async function CandidateDetailPage({ params }: PageProps) {
                         <CardContent>
                             {application.interviews.length > 0 ? (
                                 <div className="space-y-4">
-                                    {application.interviews.map((interview) => (
+                                    {application.interviews.map(interview => (
                                         <div
                                             key={interview.id}
                                             className="flex items-start gap-4 rounded-lg border p-4"

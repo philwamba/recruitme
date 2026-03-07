@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         if (!parseResult.success) {
             return NextResponse.json(
                 { message: parseResult.error.errors[0]?.message || 'Invalid form data' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         if (!data.consentAccepted) {
             return NextResponse.json(
                 { message: 'You must accept the data processing consent' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         if (!job || job.status !== 'PUBLISHED') {
             return NextResponse.json(
                 { message: 'This job is no longer accepting applications' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         if (!(cvFile instanceof File) || cvFile.size === 0) {
             return NextResponse.json(
                 { message: 'CV is required to submit your application' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         if (user && user.role !== 'APPLICANT') {
             return NextResponse.json(
                 { message: 'This email is associated with a non-applicant account. Please use a different email or sign in.' },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
             if (existingApplication) {
                 return NextResponse.json(
                     { message: 'You have already applied for this position. Sign in to view your application.' },
-                    { status: 400 }
+                    { status: 400 },
                 )
             }
         }
@@ -145,37 +145,38 @@ export async function POST(request: NextRequest) {
         const defaultStage = stages[0] ?? null
 
         const trackingId = createTrackingId()
-        const application = await prisma.application.create({
-            data: {
-                trackingId,
-                userId: user.id,
-                jobId: data.jobId,
-                coverLetter: data.coverLetter || null,
-                source: 'Guest Application',
-                consentAcceptedAt: new Date(),
-                status: 'SUBMITTED',
-                submittedAt: new Date(),
-                currentStageId: defaultStage?.id ?? null,
-            },
-        })
 
-        if (defaultStage) {
-            await prisma.applicationStageEvent.create({
-                data: {
-                    applicationId: application.id,
-                    toStageId: defaultStage.id,
-                    note: 'Guest application submitted',
-                },
-            })
-        }
-
-        // Store CV file and record in DB within a transaction
         const storedCv = await savePrivateFile(cvFile, { scan: true })
+        let application: { id: string; trackingId: string }
         try {
-            await prisma.$transaction(async (tx) => {
+            application = await prisma.$transaction(async tx => {
+                const app = await tx.application.create({
+                    data: {
+                        trackingId,
+                        userId: user.id,
+                        jobId: data.jobId,
+                        coverLetter: data.coverLetter || null,
+                        source: 'Guest Application',
+                        consentAcceptedAt: new Date(),
+                        status: 'SUBMITTED',
+                        submittedAt: new Date(),
+                        currentStageId: defaultStage?.id ?? null,
+                    },
+                })
+
+                if (defaultStage) {
+                    await tx.applicationStageEvent.create({
+                        data: {
+                            applicationId: app.id,
+                            toStageId: defaultStage.id,
+                            note: 'Guest application submitted',
+                        },
+                    })
+                }
+
                 await tx.candidateDocument.create({
                     data: {
-                        applicationId: application.id,
+                        applicationId: app.id,
                         applicantProfileId: user.applicantProfile?.id ?? null,
                         uploadedByUserId: user.id,
                         documentType: 'CV',
@@ -197,10 +198,17 @@ export async function POST(request: NextRequest) {
                         },
                     })
                 }
+
+                return app
             })
         } catch (txError) {
-            // Clean up orphaned file on DB failure
-            await removePrivateFile(storedCv.storageKey).catch(() => {})
+            const deleted = await removePrivateFile(storedCv.storageKey)
+            if (!deleted) {
+                reportError(new Error('Failed to clean up orphaned CV file'), {
+                    scope: 'api.applications.guest.cleanup',
+                    metadata: { storageKey: storedCv.storageKey },
+                })
+            }
             throw txError
         }
 
@@ -262,13 +270,13 @@ export async function POST(request: NextRequest) {
         if (error instanceof Error && error.message.includes('File')) {
             return NextResponse.json(
                 { message: error.message },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
         return NextResponse.json(
             { message: 'An error occurred while submitting your application. Please try again.' },
-            { status: 500 }
+            { status: 500 },
         )
     }
 }

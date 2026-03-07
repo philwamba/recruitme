@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { FileUpload } from '@/components/ui/file-upload'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Briefcase, MapPin, Building2, Clock, CheckCircle2, Loader2 } from 'lucide-react'
+import { Briefcase, MapPin, Building2, Clock, CheckCircle2, Loader2, User, LogIn, UserPlus, Shield, Zap, FileText } from 'lucide-react'
+import { ROUTES } from '@/lib/constants/routes'
 
 interface Job {
     id: string
@@ -38,7 +38,6 @@ export default function ApplyPage({
 }: {
     params: Promise<{ slug: string }>
 }) {
-    const router = useRouter()
     const [job, setJob] = React.useState<Job | null>(null)
     const [loading, setLoading] = React.useState(true)
     const [notFound, setNotFound] = React.useState(false)
@@ -47,6 +46,7 @@ export default function ApplyPage({
     const [submitted, setSubmitted] = React.useState(false)
     const [trackingId, setTrackingId] = React.useState<string | null>(null)
     const [formError, setFormError] = React.useState<string | null>(null)
+    const isSubmittingRef = React.useRef(false)
 
     const [formData, setFormData] = React.useState<ApplicationFormData>({
         firstName: '',
@@ -119,8 +119,12 @@ export default function ApplyPage({
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
 
+        if (isSubmittingRef.current) return
+        setFormError('')
+
         if (!validateForm() || !job) return
 
+        isSubmittingRef.current = true
         setSubmitting(true)
 
         try {
@@ -162,6 +166,7 @@ export default function ApplyPage({
             console.error('Submit error:', error)
             setFormError('An error occurred. Please try again.')
         } finally {
+            isSubmittingRef.current = false
             setSubmitting(false)
         }
     }
@@ -209,7 +214,8 @@ export default function ApplyPage({
     if (submitted) {
         return (
             <div className="min-h-screen bg-muted/30">
-                <div className="mx-auto max-w-2xl px-4 py-16">
+                <div className="mx-auto max-w-2xl px-4 py-16 space-y-6">
+                    {/* Success Card */}
                     <Card>
                         <CardContent className="pt-6">
                             <div className="flex flex-col items-center text-center py-8">
@@ -236,6 +242,62 @@ export default function ApplyPage({
                                     </Button>
                                 </div>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Create Account Prompt */}
+                    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                                    <UserPlus className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg">Save Your Application</CardTitle>
+                                    <CardDescription>
+                                        Create an account to track this and future applications
+                                    </CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-3 text-sm">
+                                <div className="flex items-start gap-3">
+                                    <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <span className="text-muted-foreground">
+                                        Your CV will be saved for faster applications
+                                    </span>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Zap className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <span className="text-muted-foreground">
+                                        Apply to future jobs with one click
+                                    </span>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <span className="text-muted-foreground">
+                                        Track all your applications in one place
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                <Button asChild className="flex-1">
+                                    <Link href={`${ROUTES.SIGN_UP}?email=${encodeURIComponent(formData.email)}&next=${encodeURIComponent(ROUTES.APPLICANT.APPLICATIONS)}`}>
+                                        <UserPlus className="mr-2 h-4 w-4" />
+                                        Create Account
+                                    </Link>
+                                </Button>
+                                <Button asChild variant="outline" className="flex-1">
+                                    <Link href={`${ROUTES.SIGN_IN}?next=${encodeURIComponent(ROUTES.APPLICANT.APPLICATIONS)}`}>
+                                        <LogIn className="mr-2 h-4 w-4" />
+                                        Sign In
+                                    </Link>
+                                </Button>
+                            </div>
+                            <p className="text-xs text-center text-muted-foreground">
+                                Already have an account? Sign in to link this application to your profile.
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
@@ -279,6 +341,39 @@ export default function ApplyPage({
                     </div>
                 </div>
 
+                {/* Login/Signup Banner */}
+                <Card className="mb-6 border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                    <CardContent className="py-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+                                    <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-sm">Already have an account?</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Sign in for faster applications with your saved CV
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 sm:shrink-0">
+                                <Button asChild size="sm" variant="outline" className="flex-1 sm:flex-none">
+                                    <Link href={`${ROUTES.SIGN_IN}?next=${encodeURIComponent(`/jobs/${job.slug}/apply`)}`}>
+                                        <LogIn className="mr-2 h-4 w-4" />
+                                        Sign In
+                                    </Link>
+                                </Button>
+                                <Button asChild size="sm" className="flex-1 sm:flex-none">
+                                    <Link href={`${ROUTES.SIGN_UP}?next=${encodeURIComponent(`/jobs/${job.slug}/apply`)}`}>
+                                        <UserPlus className="mr-2 h-4 w-4" />
+                                        Sign Up
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Application Form */}
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-6">
@@ -299,7 +394,7 @@ export default function ApplyPage({
                                         <Input
                                             id="firstName"
                                             value={formData.firstName}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                                             placeholder="John"
                                             aria-invalid={!!errors.firstName}
                                         />
@@ -314,7 +409,7 @@ export default function ApplyPage({
                                         <Input
                                             id="lastName"
                                             value={formData.lastName}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                                             placeholder="Doe"
                                             aria-invalid={!!errors.lastName}
                                         />
@@ -332,7 +427,7 @@ export default function ApplyPage({
                                             id="email"
                                             type="email"
                                             value={formData.email}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                             placeholder="john@example.com"
                                             aria-invalid={!!errors.email}
                                         />
@@ -346,7 +441,7 @@ export default function ApplyPage({
                                             id="phone"
                                             type="tel"
                                             value={formData.phone}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                            onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                                             placeholder="+254 712 345 678"
                                         />
                                     </div>
@@ -368,7 +463,7 @@ export default function ApplyPage({
                                     required
                                     accept=".pdf,.doc,.docx"
                                     value={formData.cvFile}
-                                    onChange={(f) => {
+                                    onChange={f => {
                                         setFormData(prev => ({ ...prev, cvFile: f as File | null }))
                                         if (errors.cvFile) {
                                             setErrors(prev => ({ ...prev, cvFile: undefined }))
@@ -383,9 +478,9 @@ export default function ApplyPage({
                                     accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                                     multiple
                                     value={formData.supportingDocuments}
-                                    onChange={(f) => setFormData(prev => ({
+                                    onChange={f => setFormData(prev => ({
                                         ...prev,
-                                        supportingDocuments: f as File[]
+                                        supportingDocuments: f as File[],
                                     }))}
                                     description="Certificates, portfolios, or other relevant documents (optional)"
                                 />
@@ -403,7 +498,7 @@ export default function ApplyPage({
                             <CardContent>
                                 <Textarea
                                     value={formData.coverLetter}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, coverLetter: e.target.value }))}
+                                    onChange={e => setFormData(prev => ({ ...prev, coverLetter: e.target.value }))}
                                     placeholder="I am excited to apply for this position because..."
                                     rows={6}
                                 />
@@ -417,7 +512,7 @@ export default function ApplyPage({
                                     <Checkbox
                                         id="consent"
                                         checked={formData.consentAccepted}
-                                        onCheckedChange={(checked) => {
+                                        onCheckedChange={checked => {
                                             setFormData(prev => ({ ...prev, consentAccepted: checked === true }))
                                             if (errors.consentAccepted) {
                                                 setErrors(prev => ({ ...prev, consentAccepted: undefined }))

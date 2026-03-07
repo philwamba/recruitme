@@ -96,7 +96,7 @@ export function InterviewsCalendar({ interviews }: InterviewsCalendarProps) {
 
                 {/* Day headers */}
                 <div className="grid grid-cols-7 border-b">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                         <div
                             key={day}
                             className="border-r last:border-r-0 px-2 py-2 text-center text-sm font-medium text-muted-foreground"
@@ -134,7 +134,7 @@ export function InterviewsCalendar({ interviews }: InterviewsCalendarProps) {
                                 </div>
                                 <ScrollArea className="h-[80px] mt-1">
                                     <div className="space-y-1">
-                                        {dayInterviews.map((interview) => {
+                                        {dayInterviews.map(interview => {
                                             const candidateName =
                                                 interview.application.user.applicantProfile?.firstName ||
                                                 interview.application.user.email.split('@')[0]

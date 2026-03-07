@@ -204,6 +204,7 @@ model User {
   emailTemplatesCreated EmailTemplate[] @relation("EmailTemplateCreator")
   consentRecords ConsentRecord[]
   deletionRequests DataDeletionRequest[]
+  savedSearches SavedSearch[]
 }
 
 model RolePermission {
@@ -506,7 +507,7 @@ model QualityTemplateItem {
   templateId String
   template   QualityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   qualityId  String
-  quality    Quality         @relation(fields: [qualityId], references: [id], onDelete: Cascade)
+  quality    Quality         @relation(fields: [qualityId], references: [id], onDelete: Restrict)
   weight     Float           @default(1.0)
   isRequired Boolean         @default(true)
   sortOrder  Int             @default(0)
@@ -557,6 +558,7 @@ model Job {
   @@index([departmentId])
   @@index([categoryId])
   @@index([jobTitleId])
+  @@index([qualityTemplateId])
   @@index([employmentType, workplaceType])
 }
 
@@ -900,4 +902,18 @@ model DataDeletionRequest {
   updatedAt     DateTime                  @updatedAt
 
   @@index([userId, status])
+}
+
+// Saved searches for candidate search
+model SavedSearch {
+  id        String   @id @default(cuid())
+  name      String
+  filters   Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

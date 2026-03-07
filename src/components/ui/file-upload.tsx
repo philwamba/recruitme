@@ -80,13 +80,11 @@ function FileUpload({
         }
 
         const mimeType = file.type.toLowerCase()
-        const nameParts = file.name.split('.')
-        const hasExtension = nameParts.length > 1 && nameParts[nameParts.length - 1] !== ''
-        const extension = hasExtension ? `.${nameParts.pop()?.toLowerCase()}` : null
+        const fileNameLower = file.name.toLowerCase()
 
         const isValidType = acceptedTypes.some(accepted => {
             if (accepted.startsWith('.')) {
-                return extension !== null && extension === accepted
+                return fileNameLower.endsWith(accepted)
             }
             if (accepted.includes('*')) {
                 const [type] = accepted.split('/')
@@ -221,7 +219,7 @@ function FileUpload({
                     hasFiles && 'border-primary/30 bg-primary/5',
                     displayError && 'border-destructive/50 bg-destructive/5',
                     disabled && 'cursor-not-allowed opacity-50 hover:border-muted-foreground/25 hover:bg-transparent',
-                    !isDragging && !hasFiles && !displayError && 'border-muted-foreground/25'
+                    !isDragging && !hasFiles && !displayError && 'border-muted-foreground/25',
                 )}
             >
                 {hasFiles ? (
@@ -230,7 +228,7 @@ function FileUpload({
                             <div
                                 key={`${file.name}-${index}`}
                                 className="flex items-center gap-3 rounded-md border bg-background p-3"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={e => e.stopPropagation()}
                             >
                                 {getFileIcon(file)}
                                 <div className="flex-1 min-w-0">
@@ -256,7 +254,7 @@ function FileUpload({
                             <button
                                 type="button"
                                 className="flex items-center justify-center gap-2 w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                onClick={(e) => {
+                                onClick={e => {
                                     e.stopPropagation()
                                     handleClick()
                                 }}
@@ -270,11 +268,11 @@ function FileUpload({
                     <div className="flex flex-col items-center text-center">
                         <div className={cn(
                             'flex h-12 w-12 items-center justify-center rounded-full mb-3',
-                            isDragging ? 'bg-primary/10' : 'bg-muted'
+                            isDragging ? 'bg-primary/10' : 'bg-muted',
                         )}>
                             <FileUp className={cn(
                                 'h-6 w-6',
-                                isDragging ? 'text-primary' : 'text-muted-foreground'
+                                isDragging ? 'text-primary' : 'text-muted-foreground',
                             )} />
                         </div>
                         <p className="text-sm font-medium">
@@ -291,7 +289,7 @@ function FileUpload({
             {(description || displayError) && (
                 <div className={cn(
                     'flex items-start gap-2 text-xs',
-                    displayError ? 'text-destructive' : 'text-muted-foreground'
+                    displayError ? 'text-destructive' : 'text-muted-foreground',
                 )}>
                     {displayError && <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />}
                     <p>{displayError || description}</p>
