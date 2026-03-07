@@ -78,10 +78,18 @@ export function OrganizationForm({
     const isActive = watch('isActive')
 
     // Filter out current org and its descendants from parent options
-    const parentOptions = organizations.filter(org => {
-        if (organization && org.id === organization.id) return false
-        return true
-    })
+    const getDescendantIds = (parentId: string, allOrgs: OrganizationForSelect[]): string[] => {
+        const children = allOrgs.filter(org => org.parentId === parentId)
+        return children.reduce((acc, child) => {
+            return [...acc, child.id, ...getDescendantIds(child.id, allOrgs)]
+        }, [] as string[])
+    }
+
+    const forbiddenIds = organization
+        ? [organization.id, ...getDescendantIds(organization.id, organizations)]
+        : []
+
+    const parentOptions = organizations.filter(org => !forbiddenIds.includes(org.id))
 
     const onSubmit = async (data: OrganizationFormData) => {
         try {
@@ -114,7 +122,9 @@ export function OrganizationForm({
                     <Label htmlFor="code">Code *</Label>
                     <Input
                         id="code"
-                        {...register('code')}
+                        {...register('code', {
+                            onChange: e => setValue('code', e.target.value.toUpperCase()),
+                        })}
                         placeholder="e.g., ENG"
                         className="uppercase"
                     />
@@ -148,14 +158,14 @@ export function OrganizationForm({
                 <div className="space-y-2">
                     <Label htmlFor="parentId">Parent Organization</Label>
                     <Select
-                        value={watch('parentId') ?? ''}
-                        onValueChange={value => setValue('parentId', value || null)}
+                        value={watch('parentId') ?? '__none__'}
+                        onValueChange={value => setValue('parentId', value === '__none__' ? null : value)}
                     >
                         <SelectTrigger>
                             <SelectValue placeholder="None (Top level)" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">None (Top level)</SelectItem>
+                            <SelectItem value="__none__">None (Top level)</SelectItem>
                             {parentOptions.map(org => (
                                 <SelectItem key={org.id} value={org.id}>
                                     {org.name} ({org.code})
@@ -168,14 +178,14 @@ export function OrganizationForm({
                 <div className="space-y-2">
                     <Label htmlFor="managerId">Manager</Label>
                     <Select
-                        value={watch('managerId') ?? ''}
-                        onValueChange={value => setValue('managerId', value || null)}
+                        value={watch('managerId') ?? '__none__'}
+                        onValueChange={value => setValue('managerId', value === '__none__' ? null : value)}
                     >
                         <SelectTrigger>
                             <SelectValue placeholder="Select manager" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">No manager</SelectItem>
+                            <SelectItem value="__none__">No manager</SelectItem>
                             {adminUsers.map(user => (
                                 <SelectItem key={user.id} value={user.id}>
                                     {user.email}

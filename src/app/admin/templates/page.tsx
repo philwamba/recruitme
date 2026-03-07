@@ -8,7 +8,7 @@ import {
 } from '@/app/actions/enterprise'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { AdminPageHeader, TableSkeleton } from '@/components/admin'
+import { AdminPageHeader } from '@/components/admin'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -307,7 +307,7 @@ async function SendNotificationForm() {
                         <div className="space-y-2">
                             <Label htmlFor="userId" required>Recipient</Label>
                             <Select name="userId" required>
-                                <SelectTrigger>
+                                <SelectTrigger id="userId">
                                     <SelectValue placeholder="Select user" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -322,7 +322,7 @@ async function SendNotificationForm() {
                         <div className="space-y-2">
                             <Label htmlFor="channel">Channel</Label>
                             <Select name="channel" defaultValue="EMAIL">
-                                <SelectTrigger>
+                                <SelectTrigger id="channel">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>

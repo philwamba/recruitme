@@ -8,6 +8,7 @@ import { AdminPageHeader, TableSkeleton } from '@/components/admin'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/lib/constants/routes'
 import { JobsTable } from './_components/jobs-table'
+import { Pagination } from '@/components/ui/pagination'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,12 +75,17 @@ async function JobsTableSection({
     const pageNumber = page ? parseInt(page, 10) : 1
     const validatedPage = !isNaN(pageNumber) && pageNumber > 0 ? pageNumber : 1
 
-    const { jobs } = await getJobs({
+    const { jobs, pageCount } = await getJobs({
         status: validatedStatus,
         departmentId: department,
         search,
         page: validatedPage,
     })
 
-    return <JobsTable jobs={jobs} />
+    return (
+        <div className="space-y-4">
+            <JobsTable jobs={jobs} />
+            <Pagination page={validatedPage} totalPages={pageCount} />
+        </div>
+    )
 }

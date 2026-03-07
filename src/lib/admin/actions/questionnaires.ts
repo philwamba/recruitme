@@ -205,7 +205,7 @@ export async function updateQuestion(id: string, data: QuestionFormData) {
 
     const validated = questionFormSchema.parse(data)
 
-    const question = await prisma.questionnaireQuestion.update({
+    await prisma.questionnaireQuestion.update({
         where: { id },
         data: {
             text: validated.text,
@@ -278,13 +278,24 @@ export async function reorderQuestions(questionnaireId: string, questionIds: str
         permission: 'MANAGE_SYSTEM_SETTINGS',
     })
 
+    // Verify all questions belong to this questionnaire
+    const questionnaireQuestions = await prisma.questionnaireQuestion.findMany({
+        where: { questionnaireId },
+        select: { id: true },
+    })
+    const validQuestionIds = new Set(questionnaireQuestions.map(q => q.id))
+
+    if (questionIds.length !== validQuestionIds.size || !questionIds.every(id => validQuestionIds.has(id))) {
+        throw new Error('Invalid question IDs provided for reordering')
+    }
+
     await prisma.$transaction(
         questionIds.map((id, index) =>
             prisma.questionnaireQuestion.update({
-                where: { id },
+                where: { id, questionnaireId },
                 data: { sortOrder: index },
-            })
-        )
+            }),
+        ),
     )
 
     await createAuditLog({

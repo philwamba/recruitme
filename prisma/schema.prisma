@@ -741,6 +741,7 @@ model CandidateDocument {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
+  @@unique([applicantProfileId, documentType])
   @@index([applicationId])
   @@index([applicantProfileId])
   @@index([uploadedByUserId])

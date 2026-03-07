@@ -4,7 +4,7 @@ import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, ChevronLeft, PanelLeftClose, PanelLeft } from 'lucide-react'
+import { LogOut, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { signOut } from '@/app/auth/actions'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -40,7 +40,9 @@ export function AdminSidebar({ isCollapsed = false, onToggle, counts }: AdminSid
 
     return (
         <TooltipProvider delayDuration={0}>
-            <div
+            <aside
+                role="complementary"
+                aria-label="Admin Sidebar"
                 className={cn(
                     'relative flex h-full flex-col border-r bg-card transition-all duration-300',
                     isCollapsed ? 'w-16' : 'w-64',
@@ -71,6 +73,7 @@ export function AdminSidebar({ isCollapsed = false, onToggle, counts }: AdminSid
                             className="ml-auto h-8 w-8"
                             onClick={onToggle}
                             aria-label="Collapse sidebar"
+                            aria-expanded={!isCollapsed}
                         >
                             <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
                         </Button>
@@ -88,6 +91,7 @@ export function AdminSidebar({ isCollapsed = false, onToggle, counts }: AdminSid
                                     className="h-8 w-8"
                                     onClick={onToggle}
                                     aria-label="Expand sidebar"
+                                    aria-expanded={!isCollapsed}
                                 >
                                     <PanelLeft className="h-4 w-4" aria-hidden="true" />
                                 </Button>
@@ -102,12 +106,19 @@ export function AdminSidebar({ isCollapsed = false, onToggle, counts }: AdminSid
                     {adminNavGroups.map((group, groupIndex) => (
                         <div key={group.title} className={cn(groupIndex > 0 && 'mt-4')}>
                             {!isCollapsed && (
-                                <h4 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                <h4
+                                    id={`nav-group-${groupIndex}`}
+                                    className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                                >
                                     {group.title}
                                 </h4>
                             )}
                             {isCollapsed && groupIndex > 0 && <Separator className="my-2" />}
-                            <nav className="space-y-1">
+                            <nav
+                                className="space-y-1"
+                                aria-label={isCollapsed ? group.title : undefined}
+                                aria-labelledby={!isCollapsed ? `nav-group-${groupIndex}` : undefined}
+                            >
                                 {group.items.map(item => (
                                     <NavLink
                                         key={item.href}
@@ -162,7 +173,7 @@ export function AdminSidebar({ isCollapsed = false, onToggle, counts }: AdminSid
                         )}
                     </form>
                 </div>
-            </div>
+            </aside>
         </TooltipProvider>
     )
 }
