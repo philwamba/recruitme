@@ -5,8 +5,14 @@ export const jobSearchSchema = z.object({
     q: z.string().optional().default(''),
     department: z.string().optional().default(''),
     category: z.string().optional().default(''),
-    employmentType: z.nativeEnum(EmploymentType).optional(),
-    workplaceType: z.nativeEnum(WorkplaceType).optional(),
+    employmentType: z.preprocess(
+        val => (val === '' ? undefined : val),
+        z.nativeEnum(EmploymentType).optional(),
+    ),
+    workplaceType: z.preprocess(
+        val => (val === '' ? undefined : val),
+        z.nativeEnum(WorkplaceType).optional(),
+    ),
     location: z.string().optional().default(''),
     salaryMin: z.coerce.number().int().min(0).optional(),
     salaryMax: z.coerce.number().int().min(0).optional(),

@@ -13,9 +13,13 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-function buildPageHref(search: Record<string, string>, page: number) {
-    const params = new URLSearchParams(search)
-    params.set('page', String(page))
+function buildPageHref(search: Record<string, string | number | undefined>, page: number) {
+    const params = new URLSearchParams()
+    Object.entries({ ...search, page }).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+            params.set(key, String(value))
+        }
+    })
     return `/jobs?${params.toString()}`
 }
 
@@ -29,13 +33,13 @@ export default async function JobsPage({
         q: typeof raw.q === 'string' ? raw.q : '',
         department: typeof raw.department === 'string' ? raw.department : '',
         category: typeof raw.category === 'string' ? raw.category : '',
-        employmentType: typeof raw.employmentType === 'string' ? raw.employmentType : undefined,
-        workplaceType: typeof raw.workplaceType === 'string' ? raw.workplaceType : undefined,
+        employmentType: raw.employmentType || undefined,
+        workplaceType: raw.workplaceType || undefined,
         location: typeof raw.location === 'string' ? raw.location : '',
-        salaryMin: typeof raw.salaryMin === 'string' ? raw.salaryMin : undefined,
-        salaryMax: typeof raw.salaryMax === 'string' ? raw.salaryMax : undefined,
+        salaryMin: raw.salaryMin || undefined,
+        salaryMax: raw.salaryMax || undefined,
         postedWithin: typeof raw.postedWithin === 'string' ? raw.postedWithin : '',
-        page: typeof raw.page === 'string' ? raw.page : '1',
+        page: raw.page || '1',
     }
 
     const parsed = jobSearchSchema.safeParse(normalized)
