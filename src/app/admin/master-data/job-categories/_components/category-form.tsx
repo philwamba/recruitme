@@ -70,12 +70,17 @@ export function CategoryForm({ category }: CategoryFormProps) {
             try {
                 if (category) {
                     await updateJobCategory(category.id, data)
-                    toast.success('Category updated successfully')
                 } else {
                     await createJobCategory(data)
-                    toast.success('Category created successfully')
                 }
             } catch (error) {
+                // Re-throw NEXT_REDIRECT errors so navigation works
+                if (error && typeof error === 'object' && 'digest' in error) {
+                    const digest = (error as { digest?: string }).digest
+                    if (digest?.startsWith('NEXT_REDIRECT')) {
+                        throw error
+                    }
+                }
                 toast.error(error instanceof Error ? error.message : 'Something went wrong')
             }
         })
@@ -119,7 +124,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
                                             <Input
                                                 placeholder="e.g. ENGINEERING"
                                                 {...field}
-                                                onChange={(e) => {
+                                                onChange={e => {
                                                     field.onChange(normalizeCode(e.target.value))
                                                 }}
                                                 className="uppercase"

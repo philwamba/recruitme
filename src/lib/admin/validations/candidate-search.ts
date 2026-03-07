@@ -32,7 +32,7 @@ export const candidateSearchSchema = candidateFiltersSchema.extend({
 export type CandidateSearchInput = z.infer<typeof candidateSearchSchema>
 
 export const savedSearchSchema = z.object({
-    name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
+    name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long'),
     filters: candidateFiltersSchema,
     isPublic: z.boolean().optional().default(false),
 })

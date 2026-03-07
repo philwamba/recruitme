@@ -407,6 +407,63 @@ export async function createEmailTemplateAction(formData: FormData) {
     redirect('/admin/templates?status=template-saved')
 }
 
+export async function updateEmailTemplateAction(formData: FormData) {
+    await requireCurrentUser({
+        roles: ['EMPLOYER', 'ADMIN'],
+        permission: 'MANAGE_NOTIFICATIONS',
+    })
+
+    const id = formData.get('id') as string
+    if (!id) {
+        redirect('/admin/templates?error=missing-id')
+    }
+
+    const parsed = emailTemplateSchema.safeParse({
+        name: formData.get('name'),
+        subject: formData.get('subject'),
+        body: formData.get('body'),
+        jobId: formData.get('jobId') || '',
+        isActive: formData.get('isActive') === 'true',
+    })
+
+    if (!parsed.success) {
+        redirect('/admin/templates?error=invalid-template')
+    }
+
+    await prisma.emailTemplate.update({
+        where: { id },
+        data: {
+            name: parsed.data.name,
+            subject: parsed.data.subject,
+            body: parsed.data.body,
+            isActive: parsed.data.isActive,
+            jobId: parsed.data.jobId || null,
+        },
+    })
+
+    revalidatePath('/admin/templates')
+    redirect('/admin/templates?status=template-updated')
+}
+
+export async function deleteEmailTemplateAction(formData: FormData) {
+    await requireCurrentUser({
+        roles: ['EMPLOYER', 'ADMIN'],
+        permission: 'MANAGE_NOTIFICATIONS',
+    })
+
+    const id = formData.get('id') as string
+    if (!id) {
+        redirect('/admin/templates?error=missing-id')
+    }
+
+    await prisma.emailTemplate.delete({
+        where: { id },
+    })
+
+    revalidatePath('/admin/templates')
+    redirect('/admin/templates?status=template-deleted')
+}
+
 export async function createNotificationAction(formData: FormData) {
     const user = await requireCurrentUser({
         roles: ['EMPLOYER', 'ADMIN'],

@@ -1,9 +1,12 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { ApplicationStatus } from '@prisma/client'
+import { Upload } from 'lucide-react'
 import { requireCurrentUser } from '@/lib/auth'
 import { getCandidates, getCandidateFilterOptions } from '@/lib/admin/queries/candidates'
 import { getSavedSearches } from '@/lib/admin/queries/saved-searches'
 import { AdminPageHeader, TableSkeleton } from '@/components/admin'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CandidatesTable } from './_components/candidates-table'
 import { CandidateFilters } from './_components/candidate-filters'
@@ -67,6 +70,14 @@ export default async function AdminCandidatesPage({ searchParams }: PageProps) {
             <AdminPageHeader
                 title="Candidates"
                 description="View and manage all candidates across jobs"
+                actions={
+                    <Button asChild>
+                        <Link href="/admin/candidates/import">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Import
+                        </Link>
+                    </Button>
+                }
             />
 
             <Card>
