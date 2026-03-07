@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'node:crypto'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { savePrivateFile } from '@/lib/services/private-files'
+import { savePrivateFile, removePrivateFile } from '@/lib/services/private-files'
 import { createAuditLog } from '@/lib/observability/audit'
 import { reportError } from '@/lib/observability/error-reporting'
 
