@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { EmploymentType, WorkplaceType } from '@prisma/client'
 import { getPublishedJobs } from '@/lib/services/jobs'
 import { jobSearchSchema, type JobSearchInput } from '@/lib/validations/jobs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { JobFilters } from './_components/job-filters'
 
 export const metadata: Metadata = {
     title: 'Jobs | RecruitMe',
@@ -59,59 +59,17 @@ export default async function JobsPage({
 
                 <Card>
                     <CardContent className="pt-6">
-                        <form className="grid gap-4 md:grid-cols-5">
-                            <input
-                                name="q"
-                                defaultValue={search.q}
-                                placeholder="Search roles or companies"
-                                className="rounded-md border bg-background px-3 py-2 text-sm"
-                            />
-                            <select
-                                name="department"
-                                defaultValue={search.department}
-                                className="rounded-md border bg-background px-3 py-2 text-sm"
-                            >
-                                <option value="">All departments</option>
-                                {result.departments.map(department => (
-                                    <option key={department.id} value={department.slug}>
-                                        {department.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                name="employmentType"
-                                defaultValue={search.employmentType ?? ''}
-                                className="rounded-md border bg-background px-3 py-2 text-sm"
-                            >
-                                <option value="">All job types</option>
-                                {Object.values(EmploymentType).map(option => (
-                                    <option key={option} value={option}>
-                                        {option.replaceAll('_', ' ')}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                name="workplaceType"
-                                defaultValue={search.workplaceType ?? ''}
-                                className="rounded-md border bg-background px-3 py-2 text-sm"
-                            >
-                                <option value="">All workplace types</option>
-                                {Object.values(WorkplaceType).map(option => (
-                                    <option key={option} value={option}>
-                                        {option.replaceAll('_', ' ')}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="flex gap-2">
-                                <input
-                                    name="location"
-                                    defaultValue={search.location}
-                                    placeholder="Location"
-                                    className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                                />
-                                <Button type="submit">Filter</Button>
-                            </div>
-                        </form>
+                        <JobFilters
+                            departments={result.departments}
+                            locations={result.locations}
+                            defaultValues={{
+                                q: search.q,
+                                department: search.department,
+                                employmentType: search.employmentType ?? '',
+                                workplaceType: search.workplaceType ?? '',
+                                location: search.location,
+                            }}
+                        />
                     </CardContent>
                 </Card>
 
@@ -159,53 +117,55 @@ export default async function JobsPage({
                     )}
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-            Showing page {result.page} of {result.totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                        {result.page <= 1 ? (
-                            <Button variant="outline" disabled>
-                Previous
-                            </Button>
-                        ) : (
-                            <Button asChild variant="outline">
-                                <Link
-                                    href={buildPageHref(
-                                        {
-                                            ...normalized,
-                                            employmentType: normalized.employmentType ?? '',
-                                            workplaceType: normalized.workplaceType ?? '',
-                                        },
-                                        Math.max(1, result.page - 1),
-                                    )}
-                                >
-                  Previous
-                                </Link>
-                            </Button>
-                        )}
-                        {result.page >= result.totalPages ? (
-                            <Button variant="outline" disabled>
-                Next
-                            </Button>
-                        ) : (
-                            <Button asChild variant="outline">
-                                <Link
-                                    href={buildPageHref(
-                                        {
-                                            ...normalized,
-                                            employmentType: normalized.employmentType ?? '',
-                                            workplaceType: normalized.workplaceType ?? '',
-                                        },
-                                        Math.min(result.totalPages, result.page + 1),
-                                    )}
-                                >
-                  Next
-                                </Link>
-                            </Button>
-                        )}
+                {result.totalPages > 1 && (
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                            Showing page {result.page} of {result.totalPages}
+                        </p>
+                        <div className="flex gap-2">
+                            {result.page <= 1 ? (
+                                <Button variant="outline" disabled>
+                                    Previous
+                                </Button>
+                            ) : (
+                                <Button asChild variant="outline">
+                                    <Link
+                                        href={buildPageHref(
+                                            {
+                                                ...normalized,
+                                                employmentType: normalized.employmentType ?? '',
+                                                workplaceType: normalized.workplaceType ?? '',
+                                            },
+                                            Math.max(1, result.page - 1),
+                                        )}
+                                    >
+                                        Previous
+                                    </Link>
+                                </Button>
+                            )}
+                            {result.page >= result.totalPages ? (
+                                <Button variant="outline" disabled>
+                                    Next
+                                </Button>
+                            ) : (
+                                <Button asChild variant="outline">
+                                    <Link
+                                        href={buildPageHref(
+                                            {
+                                                ...normalized,
+                                                employmentType: normalized.employmentType ?? '',
+                                                workplaceType: normalized.workplaceType ?? '',
+                                            },
+                                            Math.min(result.totalPages, result.page + 1),
+                                        )}
+                                    >
+                                        Next
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     )

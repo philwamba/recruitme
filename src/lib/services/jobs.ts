@@ -38,7 +38,7 @@ export async function getPublishedJobs(input: JobSearchInput) {
             : {}),
     }
 
-    const [jobs, totalCount, departments] = await Promise.all([
+    const [jobs, totalCount, departments, locations] = await Promise.all([
         prisma.job.findMany({
             where,
             include: {
@@ -52,11 +52,18 @@ export async function getPublishedJobs(input: JobSearchInput) {
         prisma.department.findMany({
             orderBy: { name: 'asc' },
         }),
+        prisma.job.findMany({
+            where: { status: 'PUBLISHED' },
+            select: { location: true },
+            distinct: ['location'],
+            orderBy: { location: 'asc' },
+        }),
     ])
 
     return {
         jobs,
         departments,
+        locations: locations.map(l => l.location).filter(Boolean),
         page: input.page,
         pageSize: PAGE_SIZE,
         totalCount,

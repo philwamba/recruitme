@@ -41,9 +41,12 @@ export default function ApplyPage({
     const router = useRouter()
     const [job, setJob] = React.useState<Job | null>(null)
     const [loading, setLoading] = React.useState(true)
+    const [notFound, setNotFound] = React.useState(false)
+    const [loadError, setLoadError] = React.useState<string | null>(null)
     const [submitting, setSubmitting] = React.useState(false)
     const [submitted, setSubmitted] = React.useState(false)
     const [trackingId, setTrackingId] = React.useState<string | null>(null)
+    const [formError, setFormError] = React.useState<string | null>(null)
 
     const [formData, setFormData] = React.useState<ApplicationFormData>({
         firstName: '',
@@ -58,23 +61,35 @@ export default function ApplyPage({
 
     const [errors, setErrors] = React.useState<Partial<Record<keyof ApplicationFormData, string>>>({})
 
+    // Resolve slug once from params
+    const [slug, setSlug] = React.useState<string | null>(null)
     React.useEffect(() => {
+        params.then(p => setSlug(p.slug))
+    }, [params])
+
+    React.useEffect(() => {
+        if (!slug) return
+
         async function loadJob() {
-            const { slug } = await params
             try {
                 const response = await fetch(`/api/jobs/${slug}`)
-                if (response.ok) {
+                if (response.status === 404) {
+                    setNotFound(true)
+                } else if (!response.ok) {
+                    setLoadError('Failed to load job details')
+                } else {
                     const data = await response.json()
                     setJob(data)
                 }
             } catch (error) {
                 console.error('Failed to load job:', error)
+                setLoadError('An error occurred while loading the job')
             } finally {
                 setLoading(false)
             }
         }
         loadJob()
-    }, [params])
+    }, [slug])
 
     function validateForm(): boolean {
         const newErrors: Partial<Record<keyof ApplicationFormData, string>> = {}
@@ -136,12 +151,16 @@ export default function ApplyPage({
                 setTrackingId(result.trackingId)
                 setSubmitted(true)
             } else {
-                const error = await response.json()
-                setErrors({ email: error.message || 'Failed to submit application' })
+                const errorData = await response.json()
+                if (errorData.field && errorData.field in formData) {
+                    setErrors({ [errorData.field]: errorData.message })
+                } else {
+                    setFormError(errorData.message || 'Failed to submit application')
+                }
             }
         } catch (error) {
             console.error('Submit error:', error)
-            setErrors({ email: 'An error occurred. Please try again.' })
+            setFormError('An error occurred. Please try again.')
         } finally {
             setSubmitting(false)
         }
@@ -155,7 +174,23 @@ export default function ApplyPage({
         )
     }
 
-    if (!job) {
+    if (loadError) {
+        return (
+            <div className="min-h-screen bg-muted/30">
+                <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+                    <h1 className="text-2xl font-semibold">Failed to Load Job</h1>
+                    <p className="mt-2 text-muted-foreground">
+                        {loadError}
+                    </p>
+                    <Button asChild className="mt-6">
+                        <Link href="/jobs">Browse All Jobs</Link>
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
+    if (notFound || !job) {
         return (
             <div className="min-h-screen bg-muted/30">
                 <div className="mx-auto max-w-2xl px-4 py-16 text-center">
@@ -404,11 +439,18 @@ export default function ApplyPage({
                                     </div>
                                 </div>
 
+                                {formError && (
+                                    <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+                                        <p className="text-sm text-destructive">{formError}</p>
+                                    </div>
+                                )}
+
                                 <Button
                                     type="submit"
                                     size="lg"
                                     className="w-full"
                                     disabled={submitting}
+                                    onClick={() => setFormError(null)}
                                 >
                                     {submitting ? (
                                         <>

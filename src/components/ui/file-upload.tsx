@@ -47,7 +47,7 @@ function FileUpload({
     name,
     accept = '.pdf,.doc,.docx',
     multiple = false,
-    maxSize = 5 * 1024 * 1024, // 5MB default
+    maxSize = 5 * 1024 * 1024,
     disabled = false,
     required = false,
     value,
@@ -75,18 +75,18 @@ function FileUpload({
     }, [accept])
 
     function validateFile(file: File): string | null {
-        // Check file size
         if (file.size > maxSize) {
             return `File "${file.name}" exceeds maximum size of ${formatFileSize(maxSize)}`
         }
 
-        // Check file type
-        const extension = `.${file.name.split('.').pop()?.toLowerCase()}`
         const mimeType = file.type.toLowerCase()
+        const nameParts = file.name.split('.')
+        const hasExtension = nameParts.length > 1 && nameParts[nameParts.length - 1] !== ''
+        const extension = hasExtension ? `.${nameParts.pop()?.toLowerCase()}` : null
 
         const isValidType = acceptedTypes.some(accepted => {
             if (accepted.startsWith('.')) {
-                return extension === accepted
+                return extension !== null && extension === accepted
             }
             if (accepted.includes('*')) {
                 const [type] = accepted.split('/')
