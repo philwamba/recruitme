@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -15,7 +14,7 @@ function slugify(text: string): string {
 }
 
 export async function createDepartmentAction(formData: FormData) {
-    const user = await requireCurrentUser({
+    await requireCurrentUser({
         roles: ['EMPLOYER', 'ADMIN'],
     })
 
@@ -91,11 +90,14 @@ export async function deleteDepartmentAction(formData: FormData) {
     revalidatePath('/employer/jobs')
 }
 
-// Get distinct companies and locations from existing jobs
-export async function getEmployerJobMetadata(userId: string) {
+export async function getEmployerJobMetadata() {
+    const user = await requireCurrentUser({
+        roles: ['EMPLOYER', 'ADMIN'],
+    })
+
     const jobs = await prisma.job.findMany({
         where: {
-            createdByUserId: userId,
+            createdByUserId: user.id,
         },
         select: {
             company: true,
@@ -109,8 +111,12 @@ export async function getEmployerJobMetadata(userId: string) {
     return { companies, locations }
 }
 
-// Get all departments
+// Get all departments (requires authentication)
 export async function getDepartments() {
+    await requireCurrentUser({
+        roles: ['EMPLOYER', 'ADMIN'],
+    })
+
     return prisma.department.findMany({
         orderBy: { name: 'asc' },
         include: {

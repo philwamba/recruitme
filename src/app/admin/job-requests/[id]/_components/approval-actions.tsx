@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Check, X, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -12,6 +14,7 @@ interface ApprovalActionsProps {
 }
 
 export function ApprovalActions({ approvalId }: ApprovalActionsProps) {
+    const router = useRouter()
     const [comments, setComments] = useState('')
     const [isProcessing, setIsProcessing] = useState(false)
 
@@ -19,8 +22,10 @@ export function ApprovalActions({ approvalId }: ApprovalActionsProps) {
         setIsProcessing(true)
         try {
             await processApproval(approvalId, { status, comments: comments || undefined })
+            toast.success(`Request ${status === 'APPROVED' ? 'approved' : 'rejected'} successfully`)
+            router.refresh()
         } catch (error) {
-            alert(error instanceof Error ? error.message : 'An error occurred')
+            toast.error(error instanceof Error ? error.message : 'An error occurred')
         } finally {
             setIsProcessing(false)
         }
