@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic'
 
 interface PageProps {
     searchParams: Promise<{
-        search?: string
-        category?: string
+        search?: string | string[]
+        category?: string | string[]
     }>
 }
 
@@ -24,6 +24,9 @@ export default async function QualitiesPage({ searchParams }: PageProps) {
     })
 
     const params = await searchParams
+    // Normalize search params - can be string | string[] | undefined
+    const search = Array.isArray(params.search) ? params.search[0] : params.search
+    const category = Array.isArray(params.category) ? params.category[0] : params.category
 
     return (
         <div className="space-y-6">
@@ -41,7 +44,7 @@ export default async function QualitiesPage({ searchParams }: PageProps) {
             />
 
             <Suspense fallback={<TableSkeleton columns={6} rows={10} />}>
-                <QualitiesTableSection search={params.search} category={params.category} />
+                <QualitiesTableSection search={search} category={category} />
             </Suspense>
         </div>
     )

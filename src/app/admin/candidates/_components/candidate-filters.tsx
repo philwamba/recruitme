@@ -226,11 +226,11 @@ export function CandidateFilters({
         setIsSaving(true)
         try {
             const currentFilters = {
-                search: defaultValues.search,
-                status: defaultValues.status || undefined,
+                search: defaultValues.search || undefined,
+                status: (defaultValues.status || undefined) as ApplicationStatus | undefined,
                 jobId: defaultValues.jobId || undefined,
-                skills: defaultValues.skills,
-                tags: defaultValues.tags,
+                skills: defaultValues.skills.length > 0 ? defaultValues.skills : undefined,
+                tags: defaultValues.tags.length > 0 ? defaultValues.tags : undefined,
                 minRating: defaultValues.minRating ? Number(defaultValues.minRating) : undefined,
                 maxRating: defaultValues.maxRating ? Number(defaultValues.maxRating) : undefined,
                 location: defaultValues.location || undefined,

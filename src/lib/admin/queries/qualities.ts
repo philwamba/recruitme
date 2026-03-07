@@ -76,5 +76,5 @@ export async function getQualityCategories() {
         distinct: ['category'],
         orderBy: { category: 'asc' },
     })
-    return categories.map(c => c.category).filter(Boolean) as string[]
+    return categories.map((c) => c.category).filter((v): v is string => Boolean(v))
 }

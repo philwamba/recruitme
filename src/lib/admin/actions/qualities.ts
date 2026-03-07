@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireCurrentUser } from '@/lib/auth'
 import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
@@ -27,9 +28,17 @@ export async function createQuality(data: QualityFormData) {
         throw new Error('A quality with this code already exists')
     }
 
-    const quality = await prisma.quality.create({
-        data: validated,
-    })
+    let quality
+    try {
+        quality = await prisma.quality.create({
+            data: validated,
+        })
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            throw new Error('A quality with this code already exists')
+        }
+        throw error
+    }
 
     await createAuditLog({
         actorUserId: user.id,
@@ -78,10 +87,18 @@ export async function updateQuality(qualityId: string, data: QualityFormData) {
         }
     }
 
-    const quality = await prisma.quality.update({
-        where: { id: qualityId },
-        data: validated,
-    })
+    let quality
+    try {
+        quality = await prisma.quality.update({
+            where: { id: qualityId },
+            data: validated,
+        })
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            throw new Error('A quality with this code already exists')
+        }
+        throw error
+    }
 
     await createAuditLog({
         actorUserId: user.id,

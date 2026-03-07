@@ -151,7 +151,7 @@ export async function deleteRankGrade(gradeId: string) {
     })
 
     revalidatePath(ROUTES.ADMIN.MASTER_DATA.RANK_GRADES)
-    redirect(ROUTES.ADMIN.MASTER_DATA.RANK_GRADES)
+    return { success: true, id: gradeId, name: grade.name }
 }
 
 export async function toggleRankGradeStatus(gradeId: string) {

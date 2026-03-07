@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireCurrentUser } from '@/lib/auth'
 import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
@@ -27,17 +28,25 @@ export async function createJobTitle(data: JobTitleFormData) {
         throw new Error('A job title with this code already exists')
     }
 
-    const title = await prisma.jobTitle.create({
-        data: {
-            name: validated.name,
-            code: validated.code,
-            categoryId: validated.categoryId,
-            description: validated.description,
-            rankGradeId: validated.rankGradeId || null,
-            isActive: validated.isActive,
-        },
-        include: { category: true },
-    })
+    let title
+    try {
+        title = await prisma.jobTitle.create({
+            data: {
+                name: validated.name,
+                code: validated.code,
+                categoryId: validated.categoryId,
+                description: validated.description,
+                rankGradeId: validated.rankGradeId || null,
+                isActive: validated.isActive,
+            },
+            include: { category: true },
+        })
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            throw new Error('A job title with this code already exists')
+        }
+        throw error
+    }
 
     await createAuditLog({
         actorUserId: user.id,
@@ -86,17 +95,25 @@ export async function updateJobTitle(titleId: string, data: JobTitleFormData) {
         }
     }
 
-    const title = await prisma.jobTitle.update({
-        where: { id: titleId },
-        data: {
-            name: validated.name,
-            code: validated.code,
-            categoryId: validated.categoryId,
-            description: validated.description,
-            rankGradeId: validated.rankGradeId || null,
-            isActive: validated.isActive,
-        },
-    })
+    let title
+    try {
+        title = await prisma.jobTitle.update({
+            where: { id: titleId },
+            data: {
+                name: validated.name,
+                code: validated.code,
+                categoryId: validated.categoryId,
+                description: validated.description,
+                rankGradeId: validated.rankGradeId || null,
+                isActive: validated.isActive,
+            },
+        })
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            throw new Error('A job title with this code already exists')
+        }
+        throw error
+    }
 
     await createAuditLog({
         actorUserId: user.id,

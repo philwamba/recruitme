@@ -194,12 +194,15 @@ export function GradesTable({ grades }: GradesTableProps) {
     }
 
     function handleDelete() {
-        if (!deleteId) return
+        if (!deleteId || isPending) return
         startTransition(async () => {
             try {
-                await deleteRankGrade(deleteId)
-                toast.success('Rank grade deleted')
-                setDeleteId(null)
+                const result = await deleteRankGrade(deleteId)
+                if (result.success) {
+                    toast.success('Rank grade deleted')
+                    setDeleteId(null)
+                    router.refresh()
+                }
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : 'Failed to delete')
                 setDeleteId(null)
@@ -212,7 +215,7 @@ export function GradesTable({ grades }: GradesTableProps) {
             <Input
                 placeholder="Search rank grades..."
                 value={globalFilter ?? ''}
-                onChange={e => setGlobalFilter(e.target.value)}
+                onChange={(e) => setGlobalFilter(e.target.value)}
                 className="max-w-sm"
             />
 
@@ -275,9 +278,10 @@ export function GradesTable({ grades }: GradesTableProps) {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
+                            disabled={isPending}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Delete
+                            {isPending ? 'Deleting...' : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
