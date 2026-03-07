@@ -80,13 +80,11 @@ function FileUpload({
         }
 
         const mimeType = file.type.toLowerCase()
-        const nameParts = file.name.split('.')
-        const hasExtension = nameParts.length > 1 && nameParts[nameParts.length - 1] !== ''
-        const extension = hasExtension ? `.${nameParts.pop()?.toLowerCase()}` : null
+        const fileNameLower = file.name.toLowerCase()
 
         const isValidType = acceptedTypes.some(accepted => {
             if (accepted.startsWith('.')) {
-                return extension !== null && extension === accepted
+                return fileNameLower.endsWith(accepted)
             }
             if (accepted.includes('*')) {
                 const [type] = accepted.split('/')

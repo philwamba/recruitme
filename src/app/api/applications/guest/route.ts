@@ -145,37 +145,38 @@ export async function POST(request: NextRequest) {
         const defaultStage = stages[0] ?? null
 
         const trackingId = createTrackingId()
-        const application = await prisma.application.create({
-            data: {
-                trackingId,
-                userId: user.id,
-                jobId: data.jobId,
-                coverLetter: data.coverLetter || null,
-                source: 'Guest Application',
-                consentAcceptedAt: new Date(),
-                status: 'SUBMITTED',
-                submittedAt: new Date(),
-                currentStageId: defaultStage?.id ?? null,
-            },
-        })
 
-        if (defaultStage) {
-            await prisma.applicationStageEvent.create({
-                data: {
-                    applicationId: application.id,
-                    toStageId: defaultStage.id,
-                    note: 'Guest application submitted',
-                },
-            })
-        }
-
-        // Store CV file and record in DB within a transaction
         const storedCv = await savePrivateFile(cvFile, { scan: true })
+        let application: { id: string; trackingId: string }
         try {
-            await prisma.$transaction(async (tx) => {
+            application = await prisma.$transaction(async tx => {
+                const app = await tx.application.create({
+                    data: {
+                        trackingId,
+                        userId: user.id,
+                        jobId: data.jobId,
+                        coverLetter: data.coverLetter || null,
+                        source: 'Guest Application',
+                        consentAcceptedAt: new Date(),
+                        status: 'SUBMITTED',
+                        submittedAt: new Date(),
+                        currentStageId: defaultStage?.id ?? null,
+                    },
+                })
+
+                if (defaultStage) {
+                    await tx.applicationStageEvent.create({
+                        data: {
+                            applicationId: app.id,
+                            toStageId: defaultStage.id,
+                            note: 'Guest application submitted',
+                        },
+                    })
+                }
+
                 await tx.candidateDocument.create({
                     data: {
-                        applicationId: application.id,
+                        applicationId: app.id,
                         applicantProfileId: user.applicantProfile?.id ?? null,
                         uploadedByUserId: user.id,
                         documentType: 'CV',
@@ -197,10 +198,17 @@ export async function POST(request: NextRequest) {
                         },
                     })
                 }
+
+                return app
             })
         } catch (txError) {
-            // Clean up orphaned file on DB failure
-            await removePrivateFile(storedCv.storageKey).catch(() => {})
+            const deleted = await removePrivateFile(storedCv.storageKey)
+            if (!deleted) {
+                reportError(new Error('Failed to clean up orphaned CV file'), {
+                    scope: 'api.applications.guest.cleanup',
+                    metadata: { storageKey: storedCv.storageKey },
+                })
+            }
             throw txError
         }
 

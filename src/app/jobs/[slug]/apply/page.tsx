@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,7 +38,6 @@ export default function ApplyPage({
 }: {
     params: Promise<{ slug: string }>
 }) {
-    const router = useRouter()
     const [job, setJob] = React.useState<Job | null>(null)
     const [loading, setLoading] = React.useState(true)
     const [notFound, setNotFound] = React.useState(false)
@@ -48,6 +46,7 @@ export default function ApplyPage({
     const [submitted, setSubmitted] = React.useState(false)
     const [trackingId, setTrackingId] = React.useState<string | null>(null)
     const [formError, setFormError] = React.useState<string | null>(null)
+    const isSubmittingRef = React.useRef(false)
 
     const [formData, setFormData] = React.useState<ApplicationFormData>({
         firstName: '',
@@ -120,8 +119,12 @@ export default function ApplyPage({
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
 
+        if (isSubmittingRef.current) return
+        setFormError('')
+
         if (!validateForm() || !job) return
 
+        isSubmittingRef.current = true
         setSubmitting(true)
 
         try {
@@ -163,6 +166,7 @@ export default function ApplyPage({
             console.error('Submit error:', error)
             setFormError('An error occurred. Please try again.')
         } finally {
+            isSubmittingRef.current = false
             setSubmitting(false)
         }
     }

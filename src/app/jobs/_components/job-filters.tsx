@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useTransition } from 'react'
 import { EmploymentType, WorkplaceType } from '@prisma/client'
 import { Loader2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -29,10 +29,20 @@ export function JobFilters({ departments, locations, defaultValues }: JobFilters
     const router = useRouter()
     const searchParams = useSearchParams()
     const [isPending, startTransition] = useTransition()
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+    const searchParamsString = searchParams.toString()
+
+    useEffect(() => {
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current)
+            }
+        }
+    }, [])
 
     const updateFilter = useCallback(
         (key: string, value: string) => {
-            const params = new URLSearchParams(searchParams.toString())
+            const params = new URLSearchParams(searchParamsString)
             if (value) {
                 params.set(key, value)
             } else {
@@ -40,27 +50,34 @@ export function JobFilters({ departments, locations, defaultValues }: JobFilters
             }
             params.delete('page')
             startTransition(() => {
-                router.push(`/jobs?${params.toString()}`)
+                router.replace(`/jobs?${params.toString()}`)
             })
         },
-        [router, searchParams],
+        [router, searchParamsString],
     )
 
     const handleSearchChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const value = e.target.value
-            const params = new URLSearchParams(searchParams.toString())
-            if (value) {
-                params.set('q', value)
-            } else {
-                params.delete('q')
+
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current)
             }
-            params.delete('page')
-            startTransition(() => {
-                router.push(`/jobs?${params.toString()}`)
-            })
+
+            debounceTimerRef.current = setTimeout(() => {
+                const params = new URLSearchParams(searchParamsString)
+                if (value) {
+                    params.set('q', value)
+                } else {
+                    params.delete('q')
+                }
+                params.delete('page')
+                startTransition(() => {
+                    router.replace(`/jobs?${params.toString()}`)
+                })
+            }, 300)
         },
-        [router, searchParams],
+        [router, searchParamsString],
     )
 
     return (
@@ -74,6 +91,7 @@ export function JobFilters({ departments, locations, defaultValues }: JobFilters
                         defaultValue={defaultValues.q}
                         onChange={handleSearchChange}
                         placeholder="Search roles, companies, or keywords..."
+                        aria-label="Search roles, companies, or keywords"
                         className="pl-10 h-12 text-base"
                     />
                 </div>
@@ -99,6 +117,7 @@ export function JobFilters({ departments, locations, defaultValues }: JobFilters
                     defaultValue={defaultValues.department}
                     onChange={e => updateFilter('department', e.target.value)}
                     disabled={isPending}
+                    aria-label="Filter by department"
                     className="h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <option value="">All departments</option>
@@ -114,6 +133,7 @@ export function JobFilters({ departments, locations, defaultValues }: JobFilters
                     defaultValue={defaultValues.employmentType}
                     onChange={e => updateFilter('employmentType', e.target.value)}
                     disabled={isPending}
+                    aria-label="Filter by job type"
                     className="h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <option value="">All job types</option>
