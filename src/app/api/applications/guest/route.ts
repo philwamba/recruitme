@@ -169,30 +169,39 @@ export async function POST(request: NextRequest) {
             })
         }
 
+        // Store CV file and record in DB within a transaction
         const storedCv = await savePrivateFile(cvFile, { scan: true })
-        await prisma.candidateDocument.create({
-            data: {
-                applicationId: application.id,
-                applicantProfileId: user.applicantProfile?.id ?? null,
-                uploadedByUserId: user.id,
-                documentType: 'CV',
-                storageKey: storedCv.storageKey,
-                originalFileName: storedCv.originalFileName,
-                mimeType: storedCv.mimeType,
-                sizeBytes: storedCv.sizeBytes,
-                sha256: storedCv.sha256,
-                scanStatus: storedCv.scanStatus,
-            },
-        })
+        try {
+            await prisma.$transaction(async (tx) => {
+                await tx.candidateDocument.create({
+                    data: {
+                        applicationId: application.id,
+                        applicantProfileId: user.applicantProfile?.id ?? null,
+                        uploadedByUserId: user.id,
+                        documentType: 'CV',
+                        storageKey: storedCv.storageKey,
+                        originalFileName: storedCv.originalFileName,
+                        mimeType: storedCv.mimeType,
+                        sizeBytes: storedCv.sizeBytes,
+                        sha256: storedCv.sha256,
+                        scanStatus: storedCv.scanStatus,
+                    },
+                })
 
-        if (user.applicantProfile) {
-            await prisma.applicantProfile.update({
-                where: { id: user.applicantProfile.id },
-                data: {
-                    cvUrl: storedCv.storageKey,
-                    cvFileName: storedCv.originalFileName,
-                },
+                if (user.applicantProfile) {
+                    await tx.applicantProfile.update({
+                        where: { id: user.applicantProfile.id },
+                        data: {
+                            cvUrl: storedCv.storageKey,
+                            cvFileName: storedCv.originalFileName,
+                        },
+                    })
+                }
             })
+        } catch (txError) {
+            // Clean up orphaned file on DB failure
+            await removePrivateFile(storedCv.storageKey).catch(() => {})
+            throw txError
         }
 
         const supportingDocKeys = Array.from(formData.keys()).filter(k => k.startsWith('supportingDocument_'))
