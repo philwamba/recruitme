@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { FileUpload } from '@/components/ui/file-upload'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Briefcase, MapPin, Building2, Clock, CheckCircle2, Loader2, User, LogIn, UserPlus, Shield, Zap, FileText } from 'lucide-react'
+import { Briefcase, MapPin, Building2, Clock, CheckCircle2, Loader2, LogIn, UserPlus, Shield, Zap, FileText } from 'lucide-react'
 import { ROUTES } from '@/lib/constants/routes'
 
 interface Job {
@@ -340,39 +340,6 @@ export default function ApplyPage({
                         </div>
                     </div>
                 </div>
-
-                {/* Login/Signup Banner */}
-                <Card className="mb-6 border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
-                    <CardContent className="py-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-                                    <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-sm">Already have an account?</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Sign in for faster applications with your saved CV
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2 sm:shrink-0">
-                                <Button asChild size="sm" variant="outline" className="flex-1 sm:flex-none">
-                                    <Link href={`${ROUTES.SIGN_IN}?next=${encodeURIComponent(`/jobs/${job.slug}/apply`)}`}>
-                                        <LogIn className="mr-2 h-4 w-4" />
-                                        Sign In
-                                    </Link>
-                                </Button>
-                                <Button asChild size="sm" className="flex-1 sm:flex-none">
-                                    <Link href={`${ROUTES.SIGN_UP}?next=${encodeURIComponent(`/jobs/${job.slug}/apply`)}`}>
-                                        <UserPlus className="mr-2 h-4 w-4" />
-                                        Sign Up
-                                    </Link>
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
 
                 {/* Application Form */}
                 <form onSubmit={handleSubmit}>

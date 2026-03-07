@@ -135,20 +135,6 @@ export default async function JobDetailPage({
                             {job.benefits ?? 'Benefits will be discussed during the process.'}
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Recruitment Pipeline</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ol className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-                                {job.pipelineStages.map(stage => (
-                                    <li key={stage.id} className="rounded-md border px-3 py-2">
-                                        {stage.order}. {stage.name}
-                                    </li>
-                                ))}
-                            </ol>
-                        </CardContent>
-                    </Card>
                 </div>
             </div>
         </div>
