@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic'
 function buildPageHref(search: Record<string, string | number | undefined>, page: number) {
     const params = new URLSearchParams()
     Object.entries({ ...search, page }).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (value !== undefined && value !== null && String(value) !== '') {
             params.set(key, String(value))
         }
     })

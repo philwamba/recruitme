@@ -5,6 +5,7 @@ import { getPublishedJobBySlug } from '@/lib/services/jobs'
 import { getNonce } from '@/lib/security/csp-nonce'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { JobShare } from '@/components/shared/job-share'
 
 export async function generateMetadata({
     params,
@@ -105,9 +106,12 @@ export default async function JobDetailPage({
                             </span>
                         ) : null}
                     </div>
-                    <Button asChild>
-                        <Link href={`/jobs/${job.slug}/apply`}>Apply Now</Link>
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button asChild>
+                            <Link href={`/jobs/${job.slug}/apply`}>Apply Now</Link>
+                        </Button>
+                        <JobShare title={job.title} slug={job.slug} variant="outline" />
+                    </div>
                 </div>
 
                 <div className="grid gap-6">
@@ -135,6 +139,15 @@ export default async function JobDetailPage({
                             {job.benefits ?? 'Benefits will be discussed during the process.'}
                         </CardContent>
                     </Card>
+                </div>
+
+                {/* Footer Share Action */}
+                <div className="flex items-center justify-between rounded-lg border bg-card p-6 shadow-sm">
+                    <div>
+                        <h3 className="font-medium">Share this position</h3>
+                        <p className="text-sm text-muted-foreground">Know someone who might be a good fit?</p>
+                    </div>
+                    <JobShare title={job.title} slug={job.slug} variant="secondary" />
                 </div>
             </div>
         </div>
