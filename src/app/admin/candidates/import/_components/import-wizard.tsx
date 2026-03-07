@@ -52,7 +52,6 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
     const [fieldMapping, setFieldMapping] = useState<FieldMapping>({})
     const [selectedJobId, setSelectedJobId] = useState<string>('')
     const [skipDuplicates, setSkipDuplicates] = useState(true)
-    const [isProcessing, setIsProcessing] = useState(false)
     const [progress, setProgress] = useState(0)
     const [result, setResult] = useState<{
         status: string
@@ -115,7 +114,6 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
     const handleProcess = async () => {
         if (!parsedData || !file) return
 
-        setIsProcessing(true)
         setStep('process')
 
         try {
@@ -149,8 +147,6 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
         } catch (error) {
             console.error('Import failed:', error)
             alert('Import failed. Please try again.')
-        } finally {
-            setIsProcessing(false)
         }
     }
 
@@ -377,15 +373,15 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                             {result.status === 'COMPLETED'
                                 ? 'Import Complete!'
                                 : result.status === 'PARTIAL'
-                                  ? 'Import Partially Complete'
-                                  : 'Import Failed'}
+                                    ? 'Import Partially Complete'
+                                    : 'Import Failed'}
                         </CardTitle>
                         <CardDescription>
                             {result.status === 'COMPLETED'
                                 ? 'All candidates were imported successfully.'
                                 : result.status === 'PARTIAL'
-                                  ? 'Some candidates could not be imported.'
-                                  : 'The import encountered errors.'}
+                                    ? 'Some candidates could not be imported.'
+                                    : 'The import encountered errors.'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">

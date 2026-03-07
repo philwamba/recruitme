@@ -32,3 +32,26 @@ export const approvalDecisionSchema = z.object({
 })
 
 export type ApprovalDecisionData = z.infer<typeof approvalDecisionSchema>
+
+export const employmentTypes = [
+    { value: 'FULL_TIME', label: 'Full Time' },
+    { value: 'PART_TIME', label: 'Part Time' },
+    { value: 'CONTRACT', label: 'Contract' },
+    { value: 'INTERNSHIP', label: 'Internship' },
+    { value: 'TEMPORARY', label: 'Temporary' },
+] as const
+
+export const workplaceTypes = [
+    { value: 'ON_SITE', label: 'On-site' },
+    { value: 'REMOTE', label: 'Remote' },
+    { value: 'HYBRID', label: 'Hybrid' },
+] as const
+
+export const jobRequestStatuses: { value: JobRequestStatus; label: string; className: string }[] = [
+    { value: 'DRAFT', label: 'Draft', className: 'bg-gray-100 text-gray-800' },
+    { value: 'PENDING_APPROVAL', label: 'Pending Approval', className: 'bg-yellow-100 text-yellow-800' },
+    { value: 'APPROVED', label: 'Approved', className: 'bg-green-100 text-green-800' },
+    { value: 'REJECTED', label: 'Rejected', className: 'bg-red-100 text-red-800' },
+    { value: 'CANCELLED', label: 'Cancelled', className: 'bg-gray-100 text-gray-600' },
+    { value: 'CONVERTED', label: 'Converted to Job', className: 'bg-blue-100 text-blue-800' },
+]

@@ -67,11 +67,11 @@ export default async function AdminTemplatesPage() {
                 </TabsList>
 
                 <TabsContent value="templates" className="space-y-6">
-                    <div className="grid gap-6 lg:grid-cols-2 items-start">
-                        <Suspense fallback={<Card><CardContent className="h-[400px] animate-pulse bg-muted" /></Card>}>
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <Suspense fallback={<Card><CardContent className="p-6"><div className="h-[400px] animate-pulse rounded-lg bg-muted" /></CardContent></Card>}>
                             <CreateTemplateForm />
                         </Suspense>
-                        <Suspense fallback={<Card><CardContent className="h-[500px] animate-pulse bg-muted" /></Card>}>
+                        <Suspense fallback={<Card><CardContent className="p-6"><div className="h-[400px] animate-pulse rounded-lg bg-muted" /></CardContent></Card>}>
                             <TemplatesList />
                         </Suspense>
                     </div>
@@ -146,12 +146,12 @@ async function TemplatesList() {
     })
 
     return (
-        <Card className="flex flex-col">
-            <CardHeader className="shrink-0">
+        <Card>
+            <CardHeader>
                 <CardTitle>Saved Templates</CardTitle>
                 <CardDescription>{templates.length} templates available</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
+            <CardContent className="pt-0">
                 {templates.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                         <FileText className="h-12 w-12 text-muted-foreground mb-3" />
@@ -159,7 +159,7 @@ async function TemplatesList() {
                         <p className="text-sm text-muted-foreground">Create your first template to get started.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
+                    <div className="space-y-3">
                         {templates.map(template => (
                             <div key={template.id} className="rounded-lg border p-4 space-y-3 hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center justify-between gap-2">
