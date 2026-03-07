@@ -24,7 +24,7 @@ export function Pagination({ page, totalPages, className }: PaginationProps) {
     if (totalPages <= 1) return null
 
     return (
-        <div className={cn('flex items-center justify-between px-2 py-4', className)}>
+        <nav aria-label="Pagination" className={cn('flex items-center justify-between px-2 py-4', className)}>
             <p className="text-sm text-muted-foreground">
                 Showing page {page} of {totalPages}
             </p>
@@ -66,6 +66,6 @@ export function Pagination({ page, totalPages, className }: PaginationProps) {
                     )}
                 </Button>
             </div>
-        </div>
+        </nav>
     )
 }

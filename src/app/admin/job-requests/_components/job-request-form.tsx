@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { EmploymentType, WorkplaceType } from '@prisma/client'
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -100,7 +101,14 @@ export function JobRequestForm({
                 await createJobRequest(data)
             }
         } catch (error) {
-            alert(error instanceof Error ? error.message : 'An error occurred')
+            // Re-throw NEXT_REDIRECT errors so navigation works
+            if (error && typeof error === 'object' && 'digest' in error) {
+                const digest = (error as { digest?: string }).digest
+                if (digest?.startsWith('NEXT_REDIRECT')) {
+                    throw error
+                }
+            }
+            toast.error(error instanceof Error ? error.message : 'An error occurred')
         }
     }
 

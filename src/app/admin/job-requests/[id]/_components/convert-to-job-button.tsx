@@ -28,6 +28,13 @@ export function ConvertToJobButton({ requestId }: ConvertToJobButtonProps) {
         try {
             await convertToJob(requestId)
         } catch (error) {
+            // Re-throw NEXT_REDIRECT errors so navigation works
+            if (error && typeof error === 'object' && 'digest' in error) {
+                const digest = (error as { digest?: string }).digest
+                if (digest?.startsWith('NEXT_REDIRECT')) {
+                    throw error
+                }
+            }
             alert(error instanceof Error ? error.message : 'An error occurred')
             setIsConverting(false)
         }

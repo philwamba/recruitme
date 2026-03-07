@@ -278,6 +278,12 @@ export async function reorderQuestions(questionnaireId: string, questionIds: str
         permission: 'MANAGE_SYSTEM_SETTINGS',
     })
 
+    // Check for duplicate IDs in input
+    const uniqueInputIds = new Set(questionIds)
+    if (uniqueInputIds.size !== questionIds.length) {
+        throw new Error('Duplicate question IDs in reorder payload')
+    }
+
     // Verify all questions belong to this questionnaire
     const questionnaireQuestions = await prisma.questionnaireQuestion.findMany({
         where: { questionnaireId },

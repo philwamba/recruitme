@@ -78,7 +78,7 @@ export default async function AdminTemplatesPage() {
                 </TabsContent>
 
                 <TabsContent value="send">
-                    <Suspense fallback={<Card><CardContent className="h-[400px] animate-pulse bg-muted" /></Card>}>
+                    <Suspense fallback={<Card><CardContent className="p-6"><div className="h-[400px] animate-pulse rounded-lg bg-muted" /></CardContent></Card>}>
                         <SendNotificationForm />
                     </Suspense>
                 </TabsContent>

@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 export default async function EditJobRequestPage({ params }: PageProps) {
-    await requireCurrentUser({
+    const user = await requireCurrentUser({
         roles: ['ADMIN', 'EMPLOYER'],
         permission: 'MANAGE_JOBS',
     })
@@ -26,6 +26,11 @@ export default async function EditJobRequestPage({ params }: PageProps) {
     ])
 
     if (!jobRequest) {
+        notFound()
+    }
+
+    // Employers can only edit their own job requests
+    if (user.role !== 'ADMIN' && jobRequest.requestedById !== user.id) {
         notFound()
     }
 

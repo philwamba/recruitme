@@ -149,7 +149,7 @@ export function PipelineTemplatesTable({ templates }: PipelineTemplatesTableProp
                             )}
                             <DropdownMenuItem
                                 onClick={() => handleToggleStatus(template.id)}
-                                disabled={isPending}
+                                disabled={isPending || (template.isDefault && template.isActive)}
                             >
                                 <Power className="mr-2 h-4 w-4" />
                                 {template.isActive ? 'Deactivate' : 'Activate'}

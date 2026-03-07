@@ -168,7 +168,7 @@ export async function updatePipelineTemplate(templateId: string, data: PipelineT
                     await tx.pipelineTemplateStage.create({
                         data: {
                             templateId,
-                            name: stage.name,
+                            name: stage.name.trim(),
                             order: stage.order,
                             isDefault: stage.isDefault,
                         },
