@@ -132,9 +132,11 @@ export default async function JobsPage({
                                     <Link
                                         href={buildPageHref(
                                             {
-                                                ...normalized,
-                                                employmentType: normalized.employmentType ?? '',
-                                                workplaceType: normalized.workplaceType ?? '',
+                                                q: search.q,
+                                                department: search.department,
+                                                employmentType: search.employmentType ?? '',
+                                                workplaceType: search.workplaceType ?? '',
+                                                location: search.location,
                                             },
                                             Math.max(1, result.page - 1),
                                         )}
@@ -152,9 +154,11 @@ export default async function JobsPage({
                                     <Link
                                         href={buildPageHref(
                                             {
-                                                ...normalized,
-                                                employmentType: normalized.employmentType ?? '',
-                                                workplaceType: normalized.workplaceType ?? '',
+                                                q: search.q,
+                                                department: search.department,
+                                                employmentType: search.employmentType ?? '',
+                                                workplaceType: search.workplaceType ?? '',
+                                                location: search.location,
                                             },
                                             Math.min(result.totalPages, result.page + 1),
                                         )}

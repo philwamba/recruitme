@@ -12,7 +12,7 @@ export const rankGradeFormSchema = z
         description: z.string().max(500, 'Description is too long').optional().nullable(),
         minSalary: z.coerce.number().int().positive().optional().nullable(),
         maxSalary: z.coerce.number().int().positive().optional().nullable(),
-        isActive: z.boolean().default(true),
+        isActive: z.boolean(),
     })
     .refine(
         (data) => {

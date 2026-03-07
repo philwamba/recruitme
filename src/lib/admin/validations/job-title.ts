@@ -10,7 +10,7 @@ export const jobTitleFormSchema = z.object({
     categoryId: z.string().min(1, 'Category is required'),
     description: z.string().max(500, 'Description is too long').optional().nullable(),
     rankGradeId: z.string().optional().nullable(),
-    isActive: z.boolean().default(true),
+    isActive: z.boolean(),
 })
 
 export type JobTitleFormData = z.infer<typeof jobTitleFormSchema>

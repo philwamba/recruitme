@@ -9,7 +9,7 @@ export const qualityFormSchema = z.object({
         .regex(/^[A-Z0-9_]+$/, 'Code must be uppercase alphanumeric with underscores'),
     description: z.string().max(500, 'Description is too long').optional().nullable(),
     category: z.string().max(50, 'Category is too long').optional().nullable(),
-    isActive: z.boolean().default(true),
+    isActive: z.boolean(),
 })
 
 export type QualityFormData = z.infer<typeof qualityFormSchema>

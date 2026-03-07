@@ -10,7 +10,9 @@ export interface JobCategoriesQueryParams {
 }
 
 export async function getJobCategories(params: JobCategoriesQueryParams = {}) {
-    const { search, isActive, page = 1, limit = 50 } = params
+    const { search, isActive } = params
+    const page = Math.max(1, Math.floor(params.page ?? 1) || 1)
+    const limit = Math.min(100, Math.max(1, Math.floor(params.limit ?? 50) || 50))
     const skip = (page - 1) * limit
 
     const where = {

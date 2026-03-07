@@ -200,6 +200,16 @@ export async function toggleJobCategoryStatus(categoryId: string) {
         userAgent,
     })
 
+    await createActivityLog({
+        actorUserId: user.id,
+        description: `${updated.isActive ? 'Activated' : 'Deactivated'} job category "${category.name}"`,
+        metadata: {
+            name: category.name,
+            previousStatus: category.isActive,
+            newStatus: updated.isActive,
+        },
+    })
+
     revalidatePath(ROUTES.ADMIN.MASTER_DATA.JOB_CATEGORIES)
 
     return { success: true, isActive: updated.isActive }
