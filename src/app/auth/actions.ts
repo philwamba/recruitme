@@ -26,11 +26,13 @@ import { getBaseUrl } from '@/lib/url'
 type AuthActionState = {
   success: boolean
   message: string
+  email?: string
 }
 
 const DEFAULT_AUTH_STATE: AuthActionState = {
     success: false,
     message: '',
+    email: '',
 }
 
 const MAX_SIGN_IN_ATTEMPTS = 5
@@ -54,6 +56,7 @@ export async function signIn(
             return {
                 success: false,
                 message: parsed.error.errors[0]?.message ?? 'Invalid credentials',
+                email: String(formData.get('email') ?? ''),
             }
         }
 
@@ -67,6 +70,7 @@ export async function signIn(
             return {
                 success: false,
                 message: 'Too many sign-in attempts. Please try again later.',
+                email,
             }
         }
         const user = await prisma.user.findUnique({
@@ -89,6 +93,7 @@ export async function signIn(
             return {
                 success: false,
                 message: 'Invalid credentials',
+                email,
             }
         }
 
@@ -96,6 +101,7 @@ export async function signIn(
             return {
                 success: false,
                 message: 'Your account is temporarily locked. Please try again later.',
+                email,
             }
         }
 
@@ -140,6 +146,7 @@ export async function signIn(
                 message: shouldLock
                     ? 'Your account has been locked for 15 minutes.'
                     : 'Invalid credentials',
+                email,
             }
         }
 
@@ -147,6 +154,7 @@ export async function signIn(
             return {
                 success: false,
                 message: 'Verify your email before signing in.',
+                email,
             }
         }
 
@@ -194,6 +202,7 @@ export async function signIn(
         return {
             success: false,
             message: 'Unable to sign in right now. Please try again later.',
+            email: String(formData.get('email') ?? ''),
         }
     }
 
