@@ -71,3 +71,14 @@ export async function getActiveJobCategories() {
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     })
 }
+
+export async function getJobCategoriesForSelect() {
+    return prisma.jobCategory.findMany({
+        where: { isActive: true },
+        select: {
+            id: true,
+            name: true,
+        },
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    })
+}

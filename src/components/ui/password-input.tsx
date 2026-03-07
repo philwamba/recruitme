@@ -28,7 +28,7 @@ function PasswordInput({
                 disabled={disabled}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showPassword}
-                className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                className="absolute right-0 top-0 flex h-10 w-10 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
             >
                 {showPassword ? (
                     <EyeOff className="h-4 w-4" />

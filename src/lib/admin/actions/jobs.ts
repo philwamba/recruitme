@@ -7,6 +7,7 @@ import { requireCurrentUser } from '@/lib/auth'
 import { createAuditLog, createActivityLog } from '@/lib/observability/audit'
 import { getRequestContext } from '@/lib/request-context'
 import { jobFormSchema, type JobFormData } from '@/lib/admin/validations/job'
+import { initializeJobPipeline } from '@/lib/services/pipeline'
 import { ROUTES } from '@/lib/constants/routes'
 
 function generateSlug(title: string): string {
@@ -26,31 +27,21 @@ export async function createJob(data: JobFormData) {
     const validated = jobFormSchema.parse(data)
     const { ipAddress, userAgent } = await getRequestContext()
 
-    // Create default pipeline stages
-    const defaultStages = [
-        { name: 'Applied', order: 1, isDefault: true },
-        { name: 'Screening', order: 2 },
-        { name: 'Interview', order: 3 },
-        { name: 'Assessment', order: 4 },
-        { name: 'Offer', order: 5 },
-    ]
+    const { pipelineTemplateId, ...jobData } = validated
 
     const job = await prisma.$transaction(async tx => {
         const newJob = await tx.job.create({
             data: {
-                ...validated,
+                ...jobData,
                 slug: generateSlug(validated.title),
                 createdByUserId: user.id,
                 status: validated.status || 'DRAFT',
+                pipelineTemplateId: pipelineTemplateId || null,
             },
         })
 
-        await tx.jobPipelineStage.createMany({
-            data: defaultStages.map(stage => ({
-                ...stage,
-                jobId: newJob.id,
-            })),
-        })
+        // Initialize pipeline from template or use defaults
+        await initializeJobPipeline(newJob.id, pipelineTemplateId, tx)
 
         return newJob
     })

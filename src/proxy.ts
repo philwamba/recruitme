@@ -61,7 +61,7 @@ function isPublicPath(pathname: string): boolean {
         return true
     }
 
-    if (pathname.startsWith('/jobs/') && !pathname.endsWith('/apply')) {
+    if (pathname.startsWith('/jobs/')) {
         return true
     }
 
@@ -72,9 +72,6 @@ function isPublicPath(pathname: string): boolean {
  * Check if a path requires authentication
  */
 function isProtectedPath(pathname: string): boolean {
-    if (pathname.endsWith('/apply')) {
-        return true
-    }
 
     return (
         pathname.startsWith('/applicant') ||
@@ -94,7 +91,7 @@ export function proxy(request: NextRequest) {
 
         if (!hasSession) {
             const signInUrl = new URL('/sign-in', request.url)
-           
+
             const fullPath = request.nextUrl.search
                 ? `${pathname}${request.nextUrl.search}`
                 : pathname

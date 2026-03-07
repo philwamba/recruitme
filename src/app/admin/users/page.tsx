@@ -4,7 +4,7 @@ import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { updateUserRole } from '@/app/actions/admin'
 import { AdminPageHeader, TableSkeleton } from '@/components/admin'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { format } from 'date-fns'
+import { Pagination } from '@/components/ui/pagination'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,11 +25,19 @@ async function handleUpdateRole(formData: FormData) {
     await updateUserRole(formData)
 }
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string }>
+}) {
     await requireCurrentUser({
         roles: ['ADMIN'],
         permission: 'MANAGE_USERS',
     })
+
+    const { page } = await searchParams
+    const pageNumber = page ? parseInt(page, 10) : 1
+    const validatedPage = !isNaN(pageNumber) && pageNumber > 0 ? pageNumber : 1
 
     return (
         <div className="space-y-6">
@@ -38,25 +47,34 @@ export default async function AdminUsersPage() {
             />
 
             <Suspense fallback={<TableSkeleton columns={5} rows={10} showAvatar />}>
-                <UsersSection />
+                <UsersSection page={validatedPage} />
             </Suspense>
         </div>
     )
 }
 
-async function UsersSection() {
-    const users = await prisma.user.findMany({
-        include: {
-            _count: {
-                select: {
-                    applications: true,
-                    jobsCreated: true,
+async function UsersSection({ page }: { page: number }) {
+    const limit = 20
+    const skip = (page - 1) * limit
+
+    const [users, totalCount] = await Promise.all([
+        prisma.user.findMany({
+            include: {
+                _count: {
+                    select: {
+                        applications: true,
+                        jobsCreated: true,
+                    },
                 },
             },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-    })
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+        }),
+        prisma.user.count(),
+    ])
+
+    const totalPages = Math.ceil(totalCount / limit)
 
     const roleColors: Record<UserRole, string> = {
         ADMIN: 'bg-primary/10 text-primary',
@@ -117,6 +135,7 @@ async function UsersSection() {
                     </CardContent>
                 </Card>
             ))}
+            <Pagination page={page} totalPages={totalPages} />
         </div>
     )
 }

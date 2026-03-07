@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { Share2, Linkedin, Twitter, MessageCircle, Facebook, Copy } from 'lucide-react'
+import { Share2, Copy } from 'lucide-react'
+import { BsLinkedin, BsTwitterX, BsWhatsapp, BsFacebook } from 'react-icons/bs'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,7 +30,7 @@ export function JobShare({
     variant = 'outline',
     size = 'default',
     className,
-    showLabel = true
+    showLabel = true,
 }: JobShareProps) {
     const [shareUrl, setShareUrl] = React.useState('')
 
@@ -53,23 +54,27 @@ export function JobShare({
     const shareLinks = [
         {
             name: 'LinkedIn',
-            icon: Linkedin,
+            icon: BsLinkedin,
             url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+            color: '#0A66C2',
         },
         {
-            name: 'Twitter (X)',
-            icon: Twitter,
+            name: 'X',
+            icon: BsTwitterX,
             url: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+            color: '#000000',
         },
         {
             name: 'WhatsApp',
-            icon: MessageCircle,
+            icon: BsWhatsapp,
             url: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+            color: '#25D366',
         },
         {
             name: 'Facebook',
-            icon: Facebook,
+            icon: BsFacebook,
             url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+            color: '#1877F2',
         },
     ]
 
@@ -97,7 +102,10 @@ export function JobShare({
                             rel="noopener noreferrer"
                             className="flex w-full items-center"
                         >
-                            <link.icon className="mr-2 h-4 w-4" />
+                            <link.icon
+                                className="mr-2 h-4 w-4"
+                                style={{ color: link.color }}
+                            />
                             Share on {link.name}
                         </a>
                     </DropdownMenuItem>

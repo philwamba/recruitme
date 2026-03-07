@@ -4,7 +4,7 @@ export const jobPipelineStageSchema = z.object({
     id: z.string().optional(),
     name: z.string().trim().min(1, 'Stage name is required').max(50, 'Stage name is too long'),
     order: z.number().int().min(1),
-    isDefault: z.boolean().default(false),
+    isDefault: z.boolean(),
 })
 
 export const jobPipelineFormSchema = z.object({
@@ -12,7 +12,7 @@ export const jobPipelineFormSchema = z.object({
         .array(jobPipelineStageSchema)
         .min(1, 'At least one stage is required')
         .refine(
-            (stages) => stages.filter((s) => s.isDefault).length <= 1,
+            stages => stages.filter(s => s.isDefault).length <= 1,
             'Only one stage can be the default entry point',
         ),
 })

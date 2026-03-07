@@ -1,5 +1,6 @@
 import { requireCurrentUser } from '@/lib/auth'
 import { getDepartments } from '@/lib/admin/queries/jobs'
+import { getActivePipelineTemplates } from '@/lib/admin/queries/pipeline-templates'
 import { AdminPageHeader } from '@/components/admin'
 import { ROUTES } from '@/lib/constants/routes'
 import { JobForm } from '../_components/job-form'
@@ -12,7 +13,10 @@ export default async function NewJobPage() {
         permission: 'MANAGE_JOBS',
     })
 
-    const departments = await getDepartments()
+    const [departments, pipelineTemplates] = await Promise.all([
+        getDepartments(),
+        getActivePipelineTemplates(),
+    ])
 
     return (
         <div className="space-y-6">
@@ -23,7 +27,7 @@ export default async function NewJobPage() {
                 backLabel="Back to Jobs"
             />
 
-            <JobForm departments={departments} />
+            <JobForm departments={departments} pipelineTemplates={pipelineTemplates} />
         </div>
     )
 }

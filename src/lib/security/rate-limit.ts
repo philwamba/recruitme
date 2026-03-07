@@ -1,5 +1,5 @@
 import Redis from 'ioredis'
-import { env } from '@/lib/env'
+import { env } from '../env'
 
 type RateLimitEntry = {
   count: number

@@ -31,34 +31,34 @@ export async function updateJobPipeline(jobId: string, data: JobPipelineFormData
 
     // Check if any stages with applications are being removed
     const stageIdsToKeep = validated.stages
-        .filter((s) => s.id)
-        .map((s) => s.id!)
+        .filter(s => s.id)
+        .map(s => s.id!)
 
     const stagesToRemove = job.pipelineStages.filter(
-        (s) => !stageIdsToKeep.includes(s.id)
+        s => !stageIdsToKeep.includes(s.id),
     )
 
     if (stagesToRemove.length > 0) {
         const stagesWithApplications = await prisma.application.findFirst({
             where: {
-                currentStageId: { in: stagesToRemove.map((s) => s.id) },
+                currentStageId: { in: stagesToRemove.map(s => s.id) },
             },
         })
 
         if (stagesWithApplications) {
             throw new Error(
-                'Cannot remove stages that have applications. Move applications first.'
+                'Cannot remove stages that have applications. Move applications first.',
             )
         }
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
         // Delete removed stages (only those without applications)
         if (stagesToRemove.length > 0) {
             await tx.jobPipelineStage.deleteMany({
                 where: {
                     jobId,
-                    id: { in: stagesToRemove.map((s) => s.id) },
+                    id: { in: stagesToRemove.map(s => s.id) },
                 },
             })
         }
@@ -66,10 +66,16 @@ export async function updateJobPipeline(jobId: string, data: JobPipelineFormData
         // Upsert stages
         for (const stage of validated.stages) {
             if (stage.id) {
+                // Verify ownership
+                const existingStage = job.pipelineStages.find(s => s.id === stage.id)
+                if (!existingStage) {
+                    throw new Error(`Stage ${stage.id} does not belong to this job`)
+                }
+
                 await tx.jobPipelineStage.update({
                     where: { id: stage.id },
                     data: {
-                        name: stage.name,
+                        name: stage.name.trim(),
                         order: stage.order,
                         isDefault: stage.isDefault,
                     },
@@ -78,7 +84,7 @@ export async function updateJobPipeline(jobId: string, data: JobPipelineFormData
                 await tx.jobPipelineStage.create({
                     data: {
                         jobId,
-                        name: stage.name,
+                        name: stage.name.trim(),
                         order: stage.order,
                         isDefault: stage.isDefault,
                     },
@@ -95,7 +101,7 @@ export async function updateJobPipeline(jobId: string, data: JobPipelineFormData
         metadata: {
             jobTitle: job.title,
             stageCount: validated.stages.length,
-            removedStages: stagesToRemove.map((s) => s.name),
+            removedStages: stagesToRemove.map(s => s.name),
         },
         ipAddress,
         userAgent,
@@ -114,7 +120,7 @@ export async function updateJobPipeline(jobId: string, data: JobPipelineFormData
 export async function addJobPipelineStage(
     jobId: string,
     stageName: string,
-    order?: number
+    order?: number,
 ) {
     const user = await requireCurrentUser({
         roles: ['ADMIN'],
@@ -136,13 +142,28 @@ export async function addJobPipelineStage(
 
     const nextOrder = order ?? (job.pipelineStages[0]?.order ?? 0) + 1
 
-    const stage = await prisma.jobPipelineStage.create({
-        data: {
-            jobId,
-            name: stageName.trim(),
-            order: nextOrder,
-            isDefault: false,
-        },
+    const stage = await prisma.$transaction(async tx => {
+        // If inserting in the middle, shift others
+        if (order !== undefined) {
+            await tx.jobPipelineStage.updateMany({
+                where: {
+                    jobId,
+                    order: { gte: order },
+                },
+                data: {
+                    order: { increment: 1 },
+                },
+            })
+        }
+
+        return tx.jobPipelineStage.create({
+            data: {
+                jobId,
+                name: stageName.trim(),
+                order: nextOrder,
+                isDefault: false,
+            },
+        })
     })
 
     await createAuditLog({
@@ -189,7 +210,7 @@ export async function deleteJobPipelineStage(stageId: string) {
 
     if (stage._count.applications > 0) {
         throw new Error(
-            'Cannot delete stage with applications. Move applications first.'
+            'Cannot delete stage with applications. Move applications first.',
         )
     }
 
@@ -224,7 +245,7 @@ export async function deleteJobPipelineStage(stageId: string) {
 
 export async function reorderJobPipelineStages(
     jobId: string,
-    stageIds: string[]
+    stageIds: string[],
 ) {
     const user = await requireCurrentUser({
         roles: ['ADMIN'],
@@ -242,13 +263,24 @@ export async function reorderJobPipelineStages(
         throw new Error('Job not found')
     }
 
+    // Verify all stages belong to this job
+    const jobStages = await prisma.jobPipelineStage.findMany({
+        where: { jobId },
+        select: { id: true },
+    })
+    const jobStageIds = new Set(jobStages.map(s => s.id))
+
+    if (stageIds.length !== jobStageIds.size || !stageIds.every(id => jobStageIds.has(id))) {
+        throw new Error('Invalid stage IDs provided for reordering')
+    }
+
     await prisma.$transaction(
         stageIds.map((id, index) =>
             prisma.jobPipelineStage.update({
-                where: { id },
+                where: { id, jobId },
                 data: { order: index + 1 },
-            })
-        )
+            }),
+        ),
     )
 
     await createAuditLog({
@@ -288,7 +320,7 @@ export async function setDefaultJobPipelineStage(stageId: string) {
         throw new Error('Pipeline stage not found')
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
         // Unset current default for this job
         await tx.jobPipelineStage.updateMany({
             where: { jobId: stage.job.id, isDefault: true },

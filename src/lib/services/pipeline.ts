@@ -66,7 +66,7 @@ export async function createDefaultPipelineStages(
 export async function copyTemplateToJob(
     templateId: string,
     jobId: string,
-    tx?: TransactionClient
+    tx?: TransactionClient,
 ) {
     const client = tx ?? prisma
 
@@ -92,7 +92,7 @@ export async function copyTemplateToJob(
 
     // Create stages from template
     await client.jobPipelineStage.createMany({
-        data: template.stages.map((stage) => ({
+        data: template.stages.map(stage => ({
             jobId,
             name: stage.name,
             order: stage.order,
@@ -112,7 +112,7 @@ export async function copyTemplateToJob(
 export async function initializeJobPipeline(
     jobId: string,
     templateId?: string | null,
-    tx?: TransactionClient
+    tx?: TransactionClient,
 ) {
     const client = tx ?? prisma
 

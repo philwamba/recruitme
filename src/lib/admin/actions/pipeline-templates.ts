@@ -33,7 +33,7 @@ export async function createPipelineTemplate(data: PipelineTemplateFormData) {
 
     let template
     try {
-        template = await prisma.$transaction(async (tx) => {
+        template = await prisma.$transaction(async tx => {
             // If setting as default, unset other defaults
             if (validated.isDefault) {
                 await tx.pipelineTemplate.updateMany({
@@ -49,7 +49,7 @@ export async function createPipelineTemplate(data: PipelineTemplateFormData) {
                     isDefault: validated.isDefault,
                     isActive: validated.isActive,
                     stages: {
-                        create: validated.stages.map((stage) => ({
+                        create: validated.stages.map(stage => ({
                             name: stage.name,
                             order: stage.order,
                             isDefault: stage.isDefault,
@@ -115,7 +115,7 @@ export async function updatePipelineTemplate(templateId: string, data: PipelineT
 
     let template
     try {
-        template = await prisma.$transaction(async (tx) => {
+        template = await prisma.$transaction(async tx => {
             // If setting as default, unset other defaults
             if (validated.isDefault && !existingTemplate.isDefault) {
                 await tx.pipelineTemplate.updateMany({
@@ -126,8 +126,8 @@ export async function updatePipelineTemplate(templateId: string, data: PipelineT
 
             // Delete removed stages
             const stageIdsToKeep = validated.stages
-                .filter((s) => s.id)
-                .map((s) => s.id!)
+                .filter(s => s.id)
+                .map(s => s.id!)
 
             await tx.pipelineTemplateStage.deleteMany({
                 where: {
@@ -150,10 +150,16 @@ export async function updatePipelineTemplate(templateId: string, data: PipelineT
             // Upsert stages
             for (const stage of validated.stages) {
                 if (stage.id) {
+                    // Verify ownership
+                    const existingStage = existingTemplate.stages.find(s => s.id === stage.id)
+                    if (!existingStage) {
+                        throw new Error(`Stage ${stage.id} does not belong to this template`)
+                    }
+
                     await tx.pipelineTemplateStage.update({
                         where: { id: stage.id },
                         data: {
-                            name: stage.name,
+                            name: stage.name.trim(),
                             order: stage.order,
                             isDefault: stage.isDefault,
                         },
@@ -162,7 +168,7 @@ export async function updatePipelineTemplate(templateId: string, data: PipelineT
                     await tx.pipelineTemplateStage.create({
                         data: {
                             templateId,
-                            name: stage.name,
+                            name: stage.name.trim(),
                             order: stage.order,
                             isDefault: stage.isDefault,
                         },
@@ -265,6 +271,10 @@ export async function togglePipelineTemplateStatus(templateId: string) {
         throw new Error('Pipeline template not found')
     }
 
+    if (template.isDefault && template.isActive) {
+        throw new Error('Cannot deactivate the default pipeline template. Set another template as default first.')
+    }
+
     const updated = await prisma.pipelineTemplate.update({
         where: { id: templateId },
         data: { isActive: !template.isActive },
@@ -309,7 +319,7 @@ export async function setDefaultPipelineTemplate(templateId: string) {
         throw new Error('Cannot set inactive template as default')
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
         // Unset current default
         await tx.pipelineTemplate.updateMany({
             where: { isDefault: true },

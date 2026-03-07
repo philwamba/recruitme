@@ -4,7 +4,7 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { Job, Department } from '@prisma/client'
+import type { Job, Department, PipelineTemplate, PipelineTemplateStage } from '@prisma/client'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { jobFormSchema, type JobFormData } from '@/lib/admin/validations/job'
@@ -31,9 +31,14 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ROUTES } from '@/lib/constants/routes'
 
+type TemplateWithStages = PipelineTemplate & {
+    stages: PipelineTemplateStage[]
+}
+
 interface JobFormProps {
     job?: Job | null
     departments: Department[]
+    pipelineTemplates?: TemplateWithStages[]
 }
 
 const employmentTypes = [
@@ -50,9 +55,12 @@ const workplaceTypes = [
     { value: 'ONSITE', label: 'On-site' },
 ]
 
-export function JobForm({ job, departments }: JobFormProps) {
+export function JobForm({ job, departments, pipelineTemplates = [] }: JobFormProps) {
     const router = useRouter()
     const [isPending, startTransition] = React.useTransition()
+    const isEditing = !!job
+
+    const defaultTemplate = pipelineTemplates.find(t => t.isDefault)
 
     const form = useForm<JobFormData>({
         resolver: zodResolver(jobFormSchema),
@@ -69,6 +77,7 @@ export function JobForm({ job, departments }: JobFormProps) {
             employmentType: job?.employmentType || 'FULL_TIME',
             workplaceType: job?.workplaceType || 'ONSITE',
             departmentId: job?.departmentId || '',
+            pipelineTemplateId: job?.pipelineTemplateId || defaultTemplate?.id || '',
             status: job?.status || 'DRAFT',
         },
     })
@@ -227,6 +236,48 @@ export function JobForm({ job, departments }: JobFormProps) {
                                 )}
                             />
                         </div>
+
+                        {!isEditing && pipelineTemplates.length > 0 && (
+                            <FormField
+                                control={form.control}
+                                name="pipelineTemplateId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Pipeline Template</FormLabel>
+                                        <Select
+                                            onValueChange={val =>
+                                                field.onChange(val === '__DEFAULT__' ? '' : val)
+                                            }
+                                            value={field.value || '__DEFAULT__'}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select pipeline template" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="__DEFAULT__">
+                                                    Use default stages
+                                                </SelectItem>
+                                                {pipelineTemplates.map(template => (
+                                                    <SelectItem key={template.id} value={template.id}>
+                                                        {template.name}
+                                                        {template.isDefault && ' (Default)'}
+                                                        {' - '}
+                                                        {template.stages.length} stages
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormDescription>
+                                            Choose which pipeline stages to use for this job.
+                                            You can customize stages after creation.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
                     </CardContent>
                 </Card>
 

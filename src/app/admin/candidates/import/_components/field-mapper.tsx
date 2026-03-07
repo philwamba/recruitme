@@ -178,8 +178,7 @@ export function FieldMapper({
             </div>
 
             {/* Validation message */}
-            {!mapping['email'] &&
-                !Object.values(mapping).includes('email') && (
+            {!Object.values(mapping).includes('email') && (
                 <p className="text-sm text-destructive">
                     Please map the Email field to continue.
                 </p>

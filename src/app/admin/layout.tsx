@@ -8,12 +8,10 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode
 }) {
-    const [user, counts] = await Promise.all([
-        requireCurrentUser({
-            roles: ['ADMIN'],
-        }),
-        getSidebarCounts(),
-    ])
+    const user = await requireCurrentUser({
+        roles: ['ADMIN'],
+    })
+    const counts = await getSidebarCounts()
 
     return (
         <QueryProvider>

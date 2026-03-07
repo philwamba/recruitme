@@ -1,4 +1,5 @@
 import { requireCurrentUser } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { getOrCreateProfile } from '@/app/actions/profile'
 import { PersonalInfoSection } from '@/components/applicant/profile/personal-info-section'
 import { LinksSection } from '@/components/applicant/profile/links-section'
@@ -7,6 +8,7 @@ import { SkillsSection } from '@/components/applicant/profile/skills-section'
 import { ExperienceSection } from '@/components/applicant/profile/experience-section'
 import { EducationSection } from '@/components/applicant/profile/education-section'
 import { CertificationsSection } from '@/components/applicant/profile/certifications-section'
+import { CVSection } from '@/components/applicant/profile/cv-section'
 import { ProgressRing } from '@/components/ui/extended/progress-ring'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -31,6 +33,16 @@ export default async function ProfilePage() {
             </div>
         )
     }
+
+    // Fetch the CV document for download
+    const cvDocument = await prisma.candidateDocument.findUnique({
+        where: {
+            applicantProfileId_documentType: {
+                applicantProfileId: profile.id,
+                documentType: 'CV',
+            },
+        },
+    })
 
     const totalYearsDisplay = profile.totalYearsExperience
         ? `${profile.totalYearsExperience} year${profile.totalYearsExperience !== 1 ? 's' : ''} of experience`
@@ -64,6 +76,7 @@ export default async function ProfilePage() {
             {/* Profile Sections */}
             <div className="space-y-6">
                 <PersonalInfoSection profile={profile} email={user.email} />
+                <CVSection cvDocument={cvDocument} cvFileName={profile.cvFileName} />
                 <LinksSection profile={profile} />
                 <SummarySection profile={profile} />
                 <SkillsSection profile={profile} />

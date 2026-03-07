@@ -52,7 +52,6 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
     const [fieldMapping, setFieldMapping] = useState<FieldMapping>({})
     const [selectedJobId, setSelectedJobId] = useState<string>('')
     const [skipDuplicates, setSkipDuplicates] = useState(true)
-    const [isProcessing, setIsProcessing] = useState(false)
     const [progress, setProgress] = useState(0)
     const [result, setResult] = useState<{
         status: string
@@ -115,8 +114,9 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
     const handleProcess = async () => {
         if (!parsedData || !file) return
 
-        setIsProcessing(true)
         setStep('process')
+
+        let progressInterval: ReturnType<typeof setInterval> | undefined
 
         try {
             // Create import record
@@ -129,7 +129,7 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
             })
 
             // Simulate progress
-            const progressInterval = setInterval(() => {
+            progressInterval = setInterval(() => {
                 setProgress(prev => Math.min(prev + 5, 90))
             }, 200)
 
@@ -150,7 +150,9 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
             console.error('Import failed:', error)
             alert('Import failed. Please try again.')
         } finally {
-            setIsProcessing(false)
+            if (progressInterval) {
+                clearInterval(progressInterval)
+            }
         }
     }
 
@@ -261,7 +263,7 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                             </Button>
                             <Button
                                 onClick={() => setStep('configure')}
-                                disabled={!fieldMapping.email}
+                                disabled={!Object.values(fieldMapping).includes('email')}
                             >
                                 Next
                                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -283,14 +285,14 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                         <div className="space-y-2">
                             <Label>Associate with Job (Optional)</Label>
                             <Select
-                                value={selectedJobId}
-                                onValueChange={setSelectedJobId}
+                                value={selectedJobId || '__none__'}
+                                onValueChange={val => setSelectedJobId(val === '__none__' ? '' : val)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="No job selected" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">No job</SelectItem>
+                                    <SelectItem value="__none__">No job</SelectItem>
                                     {jobs.map(job => (
                                         <SelectItem key={job.id} value={job.id}>
                                             {job.title} - {job.company}
@@ -377,15 +379,15 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                             {result.status === 'COMPLETED'
                                 ? 'Import Complete!'
                                 : result.status === 'PARTIAL'
-                                  ? 'Import Partially Complete'
-                                  : 'Import Failed'}
+                                    ? 'Import Partially Complete'
+                                    : 'Import Failed'}
                         </CardTitle>
                         <CardDescription>
                             {result.status === 'COMPLETED'
                                 ? 'All candidates were imported successfully.'
                                 : result.status === 'PARTIAL'
-                                  ? 'Some candidates could not be imported.'
-                                  : 'The import encountered errors.'}
+                                    ? 'Some candidates could not be imported.'
+                                    : 'The import encountered errors.'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -429,6 +431,7 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                                     setFile(null)
                                     setParsedData(null)
                                     setFieldMapping({})
+                                    setSelectedJobId('')
                                     setResult(null)
                                     setProgress(0)
                                 }}

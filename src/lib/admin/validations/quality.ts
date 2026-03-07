@@ -12,7 +12,7 @@ export const qualityCategories = [
 ] as const
 
 // Extract category values for validation
-const categoryValues = qualityCategories.map((c) => c.value)
+const categoryValues = qualityCategories.map(c => c.value)
 
 export const qualityFormSchema = z.object({
     name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long'),
@@ -25,7 +25,7 @@ export const qualityFormSchema = z.object({
     category: z
         .string()
         .refine(
-            (val) => val === '' || categoryValues.includes(val as (typeof categoryValues)[number]),
+            val => val === '' || categoryValues.includes(val as (typeof categoryValues)[number]),
             'Invalid category',
         )
         .optional()

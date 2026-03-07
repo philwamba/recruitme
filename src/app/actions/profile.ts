@@ -14,7 +14,7 @@ import {
 import { createActivityLog, createAuditLog } from '@/lib/observability/audit'
 import { reportError } from '@/lib/observability/error-reporting'
 import type { ApplicantProfileWithRelations } from '@/types/profile'
-import { savePrivateFile, validatePrivateUpload } from '@/lib/services/private-files'
+import { removePrivateFile, savePrivateFile, validatePrivateUpload } from '@/lib/services/private-files'
 
 /**
  * Get or create the applicant profile for the current user
@@ -402,58 +402,33 @@ export async function uploadProfileCV(formData: FormData) {
         // 1. Validate the file
         validatePrivateUpload(file)
 
-        // 2. Save the file to storage
+        // 2. Save the file to storage (temporary if transaction fails)
         const storedFile = await savePrivateFile(file, { scan: true })
 
-        // 3. Update database in a transaction
-        await prisma.$transaction(async tx => {
-            const profile = await tx.applicantProfile.findUnique({
-                where: { userId },
-            })
-
-            if (!profile) {
-                throw new Error('Profile not found')
-            }
-
-            // Update profile with CV info
-            const updatedProfile = await tx.applicantProfile.update({
-                where: { userId },
-                data: {
-                    cvUrl: storedFile.storageKey,
-                    cvFileName: storedFile.originalFileName,
-                    updatedAt: new Date(),
-                },
-                include: {
-                    workExperiences: true,
-                    educations: true,
-                    certifications: true,
-                },
-            })
-
-            // Create or update CandidateDocument record
-            const existingCv = await tx.candidateDocument.findFirst({
-                where: {
-                    applicantProfileId: profile.id,
-                    documentType: 'CV',
-                },
-            })
-
-            if (existingCv) {
-                await tx.candidateDocument.update({
-                    where: { id: existingCv.id },
-                    data: {
-                        storageKey: storedFile.storageKey,
-                        originalFileName: storedFile.originalFileName,
-                        mimeType: storedFile.mimeType,
-                        sizeBytes: storedFile.sizeBytes,
-                        sha256: storedFile.sha256,
-                        scanStatus: storedFile.scanStatus,
-                        updatedAt: new Date(),
+        try {
+            // 3. Update database in a transaction
+            await prisma.$transaction(async tx => {
+                // Upsert profile (ensure it exists)
+                const profile = await tx.applicantProfile.upsert({
+                    where: { userId },
+                    create: { userId, skills: [] },
+                    update: {},
+                    include: {
+                        workExperiences: true,
+                        educations: true,
+                        certifications: true,
                     },
                 })
-            } else {
-                await tx.candidateDocument.create({
-                    data: {
+
+                // Create or update CandidateDocument record (using unique constraint)
+                await tx.candidateDocument.upsert({
+                    where: {
+                        applicantProfileId_documentType: {
+                            applicantProfileId: profile.id,
+                            documentType: 'CV',
+                        },
+                    },
+                    create: {
                         applicantProfileId: profile.id,
                         uploadedByUserId: userId,
                         documentType: 'CV',
@@ -464,16 +439,46 @@ export async function uploadProfileCV(formData: FormData) {
                         sha256: storedFile.sha256,
                         scanStatus: storedFile.scanStatus,
                     },
+                    update: {
+                        storageKey: storedFile.storageKey,
+                        originalFileName: storedFile.originalFileName,
+                        mimeType: storedFile.mimeType,
+                        sizeBytes: storedFile.sizeBytes,
+                        sha256: storedFile.sha256,
+                        scanStatus: storedFile.scanStatus,
+                        updatedAt: new Date(),
+                    },
                 })
-            }
 
-            // Update profile completion
-            const completion = calculateProfileCompletion(updatedProfile)
-            await tx.applicantProfile.update({
-                where: { userId },
-                data: { profileCompleteness: completion.percentage },
+                // Update profile with newest CV info for quick access
+                const updatedProfile = await tx.applicantProfile.update({
+                    where: { id: profile.id },
+                    data: {
+                        cvUrl: storedFile.storageKey,
+                        cvFileName: storedFile.originalFileName,
+                        updatedAt: new Date(),
+                    },
+                    include: {
+                        workExperiences: true,
+                        educations: true,
+                        certifications: true,
+                    },
+                })
+
+                // Update profile completion
+                const completion = calculateProfileCompletion(updatedProfile)
+                await tx.applicantProfile.update({
+                    where: { id: profile.id },
+                    data: { profileCompleteness: completion.percentage },
+                })
             })
-        })
+        } catch (txError) {
+            // cleanup the uploaded file on transaction failures to prevent orphaned blobs
+            await removePrivateFile(storedFile.storageKey).catch((err: unknown) => {
+                console.error('Failed to cleanup file after transaction error:', err)
+            })
+            throw txError
+        }
 
         revalidatePath('/applicant/profile')
         revalidatePath('/applicant/upload-cv')
