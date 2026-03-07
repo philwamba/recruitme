@@ -13,17 +13,35 @@ export default function UploadCVPage() {
     const [file, setFile] = React.useState<File | null>(null)
     const [uploadStatus, setUploadStatus] = React.useState<'idle' | 'uploading' | 'complete'>('idle')
     const [progress, setProgress] = React.useState(0)
+    const intervalRef = React.useRef<NodeJS.Timeout | null>(null)
+
+    // Cleanup interval on unmount
+    React.useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current)
+            }
+        }
+    }, [])
 
     function handleUpload() {
         if (!file) return
         setUploadStatus('uploading')
         setProgress(0)
 
+        // Clear any existing interval before starting a new one
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+        }
+
         // Simulate upload progress
-        const interval = setInterval(() => {
+        intervalRef.current = setInterval(() => {
             setProgress(prev => {
                 if (prev >= 100) {
-                    clearInterval(interval)
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current)
+                        intervalRef.current = null
+                    }
                     setUploadStatus('complete')
                     return 100
                 }

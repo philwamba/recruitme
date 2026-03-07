@@ -1,18 +1,20 @@
-import { PrismaClient, EmploymentType, WorkplaceType, JobStatus } from '@prisma/client'
-import { randomBytes } from 'crypto'
+import { PrismaClient, EmploymentType, WorkplaceType } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 function generateSlug(title: string, company: string): string {
-    const base = `${title}-${company}`
+    return `${title}-${company}`
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
-    const suffix = randomBytes(4).toString('hex')
-    return `${base}-${suffix}`
 }
 
-// Real job listings from East African companies (March 2026)
+function daysFromNow(days: number): Date {
+    const date = new Date()
+    date.setDate(date.getDate() + days)
+    return date
+}
+
 const DEPARTMENTS = [
     { name: 'Technology', slug: 'technology' },
     { name: 'Engineering', slug: 'engineering' },
@@ -39,7 +41,7 @@ interface JobData {
     employmentType: EmploymentType
     workplaceType: WorkplaceType
     department: string
-    expiresAt: Date
+    expiresInDays: number
 }
 
 const JOBS: JobData[] = [
@@ -84,7 +86,7 @@ Soft Skills:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-11'),
+        expiresInDays: 45,
     },
     {
         title: 'Angular Developer',
@@ -127,7 +129,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-06'),
+        expiresInDays: 30,
     },
     {
         title: 'Lead Data Engineer',
@@ -170,7 +172,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Data & Analytics',
-        expiresAt: new Date('2026-03-06'),
+        expiresInDays: 30,
     },
     {
         title: 'Mid-Level Java Developer',
@@ -213,7 +215,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'ONSITE',
         department: 'Technology',
-        expiresAt: new Date('2026-03-06'),
+        expiresInDays: 30,
     },
     {
         title: 'Senior Manager, Security Operations Centre (SOC)',
@@ -256,7 +258,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'ONSITE',
         department: 'Technology',
-        expiresAt: new Date('2026-03-06'),
+        expiresInDays: 30,
     },
     {
         title: 'Sr. Product Manager (Fraud, Risk & AML)',
@@ -299,7 +301,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Risk & Compliance',
-        expiresAt: new Date('2026-03-06'),
+        expiresInDays: 30,
     },
     {
         title: 'CX Analytics Officer',
@@ -342,7 +344,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Customer Experience',
-        expiresAt: new Date('2026-03-06'),
+        expiresInDays: 30,
     },
     {
         title: 'NOC Shift Engineer',
@@ -385,7 +387,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'ONSITE',
         department: 'Operations',
-        expiresAt: new Date('2026-03-12'),
+        expiresInDays: 45,
     },
     {
         title: 'GM - Business Process Re-engineering and Automation',
@@ -427,7 +429,7 @@ Certifications:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Operations',
-        expiresAt: new Date('2026-03-13'),
+        expiresInDays: 60,
     },
 
     // Safaricom Kenya Jobs
@@ -473,7 +475,7 @@ Soft Skills:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Engineering',
-        expiresAt: new Date('2026-03-31'),
+        expiresInDays: 120,
     },
     {
         title: 'DevOps Full Stack Engineer',
@@ -516,7 +518,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Engineering',
-        expiresAt: new Date('2026-03-15'),
+        expiresInDays: 60,
     },
     {
         title: 'IT Solutions Architect',
@@ -558,7 +560,7 @@ Certifications:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-20'),
+        expiresInDays: 90,
     },
     {
         title: 'Technology Intern',
@@ -599,7 +601,7 @@ Preferred:
         employmentType: 'INTERNSHIP',
         workplaceType: 'ONSITE',
         department: 'Technology',
-        expiresAt: new Date('2026-04-30'),
+        expiresInDays: 180,
     },
 
     // KCB Bank Kenya Jobs
@@ -642,7 +644,7 @@ Certifications:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-15'),
+        expiresInDays: 60,
     },
 
     // CRDB Bank Tanzania Jobs
@@ -687,7 +689,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'ONSITE',
         department: 'Technology',
-        expiresAt: new Date('2026-03-15'),
+        expiresInDays: 60,
     },
     {
         title: 'Digital Product Manager',
@@ -730,7 +732,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-10'),
+        expiresInDays: 30,
     },
 
     // Vodacom Tanzania Jobs
@@ -775,7 +777,7 @@ Soft Skills:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-20'),
+        expiresInDays: 90,
     },
 
     // MTN Uganda Jobs
@@ -820,7 +822,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-25'),
+        expiresInDays: 90,
     },
 
     // Additional diverse roles
@@ -865,7 +867,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Data & Analytics',
-        expiresAt: new Date('2026-03-30'),
+        expiresInDays: 90,
     },
     {
         title: 'Cybersecurity Analyst',
@@ -907,7 +909,7 @@ Certifications:
         employmentType: 'FULL_TIME',
         workplaceType: 'ONSITE',
         department: 'Technology',
-        expiresAt: new Date('2026-03-18'),
+        expiresInDays: 60,
     },
     {
         title: 'UI/UX Designer',
@@ -950,7 +952,7 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-12'),
+        expiresInDays: 45,
     },
     {
         title: 'Cloud Infrastructure Engineer',
@@ -992,7 +994,7 @@ Certifications:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Engineering',
-        expiresAt: new Date('2026-03-25'),
+        expiresInDays: 90,
     },
     {
         title: 'Mobile Application Developer',
@@ -1035,14 +1037,13 @@ Preferred:
         employmentType: 'FULL_TIME',
         workplaceType: 'HYBRID',
         department: 'Technology',
-        expiresAt: new Date('2026-03-20'),
+        expiresInDays: 90,
     },
 ]
 
 async function main() {
     console.log('Seeding departments...\n')
 
-    // Create departments
     const departmentMap = new Map<string, string>()
     for (const dept of DEPARTMENTS) {
         const department = await prisma.department.upsert({
@@ -1059,13 +1060,31 @@ async function main() {
 
     console.log('\nSeeding jobs...\n')
 
-    // Create jobs
     for (const job of JOBS) {
         const departmentId = departmentMap.get(job.department)
         const slug = generateSlug(job.title, job.company)
+        const expiresAt = daysFromNow(job.expiresInDays)
 
-        await prisma.job.create({
-            data: {
+        await prisma.job.upsert({
+            where: { slug },
+            update: {
+                title: job.title,
+                company: job.company,
+                location: job.location,
+                description: job.description,
+                requirements: job.requirements,
+                benefits: job.benefits,
+                salaryMin: job.salaryMin,
+                salaryMax: job.salaryMax,
+                salaryCurrency: job.salaryCurrency,
+                employmentType: job.employmentType,
+                workplaceType: job.workplaceType,
+                status: 'PUBLISHED',
+                departmentId,
+                publishedAt: new Date(),
+                expiresAt,
+            },
+            create: {
                 slug,
                 title: job.title,
                 company: job.company,
@@ -1081,11 +1100,11 @@ async function main() {
                 status: 'PUBLISHED',
                 departmentId,
                 publishedAt: new Date(),
-                expiresAt: job.expiresAt,
+                expiresAt,
             },
         })
 
-        console.log(`  Created job: ${job.title} at ${job.company}`)
+        console.log(`  Upserted job: ${job.title} at ${job.company}`)
     }
 
     console.log('\n--- Seeding Complete ---')

@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
     try {
         const formData = await request.formData()
 
-        // Parse and validate form data
         const parseResult = guestApplicationSchema.safeParse({
             jobId: formData.get('jobId'),
             firstName: formData.get('firstName'),
@@ -51,7 +50,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Verify job exists and is published
         const job = await prisma.job.findUnique({
             where: { id: data.jobId },
             select: { id: true, status: true, title: true },
@@ -64,7 +62,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Get CV file
         const cvFile = formData.get('cvFile')
         if (!(cvFile instanceof File) || cvFile.size === 0) {
             return NextResponse.json(
@@ -73,7 +70,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Find or create user with this email
         let user = await prisma.user.findUnique({
             where: { email: data.email.toLowerCase() },
             include: { applicantProfile: true },
@@ -86,7 +82,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Check for existing application
         if (user) {
             const existingApplication = await prisma.application.findUnique({
                 where: {
@@ -105,7 +100,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Create user if they don't exist
         if (!user) {
             user = await prisma.user.create({
                 data: {
@@ -122,7 +116,6 @@ export async function POST(request: NextRequest) {
                 include: { applicantProfile: true },
             })
         } else if (user.applicantProfile) {
-            // Update profile if user exists but profile info is missing
             if (!user.applicantProfile.firstName || !user.applicantProfile.lastName) {
                 await prisma.applicantProfile.update({
                     where: { id: user.applicantProfile.id },
@@ -133,16 +126,24 @@ export async function POST(request: NextRequest) {
                     },
                 })
             }
+        } else {
+            const profile = await prisma.applicantProfile.create({
+                data: {
+                    userId: user.id,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    phone: data.phone || null,
+                },
+            })
+            user = { ...user, applicantProfile: profile }
         }
 
-        // Get default pipeline stage
         const stages = await prisma.jobPipelineStage.findMany({
             where: { jobId: data.jobId },
             orderBy: { order: 'asc' },
         })
         const defaultStage = stages[0] ?? null
 
-        // Create application
         const trackingId = createTrackingId()
         const application = await prisma.application.create({
             data: {
@@ -158,7 +159,6 @@ export async function POST(request: NextRequest) {
             },
         })
 
-        // Create stage event if there's a default stage
         if (defaultStage) {
             await prisma.applicationStageEvent.create({
                 data: {
@@ -169,7 +169,6 @@ export async function POST(request: NextRequest) {
             })
         }
 
-        // Store CV file
         const storedCv = await savePrivateFile(cvFile, { scan: true })
         await prisma.candidateDocument.create({
             data: {
@@ -186,7 +185,6 @@ export async function POST(request: NextRequest) {
             },
         })
 
-        // Update profile with CV info
         if (user.applicantProfile) {
             await prisma.applicantProfile.update({
                 where: { id: user.applicantProfile.id },
@@ -197,7 +195,6 @@ export async function POST(request: NextRequest) {
             })
         }
 
-        // Store supporting documents
         const supportingDocKeys = Array.from(formData.keys()).filter(k => k.startsWith('supportingDocument_'))
         for (const key of supportingDocKeys) {
             const doc = formData.get(key)
@@ -220,7 +217,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Create consent record
         await prisma.consentRecord.create({
             data: {
                 userId: user.id,
@@ -231,7 +227,6 @@ export async function POST(request: NextRequest) {
             },
         })
 
-        // Create audit log
         await createAuditLog({
             actorUserId: user.id,
             action: 'guest_application.submitted',
@@ -240,7 +235,6 @@ export async function POST(request: NextRequest) {
             metadata: {
                 trackingId,
                 jobId: data.jobId,
-                email: data.email,
             },
             ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
             userAgent: request.headers.get('user-agent') || undefined,

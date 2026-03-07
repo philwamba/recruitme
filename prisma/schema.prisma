@@ -414,6 +414,108 @@ model Department {
   jobs Job[]
 }
 
+// Master Data: Job Classification
+model JobCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobTitles JobTitle[]
+  jobs      Job[]
+
+  @@index([isActive])
+}
+
+model JobTitle {
+  id          String       @id @default(cuid())
+  name        String
+  code        String       @unique
+  categoryId  String
+  category    JobCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  description String?      @db.Text
+  rankGradeId String?
+  rankGrade   RankGrade?   @relation(fields: [rankGradeId], references: [id], onDelete: SetNull)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  jobs Job[]
+
+  @@index([categoryId])
+  @@index([rankGradeId])
+  @@index([isActive])
+}
+
+model RankGrade {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  level       Int
+  description String?  @db.Text
+  minSalary   Int?
+  maxSalary   Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobTitles JobTitle[]
+
+  @@index([level])
+  @@index([isActive])
+}
+
+// Master Data: Qualities/Factors for Evaluation
+model Quality {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String?  @db.Text
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  templateItems QualityTemplateItem[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model QualityTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?  @db.Text
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  qualities QualityTemplateItem[]
+  jobs      Job[]
+
+  @@index([isActive])
+}
+
+model QualityTemplateItem {
+  id         String          @id @default(cuid())
+  templateId String
+  template   QualityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  qualityId  String
+  quality    Quality         @relation(fields: [qualityId], references: [id], onDelete: Cascade)
+  weight     Float           @default(1.0)
+  isRequired Boolean         @default(true)
+  sortOrder  Int             @default(0)
+
+  @@unique([templateId, qualityId])
+  @@index([templateId])
+  @@index([qualityId])
+}
+
 // Job posting
 model Job {
   id             String         @id @default(cuid())
@@ -432,6 +534,13 @@ model Job {
   status         JobStatus      @default(DRAFT)
   departmentId   String?
   department     Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  // Master data references
+  categoryId     String?
+  category       JobCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  jobTitleId     String?
+  jobTitle       JobTitle?      @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
+  qualityTemplateId String?
+  qualityTemplate   QualityTemplate? @relation(fields: [qualityTemplateId], references: [id], onDelete: SetNull)
   createdByUserId String?
   createdBy      User?          @relation("JobCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
   publishedAt    DateTime?
@@ -446,6 +555,8 @@ model Job {
 
   @@index([status, publishedAt])
   @@index([departmentId])
+  @@index([categoryId])
+  @@index([jobTitleId])
   @@index([employmentType, workplaceType])
 }
 

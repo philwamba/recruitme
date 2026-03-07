@@ -47,6 +47,28 @@ export const ROUTES = {
             DELIVERY_LOGS: '/admin/operations/delivery-logs',
         },
         SETTINGS: '/admin/settings',
+        // Master Data routes
+        MASTER_DATA: {
+            ROOT: '/admin/master-data',
+            JOB_CATEGORIES: '/admin/master-data/job-categories',
+            JOB_TITLES: '/admin/master-data/job-titles',
+            RANK_GRADES: '/admin/master-data/rank-grades',
+            QUALITIES: '/admin/master-data/qualities',
+            QUESTIONNAIRES: '/admin/master-data/questionnaires',
+            POLICIES: '/admin/master-data/policies',
+        },
+        // Configuration routes
+        CONFIG: {
+            ROOT: '/admin/config',
+            JOB_TEMPLATES: '/admin/config/job-templates',
+            JOB_FAMILIES: '/admin/config/job-families',
+            INTERVIEW_TEMPLATES: '/admin/config/interview-templates',
+            OFFER_TEMPLATES: '/admin/config/offer-templates',
+            ORGANIZATION: '/admin/config/organization',
+            WORKFLOW: '/admin/config/workflow',
+        },
+        // Job Request routes
+        JOB_REQUESTS: '/admin/job-requests',
     },
 } as const
 
