@@ -32,6 +32,18 @@ export default function Home() {
             </header>
 
             <div className="relative isolate px-6 pt-14 lg:px-8">
+                {/* Hero background image */}
+                <div className="absolute inset-0 -z-10 overflow-hidden">
+                    <Image
+                        src="/dar-es-salaam-skyline.jpg"
+                        alt=""
+                        fill
+                        className="object-cover object-center opacity-[0.08] dark:opacity-[0.04]"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+                </div>
+
                 <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
                     <div className="text-center">
                         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl text-balance">
