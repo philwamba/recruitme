@@ -6,8 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import { FileUpload } from '@/components/ui/file-upload'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Building2, CheckCircle2, Loader2, LogIn, UserPlus, Shield, Zap, FileText, User, Mail, Phone } from 'lucide-react'
@@ -330,8 +328,8 @@ export default function ApplyPage({
                         </div>
 
                         <div className="space-y-2">
-                             <p className="text-sm font-medium text-muted-foreground">Sign up to submit your application to</p>
-                             <h1 className="text-4xl font-bold tracking-tight text-foreground">{job.company}</h1>
+                            <p className="text-sm font-medium text-muted-foreground">Sign up to submit your application to</p>
+                            <h1 className="text-4xl font-bold tracking-tight text-foreground">{job.company}</h1>
                         </div>
 
                         <div className="space-y-1">
