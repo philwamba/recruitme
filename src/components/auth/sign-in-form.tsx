@@ -14,6 +14,7 @@ import type { OAuthConfig } from '@/lib/oauth/config'
 const initialState = {
     success: false,
     message: '',
+    email: '',
 }
 
 export function SignInForm({
@@ -44,8 +45,15 @@ export function SignInForm({
             <form action={formAction} className="space-y-4">
                 <input type="hidden" name="next" value={nextPath} />
                 <div className="space-y-2">
-                    <Label htmlFor="email" required>Email</Label>
-                    <Input id="email" name="email" type="email" autoComplete="email" required />
+                    <Label htmlFor="email" required>Email Address</Label>
+                    <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        defaultValue={state.email}
+                        required
+                    />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password" required>Password</Label>

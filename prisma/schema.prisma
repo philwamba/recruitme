@@ -420,6 +420,31 @@ model Department {
   jobs Job[]
 }
 
+model Company {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  logo      String?
+  website   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs Job[] @relation("JobCompany")
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  address   String?
+  city      String?
+  country   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs Job[] @relation("JobLocation")
+}
+
 // Master Data: Job Classification
 model JobCategory {
   id          String   @id @default(cuid())
@@ -557,7 +582,11 @@ model Job {
   slug           String         @unique
   title          String
   company        String
+  companyId      String?
+  companyRef     Company?       @relation("JobCompany", fields: [companyId], references: [id], onDelete: SetNull)
   location       String?
+  locationId     String?
+  locationRef    Location?      @relation("JobLocation", fields: [locationId], references: [id], onDelete: SetNull)
   description    String         @db.Text
   requirements   String?        @db.Text
   benefits       String?        @db.Text
@@ -594,6 +623,8 @@ model Job {
 
   @@index([status, publishedAt])
   @@index([departmentId])
+  @@index([companyId])
+  @@index([locationId])
   @@index([categoryId])
   @@index([jobTitleId])
   @@index([qualityTemplateId])

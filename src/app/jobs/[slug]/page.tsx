@@ -82,7 +82,7 @@ export default async function JobDetailPage({
                 nonce={nonce}
                 dangerouslySetInnerHTML={{ __html: safeJsonLd }}
             />
-            <div className="mx-auto max-w-4xl space-y-8 px-4 py-10">
+            <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
                 <div className="space-y-3">
                     <Link href="/jobs" className="text-sm text-primary hover:underline">
             Back to jobs

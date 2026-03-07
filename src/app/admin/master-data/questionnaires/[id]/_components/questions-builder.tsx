@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, GripVertical, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import type { QuestionnaireQuestion, QuestionType } from '@prisma/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -120,6 +120,7 @@ export function QuestionsBuilder({ questionnaireId, questions }: QuestionsBuilde
                                                     handleMoveUp(index)
                                                 }}
                                                 disabled={index === 0 || isReordering}
+                                                aria-label="Move question up"
                                             >
                                                 <ChevronUp className="h-3 w-3" />
                                             </Button>
@@ -132,6 +133,7 @@ export function QuestionsBuilder({ questionnaireId, questions }: QuestionsBuilde
                                                     handleMoveDown(index)
                                                 }}
                                                 disabled={index === questions.length - 1 || isReordering}
+                                                aria-label="Move question down"
                                             >
                                                 <ChevronDown className="h-3 w-3" />
                                             </Button>
@@ -166,6 +168,7 @@ export function QuestionsBuilder({ questionnaireId, questions }: QuestionsBuilde
                                                     e.stopPropagation()
                                                     setEditingQuestion(question)
                                                 }}
+                                                aria-label="Edit question"
                                             >
                                                 <Edit className="h-4 w-4" />
                                             </Button>
@@ -177,6 +180,7 @@ export function QuestionsBuilder({ questionnaireId, questions }: QuestionsBuilde
                                                     e.stopPropagation()
                                                     handleDelete(question)
                                                 }}
+                                                aria-label="Delete question"
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>

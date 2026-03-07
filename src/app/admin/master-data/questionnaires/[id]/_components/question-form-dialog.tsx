@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { QuestionnaireQuestion, QuestionType } from '@prisma/client'
@@ -76,10 +76,28 @@ export function QuestionFormDialog({
         },
     })
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control,
         name: 'options',
     })
+
+    useEffect(() => {
+        if (open) {
+            const newOptions = question?.options && Array.isArray(question.options)
+                ? (question.options as { value: string; label: string }[])
+                : [{ value: '', label: '' }]
+
+            reset({
+                text: question?.text ?? '',
+                type: question?.type ?? 'TEXT',
+                options: newOptions,
+                isRequired: question?.isRequired ?? false,
+                helpText: question?.helpText ?? '',
+                sortOrder: question?.sortOrder ?? nextSortOrder,
+            })
+            replace(newOptions)
+        }
+    }, [open, question?.id, reset, replace, question, nextSortOrder])
 
     const currentType = watch('type')
     const showOptions = TYPES_WITH_OPTIONS.includes(currentType)
@@ -189,6 +207,7 @@ export function QuestionFormDialog({
                                             size="icon"
                                             onClick={() => remove(index)}
                                             disabled={fields.length <= 1}
+                                            aria-label={`Remove option ${index + 1}`}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>

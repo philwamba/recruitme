@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, Loader2, X } from 'lucide-react'
+import { Send, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -45,9 +45,13 @@ export function SubmitForApprovalButton({ requestId, approvers }: SubmitForAppro
             return
         }
 
+        const orderedApproverIds = approvers
+            .filter(a => selectedApprovers.includes(a.id))
+            .map(a => a.id)
+
         setIsSubmitting(true)
         try {
-            await submitJobRequest(requestId, selectedApprovers)
+            await submitJobRequest(requestId, orderedApproverIds)
             setOpen(false)
         } catch (error) {
             alert(error instanceof Error ? error.message : 'An error occurred')

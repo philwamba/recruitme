@@ -1,10 +1,9 @@
-import { ClipboardList } from 'lucide-react'
 import { createAssessment, reviewAssessment } from '@/app/actions/enterprise'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { EmptyState } from '@/components/admin'
+import { NoApplicationsForAssessmentsEmptyState } from '../_components/empty-states'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,11 +42,7 @@ export default async function EmployerAssessmentsPage() {
                 </p>
             </div>
             {applications.length === 0 ? (
-                <EmptyState
-                    icon={ClipboardList}
-                    title="No applications yet"
-                    description="Once candidates apply to your jobs, you can assign and manage assessments here."
-                />
+                <NoApplicationsForAssessmentsEmptyState />
             ) : (
                 <div className="grid gap-6">
                     {applications.map(application => (

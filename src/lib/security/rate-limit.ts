@@ -1,40 +1,47 @@
 import Redis from 'ioredis'
-import { env } from '../env'
 
 type RateLimitEntry = {
-  count: number
-  expiresAt: number
+    count: number
+    expiresAt: number
 }
 
-// In-memory store for fallback
 const globalForRateLimit = globalThis as typeof globalThis & {
-  __recruitmeRateLimitStore?: Map<string, RateLimitEntry>
-  __recruitmeRedisClient?: Redis | null
-  __recruitmeRedisAvailable?: boolean
+    __recruitmeRateLimitStore?: Map<string, RateLimitEntry>
+    __recruitmeRedisClient?: Redis | null
+    __recruitmeRedisAvailable?: boolean
+    __recruitmeRedisUrl?: string | undefined
 }
 
 const rateLimitStore =
-  globalForRateLimit.__recruitmeRateLimitStore ??
-  new Map<string, RateLimitEntry>()
+    globalForRateLimit.__recruitmeRateLimitStore ?? new Map<string, RateLimitEntry>()
 
 if (!globalForRateLimit.__recruitmeRateLimitStore) {
     globalForRateLimit.__recruitmeRateLimitStore = rateLimitStore
 }
 
-// Initialize Redis client if configured
+function getRedisUrl(): string | undefined {
+    if (globalForRateLimit.__recruitmeRedisUrl !== undefined) {
+        return globalForRateLimit.__recruitmeRedisUrl
+    }
+    const url = process.env.REDIS_URL
+    globalForRateLimit.__recruitmeRedisUrl = url || undefined
+    return globalForRateLimit.__recruitmeRedisUrl
+}
+
 function getRedisClient(): Redis | null {
     if (globalForRateLimit.__recruitmeRedisClient !== undefined) {
         return globalForRateLimit.__recruitmeRedisClient
     }
 
-    if (!env.redisUrl) {
+    const redisUrl = getRedisUrl()
+    if (!redisUrl) {
         globalForRateLimit.__recruitmeRedisClient = null
         globalForRateLimit.__recruitmeRedisAvailable = false
         return null
     }
 
     try {
-        const client = new Redis(env.redisUrl, {
+        const client = new Redis(redisUrl, {
             maxRetriesPerRequest: 1,
             enableReadyCheck: false,
             connectTimeout: 5000,
@@ -50,8 +57,19 @@ function getRedisClient(): Redis | null {
             globalForRateLimit.__recruitmeRedisAvailable = true
         })
 
+        client.on('end', () => {
+            globalForRateLimit.__recruitmeRedisAvailable = false
+        })
+
         globalForRateLimit.__recruitmeRedisClient = client
-        globalForRateLimit.__recruitmeRedisAvailable = true
+        // Start with false until connection is established (lazyConnect: true)
+        globalForRateLimit.__recruitmeRedisAvailable = false
+
+        // Initiate connection attempt
+        client.connect().catch(() => {
+            globalForRateLimit.__recruitmeRedisAvailable = false
+        })
+
         return client
     } catch {
         globalForRateLimit.__recruitmeRedisClient = null
@@ -159,7 +177,7 @@ export function resetRateLimitStore() {
 export function getRateLimitHealth() {
     return {
         driver: globalForRateLimit.__recruitmeRedisAvailable ? 'redis' : 'memory',
-        redisConfigured: Boolean(env.redisUrl),
+        redisConfigured: Boolean(getRedisUrl()),
         redisAvailable: globalForRateLimit.__recruitmeRedisAvailable ?? false,
     }
 }

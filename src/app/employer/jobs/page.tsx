@@ -1,4 +1,4 @@
-import { Briefcase, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { EmploymentType, JobStatus, WorkplaceType } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { EmptyState } from '@/components/admin'
+import { NoJobsEmptyState } from '../_components/empty-states'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,18 +22,12 @@ export default async function EmployerJobsPage() {
     })
 
     // Fetch data in parallel
-    const [jobs, departments, existingJobs] = await Promise.all([
+    const [jobs, departments, companies, locations] = await Promise.all([
         getEmployerJobs(user.id),
         prisma.department.findMany({ orderBy: { name: 'asc' } }),
-        prisma.job.findMany({
-            where: { createdByUserId: user.id },
-            select: { company: true, location: true },
-        }),
+        prisma.company.findMany({ orderBy: { name: 'asc' } }),
+        prisma.location.findMany({ orderBy: { name: 'asc' } }),
     ])
-
-    // Get distinct companies and locations
-    const companies = [...new Set(existingJobs.map(j => j.company).filter(Boolean))]
-    const locations = [...new Set(existingJobs.map(j => j.location).filter(Boolean))] as string[]
 
     return (
         <div className="space-y-6">
@@ -55,44 +49,64 @@ export default async function EmployerJobsPage() {
                 <CardContent>
                     <form action={createJob} className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="title">Job Title *</Label>
+                            <Label htmlFor="title">Job Title<span className="text-destructive ml-1">*</span></Label>
                             <Input id="title" name="title" placeholder="e.g., Senior Software Engineer" required />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="company">Company *</Label>
-                            <Input
-                                id="company"
-                                name="company"
-                                list="companies-list"
-                                placeholder="Enter or select company"
-                                required
-                            />
-                            <datalist id="companies-list">
-                                {companies.map(company => (
-                                    <option key={company} value={company} />
-                                ))}
-                            </datalist>
+                            <Label htmlFor="company">Company<span className="text-destructive ml-1">*</span></Label>
+                            {companies.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                    No companies yet.{' '}
+                                    <a href="/employer/settings/companies" className="text-primary hover:underline">
+                                        Create one first
+                                    </a>
+                                </p>
+                            ) : (
+                                <select
+                                    id="company"
+                                    name="company"
+                                    required
+                                    className="h-9 w-full cursor-pointer rounded-md border bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">Select a company</option>
+                                    {companies.map(company => (
+                                        <option key={company.id} value={company.name}>
+                                            {company.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="location">Location *</Label>
-                            <Input
-                                id="location"
-                                name="location"
-                                list="locations-list"
-                                placeholder="Enter or select location"
-                                required
-                            />
-                            <datalist id="locations-list">
-                                {locations.map(location => (
-                                    <option key={location} value={location} />
-                                ))}
-                            </datalist>
+                            <Label htmlFor="location">Location<span className="text-destructive ml-1">*</span></Label>
+                            {locations.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                    No locations yet.{' '}
+                                    <a href="/employer/settings/locations" className="text-primary hover:underline">
+                                        Create one first
+                                    </a>
+                                </p>
+                            ) : (
+                                <select
+                                    id="location"
+                                    name="location"
+                                    required
+                                    className="h-9 w-full cursor-pointer rounded-md border bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">Select a location</option>
+                                    {locations.map(location => (
+                                        <option key={location.id} value={location.name}>
+                                            {location.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="departmentName">Department *</Label>
+                            <Label htmlFor="departmentName">Department<span className="text-destructive ml-1">*</span></Label>
                             <Input
                                 id="departmentName"
                                 name="departmentName"
@@ -108,7 +122,7 @@ export default async function EmployerJobsPage() {
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="description">Role Overview *</Label>
+                            <Label htmlFor="description">Role Overview<span className="text-destructive ml-1">*</span></Label>
                             <Textarea
                                 id="description"
                                 name="description"
@@ -119,7 +133,7 @@ export default async function EmployerJobsPage() {
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="requirements">Requirements *</Label>
+                            <Label htmlFor="requirements">Requirements<span className="text-destructive ml-1">*</span></Label>
                             <Textarea
                                 id="requirements"
                                 name="requirements"
@@ -218,11 +232,7 @@ export default async function EmployerJobsPage() {
             </Card>
 
             {jobs.length === 0 ? (
-                <EmptyState
-                    icon={Briefcase}
-                    title="No jobs yet"
-                    description="Create your first job posting to start receiving applications."
-                />
+                <NoJobsEmptyState />
             ) : (
                 <div className="grid gap-4">
                     {jobs.map(job => (
