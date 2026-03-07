@@ -17,9 +17,11 @@ const initialState = {
 
 export function SignUpForm({
     nextPath = '',
+    defaultEmail,
     oauth,
 }: {
     nextPath?: string
+    defaultEmail?: string
     oauth: OAuthConfig
 }) {
     const [state, formAction] = useActionState(signUp, initialState)

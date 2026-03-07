@@ -61,7 +61,7 @@ export default async function JobsPage({
                     <CardContent className="pt-6">
                         <JobFilters
                             departments={result.departments}
-                            locations={result.locations}
+                            locations={result.locations.filter((loc): loc is string => loc !== null)}
                             defaultValues={{
                                 q: search.q,
                                 department: search.department,

@@ -1,0 +1,224 @@
+'use client'
+
+import * as React from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { Quality } from '@prisma/client'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+    qualityFormSchema,
+    type QualityFormData,
+    qualityCategories,
+} from '@/lib/admin/validations/quality'
+import { createQuality, updateQuality } from '@/lib/admin/actions/qualities'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ROUTES } from '@/lib/constants/routes'
+
+interface QualityFormProps {
+    quality?: Quality | null
+}
+
+export function QualityForm({ quality }: QualityFormProps) {
+    const router = useRouter()
+    const [isPending, startTransition] = React.useTransition()
+
+    const form = useForm<QualityFormData>({
+        resolver: zodResolver(qualityFormSchema),
+        defaultValues: {
+            name: quality?.name || '',
+            code: quality?.code || '',
+            description: quality?.description || '',
+            category: quality?.category || '',
+            isActive: quality?.isActive ?? true,
+        },
+    })
+
+    // Auto-generate code from name for new qualities
+    const watchName = form.watch('name')
+    React.useEffect(() => {
+        if (!quality && watchName) {
+            const generatedCode = watchName
+                .toUpperCase()
+                .replace(/[^A-Z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '')
+                .slice(0, 20)
+            form.setValue('code', generatedCode, { shouldValidate: true })
+        }
+    }, [watchName, quality, form])
+
+    async function onSubmit(data: QualityFormData) {
+        startTransition(async () => {
+            try {
+                if (quality) {
+                    await updateQuality(quality.id, data)
+                    toast.success('Quality updated successfully')
+                } else {
+                    await createQuality(data)
+                    toast.success('Quality created successfully')
+                }
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : 'Something went wrong')
+            }
+        })
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Quality Details</CardTitle>
+                        <CardDescription>
+                            Define the quality/competency factor
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid gap-6 sm:grid-cols-2">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Problem Solving" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="code"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Code</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="e.g. PROBLEM_SOLVING"
+                                                {...field}
+                                                className="uppercase"
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Unique identifier (uppercase, no spaces)
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value || ''}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select category (optional)" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="">None</SelectItem>
+                                            {qualityCategories.map((cat) => (
+                                                <SelectItem key={cat.value} value={cat.value}>
+                                                    {cat.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormDescription>
+                                        Group similar qualities together
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Describe this quality factor..."
+                                            className="min-h-[100px]"
+                                            {...field}
+                                            value={field.value || ''}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="isActive"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-base">Active</FormLabel>
+                                        <FormDescription>
+                                            Inactive qualities won&apos;t appear in templates
+                                        </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
+                <div className="flex items-center justify-end gap-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push(ROUTES.ADMIN.MASTER_DATA.QUALITIES)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit" disabled={isPending}>
+                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {quality ? 'Update Quality' : 'Create Quality'}
+                    </Button>
+                </div>
+            </form>
+        </Form>
+    )
+}

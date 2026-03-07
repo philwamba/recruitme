@@ -506,7 +506,7 @@ model QualityTemplateItem {
   templateId String
   template   QualityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   qualityId  String
-  quality    Quality         @relation(fields: [qualityId], references: [id], onDelete: Cascade)
+  quality    Quality         @relation(fields: [qualityId], references: [id], onDelete: Restrict)
   weight     Float           @default(1.0)
   isRequired Boolean         @default(true)
   sortOrder  Int             @default(0)
@@ -557,6 +557,7 @@ model Job {
   @@index([departmentId])
   @@index([categoryId])
   @@index([jobTitleId])
+  @@index([qualityTemplateId])
   @@index([employmentType, workplaceType])
 }
 

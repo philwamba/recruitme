@@ -3,7 +3,8 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useTransition } from 'react'
 import { EmploymentType, WorkplaceType } from '@prisma/client'
-import { Search } from 'lucide-react'
+import { Loader2, Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 interface Department {
@@ -64,16 +65,32 @@ export function JobFilters({ departments, locations, defaultValues }: JobFilters
 
     return (
         <div className="space-y-4">
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                    type="search"
-                    name="q"
-                    defaultValue={defaultValues.q}
-                    onChange={handleSearchChange}
-                    placeholder="Search roles, companies, or keywords..."
-                    className="pl-10 h-12 text-base"
-                />
+            <div className="flex gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        name="q"
+                        defaultValue={defaultValues.q}
+                        onChange={handleSearchChange}
+                        placeholder="Search roles, companies, or keywords..."
+                        className="pl-10 h-12 text-base"
+                    />
+                </div>
+                <Button
+                    type="button"
+                    size="lg"
+                    disabled={isPending}
+                    onClick={() => router.refresh()}
+                    className="h-12 px-6"
+                >
+                    {isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <Search className="h-4 w-4" />
+                    )}
+                    <span className="ml-2 hidden sm:inline">Search</span>
+                </Button>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
