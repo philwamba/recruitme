@@ -64,6 +64,7 @@ export const ROUTES = {
             JOB_FAMILIES: '/admin/config/job-families',
             INTERVIEW_TEMPLATES: '/admin/config/interview-templates',
             OFFER_TEMPLATES: '/admin/config/offer-templates',
+            PIPELINE_TEMPLATES: '/admin/config/pipeline-templates',
             ORGANIZATION: '/admin/config/organization',
             WORKFLOW: '/admin/config/workflow',
         },

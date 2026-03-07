@@ -978,8 +978,8 @@ model CandidateImport {
   status        ImportStatus @default(PENDING)
   errors        Json?        // Array of { row: number, field: string, message: string }
   fieldMapping  Json?        // { csvColumn: fieldName }
-  importedById  String
-  importedBy    User         @relation("CandidateImporter", fields: [importedById], references: [id])
+  importedById  String?
+  importedBy    User?        @relation("CandidateImporter", fields: [importedById], references: [id], onDelete: SetNull)
   jobId         String?
   job           Job?         @relation(fields: [jobId], references: [id], onDelete: SetNull)
   startedAt     DateTime?
