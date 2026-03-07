@@ -11,6 +11,7 @@
     "test": "node --test --experimental-strip-types tests/**/*.test.ts",
     "ci": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "seed:rbac": "node --experimental-strip-types scripts/seed-rbac.ts",
+    "seed:jobs": "node --experimental-strip-types scripts/seed-jobs.ts",
     "bootstrap:admin": "node --experimental-strip-types scripts/bootstrap-admin.ts",
     "process:outbox": "node --experimental-strip-types scripts/process-outbox.ts",
     "postinstall": "prisma generate"
