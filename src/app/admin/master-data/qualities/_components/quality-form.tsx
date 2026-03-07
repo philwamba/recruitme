@@ -138,7 +138,7 @@ export function QualityForm({ quality }: QualityFormProps) {
                                 <FormItem>
                                     <FormLabel>Category</FormLabel>
                                     <Select
-                                        onValueChange={(val) => field.onChange(val === '__NONE__' ? '' : val)}
+                                        onValueChange={val => field.onChange(val === '__NONE__' ? '' : val)}
                                         value={field.value || '__NONE__'}
                                     >
                                         <FormControl>
@@ -148,7 +148,7 @@ export function QualityForm({ quality }: QualityFormProps) {
                                         </FormControl>
                                         <SelectContent>
                                             <SelectItem value="__NONE__">None</SelectItem>
-                                            {qualityCategories.map((cat) => (
+                                            {qualityCategories.map(cat => (
                                                 <SelectItem key={cat.value} value={cat.value}>
                                                     {cat.label}
                                                 </SelectItem>

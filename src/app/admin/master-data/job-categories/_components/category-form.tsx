@@ -119,7 +119,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
                                             <Input
                                                 placeholder="e.g. ENGINEERING"
                                                 {...field}
-                                                onChange={(e) => {
+                                                onChange={e => {
                                                     field.onChange(normalizeCode(e.target.value))
                                                 }}
                                                 className="uppercase"

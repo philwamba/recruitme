@@ -177,12 +177,13 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
     }
 
     function handleDelete() {
-        if (!deleteId) return
+        if (!deleteId || isPending) return
         startTransition(async () => {
             try {
                 await deleteJobCategory(deleteId)
                 toast.success('Category deleted')
                 setDeleteId(null)
+                router.refresh()
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : 'Failed to delete')
                 setDeleteId(null)
@@ -195,16 +196,16 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
             <Input
                 placeholder="Search categories..."
                 value={globalFilter ?? ''}
-                onChange={(e) => setGlobalFilter(e.target.value)}
+                onChange={e => setGlobalFilter(e.target.value)}
                 className="max-w-sm"
             />
 
-            <div className="rounded-md border">
+            <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
+                        {table.getHeaderGroups().map(headerGroup => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
+                                {headerGroup.headers.map(header => (
                                     <TableHead key={header.id}>
                                         {header.isPlaceholder
                                             ? null
@@ -219,9 +220,9 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
+                            table.getRowModel().rows.map(row => (
                                 <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
+                                    {row.getVisibleCells().map(cell => (
                                         <TableCell key={cell.id}>
                                             {flexRender(
                                                 cell.column.columnDef.cell,
@@ -258,9 +259,10 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
+                            disabled={isPending}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Delete
+                            {isPending ? 'Deleting...' : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

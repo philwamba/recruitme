@@ -50,6 +50,11 @@ const breadcrumbLabels: Record<string, string> = {
     'audit-logs': 'Audit Logs',
     'activity-logs': 'Activity Logs',
     'delivery-logs': 'Delivery Logs',
+    'master-data': 'Master Data',
+    'job-categories': 'Job Categories',
+    'job-titles': 'Job Titles',
+    'rank-grades': 'Rank Grades',
+    qualities: 'Qualities',
     new: 'Create New',
     edit: 'Edit',
 }

@@ -209,7 +209,7 @@ export function QualitiesTable({ qualities }: QualitiesTableProps) {
                 className="max-w-sm"
             />
 
-            <div className="rounded-md border">
+            <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map(headerGroup => (

@@ -56,7 +56,7 @@ interface GradesTableProps {
 }
 
 function formatSalary(amount: number | null): string {
-    if (!amount) return '—'
+    if (amount === null) return '—'
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -101,7 +101,7 @@ export function GradesTable({ grades }: GradesTableProps) {
             cell: ({ row }) => {
                 const min = row.original.minSalary
                 const max = row.original.maxSalary
-                if (!min && !max) return <span className="text-muted-foreground">—</span>
+                if (min === null && max === null) return <span className="text-muted-foreground">—</span>
                 return (
                     <span className="text-sm">
                         {formatSalary(min)} - {formatSalary(max)}
@@ -215,11 +215,11 @@ export function GradesTable({ grades }: GradesTableProps) {
             <Input
                 placeholder="Search rank grades..."
                 value={globalFilter ?? ''}
-                onChange={(e) => setGlobalFilter(e.target.value)}
+                onChange={e => setGlobalFilter(e.target.value)}
                 className="max-w-sm"
             />
 
-            <div className="rounded-md border">
+            <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map(headerGroup => (

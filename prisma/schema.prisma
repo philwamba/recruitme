@@ -205,6 +205,7 @@ model User {
   consentRecords ConsentRecord[]
   deletionRequests DataDeletionRequest[]
   savedSearches SavedSearch[]
+  candidateImports CandidateImport[] @relation("CandidateImporter")
 }
 
 model RolePermission {
@@ -553,6 +554,7 @@ model Job {
   pipelineStages JobPipelineStage[]
   assessments    Assessment[]
   emailTemplates EmailTemplate[]
+  candidateImports CandidateImport[]
 
   @@index([status, publishedAt])
   @@index([departmentId])
@@ -916,4 +918,36 @@ model SavedSearch {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// Candidate bulk import
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  PARTIAL
+}
+
+model CandidateImport {
+  id            String       @id @default(cuid())
+  fileName      String
+  storageKey    String       @unique
+  totalRows     Int
+  processedRows Int          @default(0)
+  successCount  Int          @default(0)
+  errorCount    Int          @default(0)
+  status        ImportStatus @default(PENDING)
+  errors        Json?        // Array of { row: number, field: string, message: string }
+  fieldMapping  Json?        // { csvColumn: fieldName }
+  importedById  String
+  importedBy    User         @relation("CandidateImporter", fields: [importedById], references: [id])
+  jobId         String?
+  job           Job?         @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime     @default(now())
+
+  @@index([status])
+  @@index([importedById])
 }
