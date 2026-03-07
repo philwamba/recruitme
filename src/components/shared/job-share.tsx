@@ -45,7 +45,7 @@ export function JobShare({
         try {
             await navigator.clipboard.writeText(shareUrl)
             toast.success('Link copied to clipboard!')
-        } catch (_err) {
+        } catch {
             toast.error('Failed to copy link')
         }
     }

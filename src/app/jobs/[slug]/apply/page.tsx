@@ -6,10 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { FileUpload } from '@/components/ui/file-upload'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Briefcase, MapPin, Building2, Clock, CheckCircle2, Loader2, LogIn, UserPlus, Shield, Zap, FileText } from 'lucide-react'
+import { Building2, CheckCircle2, Loader2, LogIn, UserPlus, Shield, Zap, FileText, User, Mail, Phone } from 'lucide-react'
+import { JobShare } from '@/components/shared/job-share'
 import { ROUTES } from '@/lib/constants/routes'
 
 interface Job {
@@ -469,7 +471,5 @@ export default function ApplyPage({
                 </Card>
             </div>
         </div>
-    )
-}
     )
 }
