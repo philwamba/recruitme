@@ -68,12 +68,14 @@ export function AuthCard({
                     </p>
                     <div className="flex items-center gap-4">
                         <div className="flex -space-x-2">
-                            {['#F4A261', '#E76F51', '#2A9D8F'].map((color, i) => (
-                                <div
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <Image
                                     key={i}
-                                    aria-hidden="true"
-                                    style={{ backgroundColor: color }}
-                                    className="h-8 w-8 rounded-full ring-2 ring-white/40"
+                                    src={`/avatars/avatar-${i}.jpg`}
+                                    alt=""
+                                    width={32}
+                                    height={32}
+                                    className="h-8 w-8 rounded-full object-cover ring-2 ring-white/40"
                                 />
                             ))}
                         </div>
