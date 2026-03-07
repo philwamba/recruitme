@@ -55,7 +55,7 @@ export function SignUpForm({
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="email" required>Email</Label>
+                    <Label htmlFor="email" required>Email Address</Label>
                     <Input id="email" name="email" type="email" autoComplete="email" defaultValue={defaultEmail} required />
                 </div>
                 <div className="space-y-2">

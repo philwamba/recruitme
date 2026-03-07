@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FileUpload } from '@/components/ui/file-upload'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Building2, CheckCircle2, Loader2, LogIn, UserPlus, Shield, Zap, FileText, User, Mail, Phone } from 'lucide-react'
+import { Building2, CheckCircle2, Loader2, LogIn, UserPlus, Shield, Zap, FileText, User, Mail } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { JobShare } from '@/components/shared/job-share'
 import { ROUTES } from '@/lib/constants/routes'
 
@@ -46,6 +47,7 @@ export default function ApplyPage({
     const [submitted, setSubmitted] = React.useState(false)
     const [trackingId, setTrackingId] = React.useState<string | null>(null)
     const [formError, setFormError] = React.useState<string | null>(null)
+    const [isAuthenticated, setIsAuthenticated] = React.useState(false)
     const isSubmittingRef = React.useRef(false)
 
     const [formData, setFormData] = React.useState<ApplicationFormData>({
@@ -70,25 +72,34 @@ export default function ApplyPage({
     React.useEffect(() => {
         if (!slug) return
 
-        async function loadJob() {
+        async function loadData() {
             try {
-                const response = await fetch(`/api/jobs/${slug}`)
-                if (response.status === 404) {
+                const [jobResponse, authResponse] = await Promise.all([
+                    fetch(`/api/jobs/${slug}`),
+                    fetch('/api/auth/me'),
+                ])
+
+                if (jobResponse.status === 404) {
                     setNotFound(true)
-                } else if (!response.ok) {
+                } else if (!jobResponse.ok) {
                     setLoadError('Failed to load job details')
                 } else {
-                    const data = await response.json()
+                    const data = await jobResponse.json()
                     setJob(data)
                 }
+
+                if (authResponse.ok) {
+                    const authData = await authResponse.json()
+                    setIsAuthenticated(authData.authenticated)
+                }
             } catch (error) {
-                console.error('Failed to load job:', error)
+                console.error('Failed to load data:', error)
                 setLoadError('An error occurred while loading the job')
             } finally {
                 setLoading(false)
             }
         }
-        loadJob()
+        loadData()
     }, [slug])
 
     function validateForm(): boolean {
@@ -346,9 +357,9 @@ export default function ApplyPage({
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">First name</Label>
+                                    <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">First name <span className="text-destructive">*</span></Label>
                                     <div className="relative">
-                                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             id="firstName"
                                             className="pl-9 h-11"
@@ -360,9 +371,9 @@ export default function ApplyPage({
                                     {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Last name</Label>
+                                    <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Last name <span className="text-destructive">*</span></Label>
                                     <div className="relative">
-                                        <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <User className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             id="lastName"
                                             className="pl-9 h-11"
@@ -376,9 +387,9 @@ export default function ApplyPage({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Email address</Label>
+                                <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Email address <span className="text-destructive">*</span></Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="email"
                                         type="email"
@@ -393,20 +404,16 @@ export default function ApplyPage({
 
                             <div className="space-y-2">
                                 <Label htmlFor="phone" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Phone Number</Label>
-                                <div className="relative">
-                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        id="phone"
-                                        className="pl-9 h-11"
-                                        value={formData.phone}
-                                        onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                        placeholder="(+254) 7..."
-                                    />
-                                </div>
+                                <PhoneInput
+                                    value={formData.phone}
+                                    onChange={value => setFormData(prev => ({ ...prev, phone: value }))}
+                                    defaultCountry="TZ"
+                                    placeholder="712 345 678"
+                                />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="cv" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Select CV</Label>
+                                <Label htmlFor="cv" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Select CV <span className="text-destructive">*</span></Label>
                                 <FileUpload
                                     accept=".pdf,.doc,.docx"
                                     value={formData.cvFile}
@@ -424,7 +431,7 @@ export default function ApplyPage({
                                         onCheckedChange={checked => setFormData(prev => ({ ...prev, consentAccepted: checked === true }))}
                                     />
                                     <div className="text-xs leading-relaxed text-muted-foreground">
-                                        By clicking Sign Up & Apply, you agree to our{' '}
+                                        By clicking {isAuthenticated ? 'Apply' : 'Sign Up & Apply'}, you agree to our{' '}
                                         <Link href="/terms" className="text-primary hover:underline">Terms & Conditions</Link> and{' '}
                                         <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
                                     </div>
@@ -448,21 +455,23 @@ export default function ApplyPage({
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                             Submitting...
                                         </>
-                                    ) : 'Sign up & apply'}
+                                    ) : isAuthenticated ? 'Apply' : 'Sign up & apply'}
                                 </Button>
 
                                 <div className="text-center pt-2">
                                     <p className="text-xs text-muted-foreground">powered by <span className="font-bold text-foreground">RecruitMe</span></p>
                                 </div>
 
-                                <div className="pt-6 border-t text-center">
-                                    <p className="text-sm text-muted-foreground">
-                                        Already have an account?{' '}
-                                        <Link href={`${ROUTES.SIGN_IN}?next=${encodeURIComponent(`/jobs/${job.slug}/apply`)}`} className="text-primary font-semibold hover:underline">
-                                            Sign in & apply
-                                        </Link>
-                                    </p>
-                                </div>
+                                {!isAuthenticated && (
+                                    <div className="pt-6 border-t text-center">
+                                        <p className="text-sm text-muted-foreground">
+                                            Already have an account?{' '}
+                                            <Link href={`${ROUTES.SIGN_IN}?next=${encodeURIComponent(`/jobs/${job.slug}/apply`)}`} className="text-primary font-semibold hover:underline">
+                                                Sign in & apply
+                                            </Link>
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </form>
                     </CardContent>

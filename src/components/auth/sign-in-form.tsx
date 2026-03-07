@@ -45,7 +45,7 @@ export function SignInForm({
             <form action={formAction} className="space-y-4">
                 <input type="hidden" name="next" value={nextPath} />
                 <div className="space-y-2">
-                    <Label htmlFor="email" required>Email</Label>
+                    <Label htmlFor="email" required>Email Address</Label>
                     <Input
                         id="email"
                         name="email"
