@@ -22,32 +22,120 @@ export interface CandidatesQueryParams {
 }
 
 export async function getCandidates(params: CandidatesQueryParams = {}) {
-    const { status, jobId, search, page = 1, limit = 20 } = params
+    const {
+        status,
+        jobId,
+        search,
+        skills,
+        tags,
+        location,
+        appliedAfter,
+        appliedBefore,
+        hasDocuments,
+        page = 1,
+        limit = 20,
+    } = params
     const skip = (page - 1) * limit
 
-    const where = {
-        status: { not: 'DRAFT' as const },
-        ...(status && { status }),
-        ...(jobId && { jobId }),
-        ...(search && {
-            OR: [
-                {
-                    user: {
-                        email: { contains: search, mode: 'insensitive' as const },
+    // Build where clause
+    const where: Prisma.ApplicationWhereInput = {
+        status: { not: 'DRAFT' },
+    }
+
+    if (status) {
+        where.status = status
+    }
+
+    if (jobId) {
+        where.jobId = jobId
+    }
+
+    // Search filter
+    if (search) {
+        where.OR = [
+            {
+                user: {
+                    email: { contains: search, mode: 'insensitive' },
+                },
+            },
+            {
+                user: {
+                    applicantProfile: {
+                        OR: [
+                            { firstName: { contains: search, mode: 'insensitive' } },
+                            { lastName: { contains: search, mode: 'insensitive' } },
+                        ],
                     },
                 },
-                {
-                    user: {
-                        applicantProfile: {
-                            OR: [
-                                { firstName: { contains: search, mode: 'insensitive' as const } },
-                                { lastName: { contains: search, mode: 'insensitive' as const } },
-                            ],
-                        },
-                    },
+            },
+            {
+                trackingId: { contains: search, mode: 'insensitive' },
+            },
+        ]
+    }
+
+    // Skills filter
+    if (skills && skills.length > 0) {
+        where.user = {
+            applicantProfile: {
+                skills: {
+                    hasSome: skills,
                 },
-            ],
-        }),
+            },
+        }
+    }
+
+    // Tags filter
+    if (tags && tags.length > 0) {
+        where.tags = {
+            some: {
+                tagId: { in: tags },
+            },
+        }
+    }
+
+    // Location filter (search in city and country)
+    if (location) {
+        if (where.user) {
+            // Merge with existing user filter
+            const existingProfile = (where.user as { applicantProfile?: object }).applicantProfile
+            where.user = {
+                applicantProfile: {
+                    ...existingProfile,
+                    OR: [
+                        { city: { contains: location, mode: 'insensitive' } },
+                        { country: { contains: location, mode: 'insensitive' } },
+                    ],
+                },
+            }
+        } else {
+            where.user = {
+                applicantProfile: {
+                    OR: [
+                        { city: { contains: location, mode: 'insensitive' } },
+                        { country: { contains: location, mode: 'insensitive' } },
+                    ],
+                },
+            }
+        }
+    }
+
+    // Date filters
+    if (appliedAfter || appliedBefore) {
+        where.submittedAt = {}
+        if (appliedAfter) {
+            where.submittedAt.gte = new Date(appliedAfter)
+        }
+        if (appliedBefore) {
+            where.submittedAt.lte = new Date(appliedBefore)
+        }
+    }
+
+    // Documents filter
+    if (hasDocuments === true) {
+        where.documents = { some: {} }
+    } else if (hasDocuments === false) {
+        where.documents = { none: {} }
     }
 
     const [applications, totalCount] = await Promise.all([
@@ -68,6 +156,8 @@ export async function getCandidates(params: CandidatesQueryParams = {}) {
                                 avatarUrl: true,
                                 headline: true,
                                 skills: true,
+                                city: true,
+                                country: true,
                             },
                         },
                     },
@@ -113,9 +203,22 @@ export async function getCandidates(params: CandidatesQueryParams = {}) {
         }
     })
 
+    // Filter by rating after fetching (since avgRating is calculated)
+    let filteredApplications = applicationsWithRating
+    if (params.minRating !== undefined || params.maxRating !== undefined) {
+        filteredApplications = applicationsWithRating.filter(app => {
+            if (app.avgRating === null) return false
+            if (params.minRating !== undefined && app.avgRating < params.minRating) return false
+            if (params.maxRating !== undefined && app.avgRating > params.maxRating) return false
+            return true
+        })
+    }
+
     return {
-        applications: applicationsWithRating,
-        totalCount,
+        applications: filteredApplications,
+        totalCount: params.minRating !== undefined || params.maxRating !== undefined
+            ? filteredApplications.length
+            : totalCount,
         pageCount: Math.ceil(totalCount / limit),
         currentPage: page,
     }
@@ -237,4 +340,39 @@ export async function getTags() {
     return prisma.tag.findMany({
         orderBy: { name: 'asc' },
     })
+}
+
+export async function getCandidateFilterOptions() {
+    const [jobs, tags, skills] = await Promise.all([
+        prisma.job.findMany({
+            where: { status: { not: 'ARCHIVED' } },
+            select: {
+                id: true,
+                title: true,
+                company: true,
+            },
+            orderBy: { title: 'asc' },
+        }),
+        prisma.tag.findMany({
+            orderBy: { name: 'asc' },
+        }),
+        // Get unique skills from all applicant profiles
+        prisma.applicantProfile.findMany({
+            select: { skills: true },
+            where: {
+                skills: { isEmpty: false },
+            },
+        }),
+    ])
+
+    // Extract and deduplicate skills
+    const uniqueSkills = Array.from(
+        new Set(skills.flatMap(p => p.skills)),
+    ).sort()
+
+    return {
+        jobs,
+        tags,
+        skills: uniqueSkills,
+    }
 }

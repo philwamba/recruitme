@@ -185,7 +185,7 @@ export function TitlesTable({ titles }: TitlesTableProps) {
     }
 
     function handleDelete() {
-        if (!deleteId) return
+        if (!deleteId || isPending) return
         startTransition(async () => {
             try {
                 await deleteJobTitle(deleteId)
@@ -203,16 +203,16 @@ export function TitlesTable({ titles }: TitlesTableProps) {
             <Input
                 placeholder="Search job titles..."
                 value={globalFilter ?? ''}
-                onChange={e => setGlobalFilter(e.target.value)}
+                onChange={(e) => setGlobalFilter(e.target.value)}
                 className="max-w-sm"
             />
 
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
-                        {table.getHeaderGroups().map(headerGroup => (
+                        {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map(header => (
+                                {headerGroup.headers.map((header) => (
                                     <TableHead key={header.id}>
                                         {header.isPlaceholder
                                             ? null
@@ -227,9 +227,9 @@ export function TitlesTable({ titles }: TitlesTableProps) {
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map(row => (
+                            table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
-                                    {row.getVisibleCells().map(cell => (
+                                    {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
                                             {flexRender(
                                                 cell.column.columnDef.cell,
@@ -266,9 +266,10 @@ export function TitlesTable({ titles }: TitlesTableProps) {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
+                            disabled={isPending}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Delete
+                            {isPending ? 'Deleting...' : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

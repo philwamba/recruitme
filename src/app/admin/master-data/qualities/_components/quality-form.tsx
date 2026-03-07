@@ -138,8 +138,8 @@ export function QualityForm({ quality }: QualityFormProps) {
                                 <FormItem>
                                     <FormLabel>Category</FormLabel>
                                     <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value || ''}
+                                        onValueChange={(val) => field.onChange(val === '__NONE__' ? '' : val)}
+                                        value={field.value || '__NONE__'}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
@@ -147,8 +147,8 @@ export function QualityForm({ quality }: QualityFormProps) {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="">None</SelectItem>
-                                            {qualityCategories.map(cat => (
+                                            <SelectItem value="__NONE__">None</SelectItem>
+                                            {qualityCategories.map((cat) => (
                                                 <SelectItem key={cat.value} value={cat.value}>
                                                     {cat.label}
                                                 </SelectItem>

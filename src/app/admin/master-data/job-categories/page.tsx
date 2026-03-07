@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 
 interface PageProps {
     searchParams: Promise<{
-        search?: string
+        search?: string | string[]
     }>
 }
 
@@ -23,6 +23,8 @@ export default async function JobCategoriesPage({ searchParams }: PageProps) {
     })
 
     const params = await searchParams
+    // Normalize search param - can be string | string[] | undefined
+    const search = Array.isArray(params.search) ? params.search[0] : params.search
 
     return (
         <div className="space-y-6">
@@ -39,8 +41,8 @@ export default async function JobCategoriesPage({ searchParams }: PageProps) {
                 }
             />
 
-            <Suspense fallback={<TableSkeleton columns={6} rows={10} />}>
-                <CategoriesTableSection search={params.search} />
+            <Suspense fallback={<TableSkeleton columns={7} rows={10} />}>
+                <CategoriesTableSection search={search} />
             </Suspense>
         </div>
     )

@@ -162,8 +162,8 @@ export function TitleForm({ title, categories, rankGrades }: TitleFormProps) {
                                     <FormItem>
                                         <FormLabel>Rank/Grade</FormLabel>
                                         <Select
-                                            onValueChange={field.onChange}
-                                            defaultValue={field.value || ''}
+                                            onValueChange={(val) => field.onChange(val === '__NONE__' ? '' : val)}
+                                            value={field.value || '__NONE__'}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
@@ -171,8 +171,8 @@ export function TitleForm({ title, categories, rankGrades }: TitleFormProps) {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="">None</SelectItem>
-                                                {rankGrades.map(grade => (
+                                                <SelectItem value="__NONE__">None</SelectItem>
+                                                {rankGrades.map((grade) => (
                                                     <SelectItem key={grade.id} value={grade.id}>
                                                         {grade.name} (Level {grade.level})
                                                     </SelectItem>

@@ -1,28 +1,66 @@
 import { Suspense } from 'react'
 import { ApplicationStatus } from '@prisma/client'
 import { requireCurrentUser } from '@/lib/auth'
-import { getCandidates } from '@/lib/admin/queries/candidates'
+import { getCandidates, getCandidateFilterOptions } from '@/lib/admin/queries/candidates'
+import { getSavedSearches } from '@/lib/admin/queries/saved-searches'
 import { AdminPageHeader, TableSkeleton } from '@/components/admin'
+import { Card, CardContent } from '@/components/ui/card'
 import { CandidatesTable } from './_components/candidates-table'
+import { CandidateFilters } from './_components/candidate-filters'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
     searchParams: Promise<{
         status?: string
-        job?: string
+        jobId?: string
         search?: string
+        skills?: string | string[]
+        tags?: string | string[]
+        minRating?: string
+        maxRating?: string
+        location?: string
+        appliedAfter?: string
+        appliedBefore?: string
+        hasDocuments?: string
         page?: string
     }>
 }
 
 export default async function AdminCandidatesPage({ searchParams }: PageProps) {
-    await requireCurrentUser({
+    const user = await requireCurrentUser({
         roles: ['ADMIN'],
         permission: 'MANAGE_APPLICATIONS',
     })
 
     const params = await searchParams
+
+    // Parse array parameters
+    const skills = params.skills
+        ? Array.isArray(params.skills)
+            ? params.skills
+            : [params.skills]
+        : []
+    const tags = params.tags
+        ? Array.isArray(params.tags)
+            ? params.tags
+            : [params.tags]
+        : []
+
+    // Fetch filter options and saved searches
+    const [filterOptions, rawSavedSearches] = await Promise.all([
+        getCandidateFilterOptions(),
+        getSavedSearches(user.id),
+    ])
+
+    // Map saved searches to ensure proper filter types
+    const savedSearches = rawSavedSearches.map(search => ({
+        id: search.id,
+        name: search.name,
+        filters: (search.filters ?? {}) as Record<string, unknown>,
+        isPublic: search.isPublic,
+        user: search.user,
+    }))
 
     return (
         <div className="space-y-6">
@@ -31,11 +69,43 @@ export default async function AdminCandidatesPage({ searchParams }: PageProps) {
                 description="View and manage all candidates across jobs"
             />
 
+            <Card>
+                <CardContent className="pt-6">
+                    <CandidateFilters
+                        jobs={filterOptions.jobs}
+                        tags={filterOptions.tags}
+                        skills={filterOptions.skills}
+                        savedSearches={savedSearches}
+                        defaultValues={{
+                            search: params.search ?? '',
+                            status: params.status ?? '',
+                            jobId: params.jobId ?? '',
+                            skills,
+                            tags,
+                            minRating: params.minRating ?? '',
+                            maxRating: params.maxRating ?? '',
+                            location: params.location ?? '',
+                            appliedAfter: params.appliedAfter ?? '',
+                            appliedBefore: params.appliedBefore ?? '',
+                            hasDocuments: params.hasDocuments ?? '',
+                        }}
+                    />
+                </CardContent>
+            </Card>
+
             <Suspense fallback={<TableSkeleton columns={6} rows={10} showAvatar />}>
                 <CandidatesTableSection
                     status={params.status}
-                    jobId={params.job}
+                    jobId={params.jobId}
                     search={params.search}
+                    skills={skills}
+                    tags={tags}
+                    minRating={params.minRating}
+                    maxRating={params.maxRating}
+                    location={params.location}
+                    appliedAfter={params.appliedAfter}
+                    appliedBefore={params.appliedBefore}
+                    hasDocuments={params.hasDocuments}
                     page={params.page}
                 />
             </Suspense>
@@ -47,11 +117,27 @@ async function CandidatesTableSection({
     status,
     jobId,
     search,
+    skills,
+    tags,
+    minRating,
+    maxRating,
+    location,
+    appliedAfter,
+    appliedBefore,
+    hasDocuments,
     page,
 }: {
     status?: string
     jobId?: string
     search?: string
+    skills?: string[]
+    tags?: string[]
+    minRating?: string
+    maxRating?: string
+    location?: string
+    appliedAfter?: string
+    appliedBefore?: string
+    hasDocuments?: string
     page?: string
 }) {
     const validStatuses = Object.values(ApplicationStatus)
@@ -66,6 +152,14 @@ async function CandidatesTableSection({
         status: validatedStatus,
         jobId,
         search,
+        skills,
+        tags,
+        minRating: minRating ? Number(minRating) : undefined,
+        maxRating: maxRating ? Number(maxRating) : undefined,
+        location,
+        appliedAfter,
+        appliedBefore,
+        hasDocuments: hasDocuments ? hasDocuments === 'true' : undefined,
         page: validatedPage,
     })
 

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireCurrentUser } from '@/lib/auth'
-import { createAuditLog } from '@/lib/admin/services/audit-log'
+import { createAuditLog } from '@/lib/observability/audit'
 import { savedSearchSchema, type SavedSearchFormData } from '@/lib/admin/validations/candidate-search'
 import { ROUTES } from '@/lib/constants/routes'
 
@@ -26,11 +26,11 @@ export async function createSavedSearch(data: SavedSearchFormData) {
     })
 
     await createAuditLog({
-        actorId: user.id,
+        actorUserId: user.id,
         action: 'CREATE',
-        entityType: 'SavedSearch',
-        entityId: savedSearch.id,
-        newData: savedSearch,
+        targetType: 'SavedSearch',
+        targetId: savedSearch.id,
+        metadata: { name: savedSearch.name },
     })
 
     revalidatePath(ROUTES.ADMIN.CANDIDATES)
@@ -68,12 +68,11 @@ export async function updateSavedSearch(id: string, data: SavedSearchFormData) {
     })
 
     await createAuditLog({
-        actorId: user.id,
+        actorUserId: user.id,
         action: 'UPDATE',
-        entityType: 'SavedSearch',
-        entityId: id,
-        previousData: existingSearch,
-        newData: updatedSearch,
+        targetType: 'SavedSearch',
+        targetId: id,
+        metadata: { name: updatedSearch.name },
     })
 
     revalidatePath(ROUTES.ADMIN.CANDIDATES)
@@ -104,11 +103,11 @@ export async function deleteSavedSearch(id: string) {
     })
 
     await createAuditLog({
-        actorId: user.id,
+        actorUserId: user.id,
         action: 'DELETE',
-        entityType: 'SavedSearch',
-        entityId: id,
-        previousData: existingSearch,
+        targetType: 'SavedSearch',
+        targetId: id,
+        metadata: { name: existingSearch.name },
     })
 
     revalidatePath(ROUTES.ADMIN.CANDIDATES)

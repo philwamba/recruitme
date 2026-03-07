@@ -47,18 +47,23 @@ export function CategoryForm({ category }: CategoryFormProps) {
         },
     })
 
-    // Auto-generate code from name for new categories
+    // Shared function to normalize code values
+    const normalizeCode = React.useCallback((value: string) => {
+        return value
+            .toUpperCase()
+            .replace(/[^A-Z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .slice(0, 20)
+    }, [])
+
+    // Auto-generate code from name for new categories (only when code is empty/pristine)
     const watchName = form.watch('name')
     React.useEffect(() => {
-        if (!category && watchName) {
-            const generatedCode = watchName
-                .toUpperCase()
-                .replace(/[^A-Z0-9]+/g, '_')
-                .replace(/^_+|_+$/g, '')
-                .slice(0, 20)
-            form.setValue('code', generatedCode, { shouldValidate: true })
+        const currentCode = form.getValues('code')
+        if (!category && watchName && !currentCode) {
+            form.setValue('code', normalizeCode(watchName), { shouldValidate: true })
         }
-    }, [watchName, category, form])
+    }, [watchName, category, form, normalizeCode])
 
     async function onSubmit(data: JobCategoryFormData) {
         startTransition(async () => {
@@ -114,6 +119,9 @@ export function CategoryForm({ category }: CategoryFormProps) {
                                             <Input
                                                 placeholder="e.g. ENGINEERING"
                                                 {...field}
+                                                onChange={(e) => {
+                                                    field.onChange(normalizeCode(e.target.value))
+                                                }}
                                                 className="uppercase"
                                             />
                                         </FormControl>
