@@ -40,7 +40,7 @@ export function JobPipelineForm({ jobId, jobTitle, stages }: JobPipelineFormProp
     const form = useForm<JobPipelineFormData>({
         resolver: zodResolver(jobPipelineFormSchema),
         defaultValues: {
-            stages: stages.map((s) => ({
+            stages: stages.map(s => ({
                 id: s.id,
                 name: s.name,
                 order: s.order,
@@ -57,7 +57,7 @@ export function JobPipelineForm({ jobId, jobTitle, stages }: JobPipelineFormProp
                 router.push(`${ROUTES.ADMIN.PIPELINE}/${jobId}`)
             } catch (error) {
                 toast.error(
-                    error instanceof Error ? error.message : 'Something went wrong'
+                    error instanceof Error ? error.message : 'Something went wrong',
                 )
             }
         })

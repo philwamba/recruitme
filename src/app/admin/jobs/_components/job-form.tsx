@@ -60,7 +60,7 @@ export function JobForm({ job, departments, pipelineTemplates = [] }: JobFormPro
     const [isPending, startTransition] = React.useTransition()
     const isEditing = !!job
 
-    const defaultTemplate = pipelineTemplates.find((t) => t.isDefault)
+    const defaultTemplate = pipelineTemplates.find(t => t.isDefault)
 
     const form = useForm<JobFormData>({
         resolver: zodResolver(jobFormSchema),
@@ -224,7 +224,7 @@ export function JobForm({ job, departments, pipelineTemplates = [] }: JobFormPro
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {workplaceTypes.map((type) => (
+                                                {workplaceTypes.map(type => (
                                                     <SelectItem key={type.value} value={type.value}>
                                                         {type.label}
                                                     </SelectItem>
@@ -245,7 +245,7 @@ export function JobForm({ job, departments, pipelineTemplates = [] }: JobFormPro
                                     <FormItem>
                                         <FormLabel>Pipeline Template</FormLabel>
                                         <Select
-                                            onValueChange={(val) =>
+                                            onValueChange={val =>
                                                 field.onChange(val === '__DEFAULT__' ? '' : val)
                                             }
                                             value={field.value || '__DEFAULT__'}
@@ -259,7 +259,7 @@ export function JobForm({ job, departments, pipelineTemplates = [] }: JobFormPro
                                                 <SelectItem value="__DEFAULT__">
                                                     Use default stages
                                                 </SelectItem>
-                                                {pipelineTemplates.map((template) => (
+                                                {pipelineTemplates.map(template => (
                                                     <SelectItem key={template.id} value={template.id}>
                                                         {template.name}
                                                         {template.isDefault && ' (Default)'}

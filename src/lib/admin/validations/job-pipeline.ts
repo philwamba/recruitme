@@ -4,7 +4,7 @@ export const jobPipelineStageSchema = z.object({
     id: z.string().optional(),
     name: z.string().trim().min(1, 'Stage name is required').max(50, 'Stage name is too long'),
     order: z.number().int().min(1),
-    isDefault: z.boolean().default(false),
+    isDefault: z.boolean(),
 })
 
 export const jobPipelineFormSchema = z.object({
