@@ -192,7 +192,7 @@ export function PipelineTemplatesTable({ templates }: PipelineTemplatesTableProp
                 router.refresh()
             } catch (error) {
                 toast.error(
-                    error instanceof Error ? error.message : 'Failed to update status'
+                    error instanceof Error ? error.message : 'Failed to update status',
                 )
             }
         })
@@ -206,7 +206,7 @@ export function PipelineTemplatesTable({ templates }: PipelineTemplatesTableProp
                 router.refresh()
             } catch (error) {
                 toast.error(
-                    error instanceof Error ? error.message : 'Failed to set default'
+                    error instanceof Error ? error.message : 'Failed to set default',
                 )
             }
         })
@@ -222,7 +222,7 @@ export function PipelineTemplatesTable({ templates }: PipelineTemplatesTableProp
                 router.refresh()
             } catch (error) {
                 toast.error(
-                    error instanceof Error ? error.message : 'Failed to delete'
+                    error instanceof Error ? error.message : 'Failed to delete',
                 )
                 setDeleteId(null)
             }
@@ -234,23 +234,23 @@ export function PipelineTemplatesTable({ templates }: PipelineTemplatesTableProp
             <Input
                 placeholder="Search templates..."
                 value={globalFilter ?? ''}
-                onChange={(e) => setGlobalFilter(e.target.value)}
+                onChange={e => setGlobalFilter(e.target.value)}
                 className="max-w-sm"
             />
 
             <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
+                        {table.getHeaderGroups().map(headerGroup => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
+                                {headerGroup.headers.map(header => (
                                     <TableHead key={header.id}>
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef.header,
-                                                  header.getContext()
-                                              )}
+                                                header.column.columnDef.header,
+                                                header.getContext(),
+                                            )}
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -258,13 +258,13 @@ export function PipelineTemplatesTable({ templates }: PipelineTemplatesTableProp
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
+                            table.getRowModel().rows.map(row => (
                                 <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
+                                    {row.getVisibleCells().map(cell => (
                                         <TableCell key={cell.id}>
                                             {flexRender(
                                                 cell.column.columnDef.cell,
-                                                cell.getContext()
+                                                cell.getContext(),
                                             )}
                                         </TableCell>
                                     ))}

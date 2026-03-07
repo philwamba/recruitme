@@ -183,7 +183,7 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
                 await deleteJobCategory(deleteId)
                 toast.success('Category deleted')
                 setDeleteId(null)
-                router.refresh()
+                // Note: deleteJobCategory calls redirect(), so router.refresh() is not needed
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : 'Failed to delete')
                 setDeleteId(null)

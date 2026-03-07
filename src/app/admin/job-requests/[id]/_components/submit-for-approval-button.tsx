@@ -35,7 +35,7 @@ export function SubmitForApprovalButton({ requestId, approvers }: SubmitForAppro
         setSelectedApprovers(prev =>
             prev.includes(approverId)
                 ? prev.filter(id => id !== approverId)
-                : [...prev, approverId]
+                : [...prev, approverId],
         )
     }
 

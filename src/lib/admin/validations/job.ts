@@ -13,6 +13,7 @@ export const jobFormSchema = z.object({
     employmentType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'TEMPORARY']),
     workplaceType: z.enum(['REMOTE', 'HYBRID', 'ONSITE']),
     departmentId: z.string().optional().nullable(),
+    pipelineTemplateId: z.string().optional().nullable(),
     status: z.enum(['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED']).optional(),
 }).refine(
     data => {

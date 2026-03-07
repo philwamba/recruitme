@@ -32,7 +32,7 @@ export function SortableStagesList({
             reorderedStages.map((stage, index) => ({
                 ...stage,
                 order: index + 1,
-            }))
+            })),
         )
     }
 
@@ -49,31 +49,31 @@ export function SortableStagesList({
 
     const handleUpdateStage = (id: string, updates: Partial<StageItem>) => {
         onChange(
-            stages.map((stage) =>
-                stage.id === id ? { ...stage, ...updates } : stage
-            )
+            stages.map(stage =>
+                stage.id === id ? { ...stage, ...updates } : stage,
+            ),
         )
     }
 
     const handleDeleteStage = (id: string) => {
-        const filtered = stages.filter((s) => s.id !== id)
+        const filtered = stages.filter(s => s.id !== id)
         // If deleting the default stage, make the first one default
-        const hasDefault = filtered.some((s) => s.isDefault)
+        const hasDefault = filtered.some(s => s.isDefault)
         onChange(
             filtered.map((stage, index) => ({
                 ...stage,
                 order: index + 1,
                 isDefault: !hasDefault && index === 0 ? true : stage.isDefault,
-            }))
+            })),
         )
     }
 
     const handleSetDefault = (id: string) => {
         onChange(
-            stages.map((stage) => ({
+            stages.map(stage => ({
                 ...stage,
                 isDefault: stage.id === id,
-            }))
+            })),
         )
     }
 
@@ -85,13 +85,13 @@ export function SortableStagesList({
                 onReorder={handleReorder}
                 className="space-y-2"
             >
-                {stages.map((stage) => (
+                {stages.map(stage => (
                     <StageItem
                         key={stage.id}
                         stage={stage}
                         disabled={disabled}
                         canDelete={stages.length > 1}
-                        onUpdate={(updates) => handleUpdateStage(stage.id, updates)}
+                        onUpdate={updates => handleUpdateStage(stage.id, updates)}
                         onDelete={() => handleDeleteStage(stage.id)}
                         onSetDefault={() => handleSetDefault(stage.id)}
                     />
@@ -145,13 +145,13 @@ function StageItem({
             dragControls={dragControls}
             className={cn(
                 'flex items-center gap-2 rounded-lg border bg-card p-3',
-                disabled && 'opacity-50'
+                disabled && 'opacity-50',
             )}
         >
             <button
                 type="button"
                 className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
-                onPointerDown={(e) => !disabled && dragControls.start(e)}
+                onPointerDown={e => !disabled && dragControls.start(e)}
                 disabled={disabled}
             >
                 <GripVertical className="h-5 w-5" />
@@ -163,7 +163,7 @@ function StageItem({
 
             <Input
                 value={stage.name}
-                onChange={(e) => onUpdate({ name: e.target.value })}
+                onChange={e => onUpdate({ name: e.target.value })}
                 placeholder="Stage name"
                 disabled={disabled}
                 className="flex-1"
@@ -177,7 +177,7 @@ function StageItem({
                 disabled={disabled}
                 title={stage.isDefault ? 'Default entry stage' : 'Set as default entry stage'}
                 className={cn(
-                    stage.isDefault && 'text-amber-500 hover:text-amber-600'
+                    stage.isDefault && 'text-amber-500 hover:text-amber-600',
                 )}
             >
                 <Star

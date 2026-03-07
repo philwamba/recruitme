@@ -68,7 +68,7 @@ export function PipelineTemplateForm({ template }: PipelineTemplateFormProps) {
             description: template?.description || '',
             isDefault: template?.isDefault ?? false,
             isActive: template?.isActive ?? true,
-            stages: template?.stages.map((s) => ({
+            stages: template?.stages.map(s => ({
                 id: s.id,
                 name: s.name,
                 order: s.order,
@@ -94,7 +94,7 @@ export function PipelineTemplateForm({ template }: PipelineTemplateFormProps) {
                     }
                 }
                 toast.error(
-                    error instanceof Error ? error.message : 'Something went wrong'
+                    error instanceof Error ? error.message : 'Something went wrong',
                 )
             }
         })

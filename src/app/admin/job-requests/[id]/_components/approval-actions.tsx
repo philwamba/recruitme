@@ -33,7 +33,7 @@ export function ApprovalActions({ approvalId }: ApprovalActionsProps) {
                 <Textarea
                     id="comments"
                     value={comments}
-                    onChange={(e) => setComments(e.target.value)}
+                    onChange={e => setComments(e.target.value)}
                     placeholder="Add any comments about your decision..."
                     rows={3}
                 />

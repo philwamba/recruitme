@@ -23,20 +23,24 @@ export const candidateFields = [
 
 export type CandidateFieldKey = (typeof candidateFields)[number]['key']
 
+// Preprocess empty strings to undefined
+const emptyToUndefined = (v: unknown) =>
+    typeof v === 'string' && v.trim() === '' ? undefined : v
+
 // Import row schema (what we expect from CSV)
 export const importRowSchema = z.object({
-    email: z.string().email('Invalid email'),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    phone: z.string().optional(),
-    city: z.string().optional(),
-    country: z.string().optional(),
-    headline: z.string().optional(),
-    linkedinUrl: z.string().url().optional().or(z.literal('')),
-    githubUrl: z.string().url().optional().or(z.literal('')),
-    portfolioUrl: z.string().url().optional().or(z.literal('')),
-    skills: z.string().optional(), // Comma-separated
-    source: z.string().optional(),
+    email: z.preprocess(emptyToUndefined, z.string().email('Invalid email')),
+    firstName: z.preprocess(emptyToUndefined, z.string().optional()),
+    lastName: z.preprocess(emptyToUndefined, z.string().optional()),
+    phone: z.preprocess(emptyToUndefined, z.string().optional()),
+    city: z.preprocess(emptyToUndefined, z.string().optional()),
+    country: z.preprocess(emptyToUndefined, z.string().optional()),
+    headline: z.preprocess(emptyToUndefined, z.string().optional()),
+    linkedinUrl: z.preprocess(emptyToUndefined, z.string().url().optional()),
+    githubUrl: z.preprocess(emptyToUndefined, z.string().url().optional()),
+    portfolioUrl: z.preprocess(emptyToUndefined, z.string().url().optional()),
+    skills: z.preprocess(emptyToUndefined, z.string().optional()), // Comma-separated
+    source: z.preprocess(emptyToUndefined, z.string().optional()),
 })
 
 export type ImportRow = z.infer<typeof importRowSchema>

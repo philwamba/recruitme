@@ -12,7 +12,7 @@ export const jobPipelineFormSchema = z.object({
         .array(jobPipelineStageSchema)
         .min(1, 'At least one stage is required')
         .refine(
-            (stages) => stages.filter((s) => s.isDefault).length <= 1,
+            stages => stages.filter(s => s.isDefault).length <= 1,
             'Only one stage can be the default entry point',
         ),
 })

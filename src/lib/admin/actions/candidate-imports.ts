@@ -95,72 +95,54 @@ export async function processImport(params: ProcessImportParams) {
     let successCount = 0
     let processedRows = 0
 
+    try {
     // Process each row
-    for (let i = 0; i < params.rows.length; i++) {
-        const rawRow = params.rows[i]
-        processedRows++
+        for (let i = 0; i < params.rows.length; i++) {
+            const rawRow = params.rows[i]
+            processedRows++
 
-        try {
+            try {
             // Map CSV columns to candidate fields
-            const mappedRow: Partial<ImportRow> = {}
-            for (const [csvColumn, candidateField] of Object.entries(params.fieldMapping)) {
-                if (candidateField && rawRow[csvColumn] !== undefined) {
-                    (mappedRow as Record<string, string>)[candidateField] = rawRow[csvColumn]
+                const mappedRow: Partial<ImportRow> = {}
+                for (const [csvColumn, candidateField] of Object.entries(params.fieldMapping)) {
+                    if (candidateField && rawRow[csvColumn] !== undefined) {
+                        (mappedRow as Record<string, string>)[candidateField] = rawRow[csvColumn]
+                    }
                 }
-            }
 
-            // Validate the mapped row
-            const validationResult = importRowSchema.safeParse(mappedRow)
-            if (!validationResult.success) {
-                const fieldErrors = validationResult.error.errors
-                for (const error of fieldErrors) {
-                    errors.push({
-                        row: i + 2, // +2 for 1-based indexing and header row
-                        field: error.path.join('.'),
-                        message: error.message,
-                    })
+                // Validate the mapped row
+                const validationResult = importRowSchema.safeParse(mappedRow)
+                if (!validationResult.success) {
+                    const fieldErrors = validationResult.error.errors
+                    for (const error of fieldErrors) {
+                        errors.push({
+                            row: i + 2, // +2 for 1-based indexing and header row
+                            field: error.path.join('.'),
+                            message: error.message,
+                        })
+                    }
+                    continue
                 }
-                continue
-            }
 
-            const validRow = validationResult.data
+                const validRow = validationResult.data
 
-            // Check for existing user
-            const existingUser = await prisma.user.findUnique({
-                where: { email: validRow.email },
-            })
+                // Check for existing user
+                const existingUser = await prisma.user.findUnique({
+                    where: { email: validRow.email },
+                })
 
-            if (existingUser && params.skipDuplicates) {
+                if (existingUser && params.skipDuplicates) {
                 // Skip duplicate
-                continue
-            }
+                    continue
+                }
 
-            // Create or update user and profile
-            const userResult = await prisma.user.upsert({
-                where: { email: validRow.email },
-                create: {
-                    email: validRow.email,
-                    role: 'APPLICANT',
-                    applicantProfile: {
-                        create: {
-                            firstName: validRow.firstName,
-                            lastName: validRow.lastName,
-                            phone: validRow.phone,
-                            city: validRow.city,
-                            country: validRow.country,
-                            headline: validRow.headline,
-                            linkedinUrl: validRow.linkedinUrl || null,
-                            githubUrl: validRow.githubUrl || null,
-                            portfolioUrl: validRow.portfolioUrl || null,
-                            skills: validRow.skills
-                                ? validRow.skills.split(',').map(s => s.trim()).filter(Boolean)
-                                : [],
-                        },
-                    },
-                },
-                update: {
-                    applicantProfile: {
-                        upsert: {
+                // Create or update user and profile
+                const userResult = await prisma.user.upsert({
+                    where: { email: validRow.email },
+                    create: {
+                        email: validRow.email,
+                        role: 'APPLICANT',
+                        applicantProfile: {
                             create: {
                                 firstName: validRow.firstName,
                                 lastName: validRow.lastName,
@@ -175,39 +157,55 @@ export async function processImport(params: ProcessImportParams) {
                                     ? validRow.skills.split(',').map(s => s.trim()).filter(Boolean)
                                     : [],
                             },
-                            update: {
-                                firstName: validRow.firstName ?? undefined,
-                                lastName: validRow.lastName ?? undefined,
-                                phone: validRow.phone ?? undefined,
-                                city: validRow.city ?? undefined,
-                                country: validRow.country ?? undefined,
-                                headline: validRow.headline ?? undefined,
-                                linkedinUrl: validRow.linkedinUrl || undefined,
-                                githubUrl: validRow.githubUrl || undefined,
-                                portfolioUrl: validRow.portfolioUrl || undefined,
-                                skills: validRow.skills
-                                    ? validRow.skills.split(',').map(s => s.trim()).filter(Boolean)
-                                    : undefined,
-                            },
                         },
                     },
-                },
-            })
-
-            // If a job is specified, create an application
-            if (params.jobId) {
-                const existingApplication = await prisma.application.findUnique({
-                    where: {
-                        userId_jobId: {
-                            userId: userResult.id,
-                            jobId: params.jobId,
+                    update: {
+                        applicantProfile: {
+                            upsert: {
+                                create: {
+                                    firstName: validRow.firstName,
+                                    lastName: validRow.lastName,
+                                    phone: validRow.phone,
+                                    city: validRow.city,
+                                    country: validRow.country,
+                                    headline: validRow.headline,
+                                    linkedinUrl: validRow.linkedinUrl || null,
+                                    githubUrl: validRow.githubUrl || null,
+                                    portfolioUrl: validRow.portfolioUrl || null,
+                                    skills: validRow.skills
+                                        ? validRow.skills.split(',').map(s => s.trim()).filter(Boolean)
+                                        : [],
+                                },
+                                update: {
+                                    firstName: validRow.firstName ?? undefined,
+                                    lastName: validRow.lastName ?? undefined,
+                                    phone: validRow.phone ?? undefined,
+                                    city: validRow.city ?? undefined,
+                                    country: validRow.country ?? undefined,
+                                    headline: validRow.headline ?? undefined,
+                                    linkedinUrl: validRow.linkedinUrl || undefined,
+                                    githubUrl: validRow.githubUrl || undefined,
+                                    portfolioUrl: validRow.portfolioUrl || undefined,
+                                    skills: validRow.skills
+                                        ? validRow.skills.split(',').map(s => s.trim()).filter(Boolean)
+                                        : undefined,
+                                },
+                            },
                         },
                     },
                 })
 
-                if (!existingApplication) {
-                    await prisma.application.create({
-                        data: {
+                // If a job is specified, create an application (using upsert to avoid race conditions)
+                if (params.jobId) {
+                    await prisma.application.upsert({
+                        where: {
+                            userId_jobId: {
+                                userId: userResult.id,
+                                jobId: params.jobId,
+                            },
+                        },
+                        update: {},
+                        create: {
                             userId: userResult.id,
                             jobId: params.jobId,
                             trackingId: `IMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -217,69 +215,84 @@ export async function processImport(params: ProcessImportParams) {
                         },
                     })
                 }
+
+                successCount++
+            } catch (error) {
+                errors.push({
+                    row: i + 2,
+                    field: 'general',
+                    message: error instanceof Error ? error.message : 'Unknown error',
+                })
             }
 
-            successCount++
-        } catch (error) {
-            errors.push({
-                row: i + 2,
-                field: 'general',
-                message: error instanceof Error ? error.message : 'Unknown error',
-            })
+            // Update progress periodically
+            if (processedRows % 10 === 0) {
+                await prisma.candidateImport.update({
+                    where: { id: params.importId },
+                    data: {
+                        processedRows,
+                        successCount,
+                        errorCount: errors.length,
+                    },
+                })
+            }
         }
 
-        // Update progress periodically
-        if (processedRows % 10 === 0) {
-            await prisma.candidateImport.update({
-                where: { id: params.importId },
-                data: {
-                    processedRows,
-                    successCount,
-                    errorCount: errors.length,
-                },
-            })
+        // Final update
+        const finalStatus = errors.length === 0
+            ? 'COMPLETED'
+            : successCount > 0
+                ? 'PARTIAL'
+                : 'FAILED'
+
+        await prisma.candidateImport.update({
+            where: { id: params.importId },
+            data: {
+                status: finalStatus,
+                processedRows,
+                successCount,
+                errorCount: errors.length,
+                errors: errors.length > 0 ? (errors as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+                completedAt: new Date(),
+            },
+        })
+
+        await createAuditLog({
+            actorUserId: user.id,
+            action: 'PROCESS_IMPORT',
+            targetType: 'CandidateImport',
+            targetId: params.importId,
+            metadata: {
+                status: finalStatus,
+                successCount,
+                errorCount: errors.length,
+            },
+        })
+
+        revalidatePath(ROUTES.ADMIN.CANDIDATES)
+
+        return {
+            success: true,
+            status: finalStatus,
+            successCount,
+            errorCount: errors.length,
+            errors: errors.slice(0, 100), // Limit errors returned
         }
-    }
-
-    // Final update
-    const finalStatus = errors.length === 0
-        ? 'COMPLETED'
-        : successCount > 0
-            ? 'PARTIAL'
-            : 'FAILED'
-
-    await prisma.candidateImport.update({
-        where: { id: params.importId },
-        data: {
-            status: finalStatus,
-            processedRows,
-            successCount,
-            errorCount: errors.length,
-            errors: errors.length > 0 ? (errors as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
-            completedAt: new Date(),
-        },
-    })
-
-    await createAuditLog({
-        actorUserId: user.id,
-        action: 'PROCESS_IMPORT',
-        targetType: 'CandidateImport',
-        targetId: params.importId,
-        metadata: {
-            status: finalStatus,
-            successCount,
-            errorCount: errors.length,
-        },
-    })
-
-    revalidatePath(ROUTES.ADMIN.CANDIDATES)
-
-    return {
-        success: true,
-        status: finalStatus,
-        successCount,
-        errorCount: errors.length,
-        errors: errors.slice(0, 100), // Limit errors returned
+    } catch (outerError) {
+        // Mark import as FAILED if an unhandled exception occurs
+        await prisma.candidateImport.update({
+            where: { id: params.importId },
+            data: {
+                status: 'FAILED',
+                completedAt: new Date(),
+                errors: [{
+                    row: 0,
+                    field: 'system',
+                    message: outerError instanceof Error ? outerError.message : 'Unknown error',
+                }] as unknown as Prisma.InputJsonValue,
+            },
+        })
+        throw outerError
     }
 }
 

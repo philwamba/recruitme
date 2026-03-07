@@ -42,7 +42,7 @@ export const employmentTypes = [
 ] as const
 
 export const workplaceTypes = [
-    { value: 'ON_SITE', label: 'On-site' },
+    { value: 'ONSITE', label: 'On-site' },
     { value: 'REMOTE', label: 'Remote' },
     { value: 'HYBRID', label: 'Hybrid' },
 ] as const

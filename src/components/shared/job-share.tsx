@@ -29,7 +29,7 @@ export function JobShare({
     variant = 'outline',
     size = 'default',
     className,
-    showLabel = true
+    showLabel = true,
 }: JobShareProps) {
     const [shareUrl, setShareUrl] = React.useState('')
 

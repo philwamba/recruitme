@@ -57,7 +57,7 @@ export default async function JobRequestDetailPage({ params }: PageProps) {
     const canConvert = jobRequest.status === 'APPROVED'
 
     const userPendingApproval = jobRequest.approvals.find(
-        a => a.approverUserId === user.id && a.status === 'PENDING'
+        a => a.approverUserId === user.id && a.status === 'PENDING',
     )
 
     return (
@@ -232,8 +232,8 @@ export default async function JobRequestDetailPage({ params }: PageProps) {
                                                 approval.status === 'APPROVED'
                                                     ? 'bg-green-100 text-green-700'
                                                     : approval.status === 'REJECTED'
-                                                    ? 'bg-red-100 text-red-700'
-                                                    : 'bg-gray-100 text-gray-600'
+                                                        ? 'bg-red-100 text-red-700'
+                                                        : 'bg-gray-100 text-gray-600'
                                             }`}>
                                                 {index + 1}
                                             </div>

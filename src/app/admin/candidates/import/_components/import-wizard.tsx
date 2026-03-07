@@ -116,6 +116,8 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
 
         setStep('process')
 
+        let progressInterval: ReturnType<typeof setInterval> | undefined
+
         try {
             // Create import record
             const createResult = await createCandidateImport({
@@ -127,7 +129,7 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
             })
 
             // Simulate progress
-            const progressInterval = setInterval(() => {
+            progressInterval = setInterval(() => {
                 setProgress(prev => Math.min(prev + 5, 90))
             }, 200)
 
@@ -147,6 +149,10 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
         } catch (error) {
             console.error('Import failed:', error)
             alert('Import failed. Please try again.')
+        } finally {
+            if (progressInterval) {
+                clearInterval(progressInterval)
+            }
         }
     }
 
@@ -257,7 +263,7 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                             </Button>
                             <Button
                                 onClick={() => setStep('configure')}
-                                disabled={!fieldMapping.email}
+                                disabled={!Object.values(fieldMapping).includes('email')}
                             >
                                 Next
                                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -279,14 +285,14 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                         <div className="space-y-2">
                             <Label>Associate with Job (Optional)</Label>
                             <Select
-                                value={selectedJobId}
-                                onValueChange={setSelectedJobId}
+                                value={selectedJobId || '__none__'}
+                                onValueChange={val => setSelectedJobId(val === '__none__' ? '' : val)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="No job selected" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">No job</SelectItem>
+                                    <SelectItem value="__none__">No job</SelectItem>
                                     {jobs.map(job => (
                                         <SelectItem key={job.id} value={job.id}>
                                             {job.title} - {job.company}
@@ -425,6 +431,7 @@ export function ImportWizard({ jobs }: ImportWizardProps) {
                                     setFile(null)
                                     setParsedData(null)
                                     setFieldMapping({})
+                                    setSelectedJobId('')
                                     setResult(null)
                                     setProgress(0)
                                 }}

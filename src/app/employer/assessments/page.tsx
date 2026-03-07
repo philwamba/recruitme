@@ -1,8 +1,10 @@
+import { ClipboardList } from 'lucide-react'
 import { createAssessment, reviewAssessment } from '@/app/actions/enterprise'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { EmptyState } from '@/components/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +42,13 @@ export default async function EmployerAssessmentsPage() {
           Assign candidate work, review submissions, and record structured scoring.
                 </p>
             </div>
+            {applications.length === 0 ? (
+                <EmptyState
+                    icon={ClipboardList}
+                    title="No applications yet"
+                    description="Once candidates apply to your jobs, you can assign and manage assessments here."
+                />
+            ) : (
             <div className="grid gap-6">
                 {applications.map(application => (
                     <Card key={application.id}>
@@ -105,6 +114,7 @@ export default async function EmployerAssessmentsPage() {
                     </Card>
                 ))}
             </div>
+            )}
         </div>
     )
 }

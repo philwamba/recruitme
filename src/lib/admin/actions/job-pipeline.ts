@@ -120,7 +120,7 @@ export async function updateJobPipeline(jobId: string, data: JobPipelineFormData
 export async function addJobPipelineStage(
     jobId: string,
     stageName: string,
-    order?: number
+    order?: number,
 ) {
     const user = await requireCurrentUser({
         roles: ['ADMIN'],
@@ -210,7 +210,7 @@ export async function deleteJobPipelineStage(stageId: string) {
 
     if (stage._count.applications > 0) {
         throw new Error(
-            'Cannot delete stage with applications. Move applications first.'
+            'Cannot delete stage with applications. Move applications first.',
         )
     }
 
@@ -245,7 +245,7 @@ export async function deleteJobPipelineStage(stageId: string) {
 
 export async function reorderJobPipelineStages(
     jobId: string,
-    stageIds: string[]
+    stageIds: string[],
 ) {
     const user = await requireCurrentUser({
         roles: ['ADMIN'],
@@ -268,9 +268,9 @@ export async function reorderJobPipelineStages(
         where: { jobId },
         select: { id: true },
     })
-    const jobStageIds = new Set(jobStages.map((s) => s.id))
+    const jobStageIds = new Set(jobStages.map(s => s.id))
 
-    if (stageIds.length !== jobStageIds.size || !stageIds.every((id) => jobStageIds.has(id))) {
+    if (stageIds.length !== jobStageIds.size || !stageIds.every(id => jobStageIds.has(id))) {
         throw new Error('Invalid stage IDs provided for reordering')
     }
 

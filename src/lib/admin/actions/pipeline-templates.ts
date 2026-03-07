@@ -33,7 +33,7 @@ export async function createPipelineTemplate(data: PipelineTemplateFormData) {
 
     let template
     try {
-        template = await prisma.$transaction(async (tx) => {
+        template = await prisma.$transaction(async tx => {
             // If setting as default, unset other defaults
             if (validated.isDefault) {
                 await tx.pipelineTemplate.updateMany({
@@ -115,7 +115,7 @@ export async function updatePipelineTemplate(templateId: string, data: PipelineT
 
     let template
     try {
-        template = await prisma.$transaction(async (tx) => {
+        template = await prisma.$transaction(async tx => {
             // If setting as default, unset other defaults
             if (validated.isDefault && !existingTemplate.isDefault) {
                 await tx.pipelineTemplate.updateMany({

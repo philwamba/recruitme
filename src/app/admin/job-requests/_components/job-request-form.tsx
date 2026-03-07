@@ -76,7 +76,7 @@ export function JobRequestForm({
             categoryId: jobRequest?.categoryId ?? null,
             headcount: jobRequest?.headcount ?? 1,
             employmentType: jobRequest?.employmentType ?? 'FULL_TIME',
-            workplaceType: jobRequest?.workplaceType ?? 'ON_SITE',
+            workplaceType: jobRequest?.workplaceType ?? 'ONSITE',
             location: jobRequest?.location ?? '',
             justification: jobRequest?.justification ?? '',
             requirements: jobRequest?.requirements ?? '',

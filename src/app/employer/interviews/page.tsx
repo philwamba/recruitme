@@ -1,9 +1,11 @@
+import { CalendarCheck } from 'lucide-react'
 import { Recommendation } from '@prisma/client'
 import { createInterview, submitInterviewFeedback } from '@/app/actions/enterprise'
 import { requireCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { EmptyState } from '@/components/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +46,13 @@ export default async function EmployerInterviewsPage() {
           Schedule interviews, add panelists, and capture structured interviewer feedback.
                 </p>
             </div>
+            {applications.length === 0 ? (
+                <EmptyState
+                    icon={CalendarCheck}
+                    title="No applications yet"
+                    description="Once candidates apply to your jobs, you can schedule and manage interviews here."
+                />
+            ) : (
             <div className="grid gap-6">
                 {applications.map(application => (
                     <Card key={application.id}>
@@ -115,6 +124,7 @@ export default async function EmployerInterviewsPage() {
                     </Card>
                 ))}
             </div>
+            )}
         </div>
     )
 }
