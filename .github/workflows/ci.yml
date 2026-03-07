@@ -32,4 +32,4 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recruitme
           AUTH_SECRET: 12345678901234567890123456789012
           NEXT_PUBLIC_APP_URL: http://localhost:3000
-        run: pnpm ci
+        run: pnpm run ci

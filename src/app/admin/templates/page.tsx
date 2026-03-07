@@ -102,20 +102,20 @@ async function CreateTemplateForm() {
             <CardContent>
                 <form action={createEmailTemplateAction} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Template Name</Label>
+                        <Label htmlFor="name" required>Template Name</Label>
                         <Input id="name" name="name" placeholder="e.g., interview-invitation" required />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="subject">Subject</Label>
+                        <Label htmlFor="subject" required>Subject</Label>
                         <Input id="subject" name="subject" placeholder="e.g., Interview Invitation for {{jobTitle}}" required />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="body">Body</Label>
+                        <Label htmlFor="body" required>Body</Label>
                         <Textarea
                             id="body"
                             name="body"
                             placeholder="Dear {{candidateName}},&#10;&#10;We are pleased to invite you..."
-                            className="min-h-[150px]"
+                            className="min-h-[150px] resize-none"
                             required
                         />
                     </div>
@@ -195,7 +195,7 @@ async function TemplatesList() {
                                                 <form action={updateEmailTemplateAction} className="space-y-4">
                                                     <input type="hidden" name="id" value={template.id} />
                                                     <div className="space-y-2">
-                                                        <Label htmlFor={`edit-name-${template.id}`}>Template Name</Label>
+                                                        <Label htmlFor={`edit-name-${template.id}`} required>Template Name</Label>
                                                         <Input
                                                             id={`edit-name-${template.id}`}
                                                             name="name"
@@ -204,7 +204,7 @@ async function TemplatesList() {
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor={`edit-subject-${template.id}`}>Subject</Label>
+                                                        <Label htmlFor={`edit-subject-${template.id}`} required>Subject</Label>
                                                         <Input
                                                             id={`edit-subject-${template.id}`}
                                                             name="subject"
@@ -213,12 +213,12 @@ async function TemplatesList() {
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor={`edit-body-${template.id}`}>Body</Label>
+                                                        <Label htmlFor={`edit-body-${template.id}`} required>Body</Label>
                                                         <Textarea
                                                             id={`edit-body-${template.id}`}
                                                             name="body"
                                                             defaultValue={template.body}
-                                                            className="min-h-[200px]"
+                                                            className="min-h-[200px] resize-none"
                                                             required
                                                         />
                                                     </div>
@@ -305,7 +305,7 @@ async function SendNotificationForm() {
                 <form action={createNotificationAction} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="userId">Recipient</Label>
+                            <Label htmlFor="userId" required>Recipient</Label>
                             <Select name="userId" required>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select user" />
@@ -333,16 +333,16 @@ async function SendNotificationForm() {
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="subject">Subject</Label>
+                        <Label htmlFor="subject" required>Subject</Label>
                         <Input id="subject" name="subject" placeholder="Notification subject" required />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="body">Message</Label>
+                        <Label htmlFor="body" required>Message</Label>
                         <Textarea
                             id="body"
                             name="body"
                             placeholder="Write your message..."
-                            className="min-h-[120px]"
+                            className="min-h-[120px] resize-none"
                             required
                         />
                     </div>

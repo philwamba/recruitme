@@ -13,13 +13,21 @@ import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { adminNavGroups, type NavItem } from './nav-config'
 import { ROUTES } from '@/lib/constants/routes'
+import type { SidebarCounts } from '@/lib/admin/queries/sidebar-counts'
+
+function formatBadgeCount(count: number): string {
+    if (count <= 0) return ''
+    if (count > 999) return '999+'
+    return count.toString()
+}
 
 interface AdminSidebarProps {
     isCollapsed?: boolean
     onToggle?: () => void
+    counts?: SidebarCounts
 }
 
-export function AdminSidebar({ isCollapsed = false, onToggle }: AdminSidebarProps) {
+export function AdminSidebar({ isCollapsed = false, onToggle, counts }: AdminSidebarProps) {
     const pathname = usePathname()
 
     const isActive = (item: NavItem) => {
@@ -106,6 +114,7 @@ export function AdminSidebar({ isCollapsed = false, onToggle }: AdminSidebarProp
                                         item={item}
                                         isActive={isActive(item)}
                                         isCollapsed={isCollapsed}
+                                        counts={counts}
                                     />
                                 ))}
                             </nav>
@@ -162,11 +171,16 @@ interface NavLinkProps {
     item: NavItem
     isActive: boolean
     isCollapsed: boolean
+    counts?: SidebarCounts
 }
 
-function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
+function NavLink({ item, isActive, isCollapsed, counts }: NavLinkProps) {
     const Icon = item.icon
     const isDisabled = !!item.badge
+
+    // Get dynamic badge count
+    const badgeCount = item.badgeKey && counts ? counts[item.badgeKey] : 0
+    const badgeText = item.badge || (badgeCount > 0 ? formatBadgeCount(badgeCount) : '')
 
     const linkContent = (
         <Link
@@ -174,7 +188,7 @@ function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
             aria-label={isCollapsed ? item.title : undefined}
             aria-disabled={isDisabled}
             className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -186,12 +200,23 @@ function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
             {!isCollapsed && (
                 <>
                     <span className="flex-1">{item.title}</span>
-                    {item.badge && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                            {item.badge}
+                    {badgeText && (
+                        <span className={cn(
+                            'rounded-full px-1.5 py-0.5 text-[10px] font-semibold min-w-[20px] text-center',
+                            item.badgeKey
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground',
+                        )}>
+                            {badgeText}
                         </span>
                     )}
                 </>
+            )}
+            {/* Badge indicator when collapsed */}
+            {isCollapsed && badgeText && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-primary-foreground">
+                    {badgeCount > 99 ? '99+' : badgeText}
+                </span>
             )}
         </Link>
     )
@@ -202,9 +227,9 @@ function NavLink({ item, isActive, isCollapsed }: NavLinkProps) {
                 <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                 <TooltipContent side="right" className="flex items-center gap-2">
                     {item.title}
-                    {item.badge && (
-                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium">
-                            {item.badge}
+                    {badgeText && (
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                            {badgeText}
                         </span>
                     )}
                 </TooltipContent>

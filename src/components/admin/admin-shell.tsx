@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import type { AuthenticatedUser } from '@/lib/auth'
+import type { SidebarCounts } from '@/lib/admin/queries/sidebar-counts'
 import { AdminSidebar } from './admin-sidebar'
 import { AdminHeader } from './admin-header'
 import { AdminMobileNav } from './admin-mobile-nav'
@@ -12,9 +13,11 @@ const SIDEBAR_STORAGE_KEY = 'admin-sidebar-collapsed'
 export function AdminShell({
     children,
     user,
+    counts,
 }: {
     children: React.ReactNode
     user: AuthenticatedUser
+    counts?: SidebarCounts
 }) {
     const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
     const [mobileNavOpen, setMobileNavOpen] = React.useState(false)
@@ -45,11 +48,12 @@ export function AdminShell({
                 <AdminSidebar
                     isCollapsed={sidebarCollapsed}
                     onToggle={handleToggleSidebar}
+                    counts={counts}
                 />
             </div>
 
             {/* Mobile Navigation */}
-            <AdminMobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
+            <AdminMobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} counts={counts} />
 
             {/* Main Content */}
             <div className="flex flex-1 flex-col overflow-hidden">

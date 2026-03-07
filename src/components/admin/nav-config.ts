@@ -30,6 +30,7 @@ export interface NavItem {
     href: string
     icon: LucideIcon
     badge?: string
+    badgeKey?: 'candidates' | 'interviews' | 'assessments' | 'pendingReviews'
     matchPaths?: string[]
 }
 
@@ -62,24 +63,28 @@ export const adminNavGroups: NavGroup[] = [
                 title: 'Candidates',
                 href: ROUTES.ADMIN.CANDIDATES,
                 icon: Users,
+                badgeKey: 'candidates',
                 matchPaths: ['/admin/candidates'],
             },
             {
                 title: 'Pipeline',
                 href: ROUTES.ADMIN.PIPELINE,
                 icon: Columns3,
+                badgeKey: 'pendingReviews',
                 matchPaths: ['/admin/pipeline'],
             },
             {
                 title: 'Interviews',
                 href: ROUTES.ADMIN.INTERVIEWS,
                 icon: Calendar,
+                badgeKey: 'interviews',
                 matchPaths: ['/admin/interviews'],
             },
             {
                 title: 'Assessments',
                 href: ROUTES.ADMIN.ASSESSMENTS,
                 icon: ClipboardCheck,
+                badgeKey: 'assessments',
                 matchPaths: ['/admin/assessments'],
             },
         ],
