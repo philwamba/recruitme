@@ -187,12 +187,13 @@ export function QualitiesTable({ qualities }: QualitiesTableProps) {
     }
 
     function handleDelete() {
-        if (!deleteId) return
+        if (!deleteId || isPending) return
         startTransition(async () => {
             try {
                 await deleteQuality(deleteId)
                 toast.success('Quality deleted')
                 setDeleteId(null)
+                router.refresh()
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : 'Failed to delete')
                 setDeleteId(null)
@@ -268,9 +269,10 @@ export function QualitiesTable({ qualities }: QualitiesTableProps) {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
+                            disabled={isPending}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Delete
+                            {isPending ? 'Deleting...' : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -206,6 +206,10 @@ model User {
   deletionRequests DataDeletionRequest[]
   savedSearches SavedSearch[]
   candidateImports CandidateImport[] @relation("CandidateImporter")
+  organizationsManaged Organization[] @relation("OrgManager")
+  jobRequests JobRequest[] @relation("JobRequestor")
+  jobRequestApprovals JobRequestApproval[] @relation("JobApprover")
+  questionnaireResponses QuestionnaireResponse[] @relation("QuestionnaireRespondent")
 }
 
 model RolePermission {
@@ -427,8 +431,9 @@ model JobCategory {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  jobTitles JobTitle[]
-  jobs      Job[]
+  jobTitles   JobTitle[]
+  jobs        Job[]
+  jobRequests JobRequest[]
 
   @@index([isActive])
 }
@@ -518,6 +523,34 @@ model QualityTemplateItem {
   @@index([qualityId])
 }
 
+// Pipeline Templates for reusable hiring workflows
+model PipelineTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?  @db.Text
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stages PipelineTemplateStage[]
+  jobs   Job[]
+
+  @@index([isActive])
+}
+
+model PipelineTemplateStage {
+  id         String           @id @default(cuid())
+  templateId String
+  template   PipelineTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name       String
+  order      Int
+  isDefault  Boolean          @default(false)
+
+  @@unique([templateId, order])
+  @@index([templateId])
+}
+
 // Job posting
 model Job {
   id             String         @id @default(cuid())
@@ -543,6 +576,8 @@ model Job {
   jobTitle       JobTitle?      @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
   qualityTemplateId String?
   qualityTemplate   QualityTemplate? @relation(fields: [qualityTemplateId], references: [id], onDelete: SetNull)
+  pipelineTemplateId String?
+  pipelineTemplate   PipelineTemplate? @relation(fields: [pipelineTemplateId], references: [id], onDelete: SetNull)
   createdByUserId String?
   createdBy      User?          @relation("JobCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
   publishedAt    DateTime?
@@ -555,12 +590,14 @@ model Job {
   assessments    Assessment[]
   emailTemplates EmailTemplate[]
   candidateImports CandidateImport[]
+  jobRequest     JobRequest?
 
   @@index([status, publishedAt])
   @@index([departmentId])
   @@index([categoryId])
   @@index([jobTitleId])
   @@index([qualityTemplateId])
+  @@index([pipelineTemplateId])
   @@index([employmentType, workplaceType])
 }
 
@@ -592,6 +629,7 @@ model Application {
   assessments    Assessment[]
   notifications  Notification[]
   consentRecords ConsentRecord[]
+  questionnaireResponses QuestionnaireResponse[]
 
   @@unique([userId, jobId])
   @@index([userId])
@@ -950,4 +988,194 @@ model CandidateImport {
 
   @@index([status])
   @@index([importedById])
+}
+
+// ==========================================
+// Phase 4: Organization & Job Request Workflow
+// ==========================================
+
+enum OrganizationType {
+  COMPANY
+  DIVISION
+  DEPARTMENT
+  TEAM
+  UNIT
+}
+
+model Organization {
+  id        String           @id @default(cuid())
+  name      String
+  code      String           @unique
+  parentId  String?
+  parent    Organization?    @relation("OrgHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Organization[]   @relation("OrgHierarchy")
+  type      OrganizationType
+  managerId String?
+  manager   User?            @relation("OrgManager", fields: [managerId], references: [id], onDelete: SetNull)
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  jobRequests JobRequest[]
+
+  @@index([parentId])
+  @@index([type])
+  @@index([isActive])
+}
+
+enum JobRequestStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  CANCELLED
+  CONVERTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DELEGATED
+}
+
+model JobRequest {
+  id              String           @id @default(cuid())
+  requestNumber   String           @unique
+  title           String
+  organizationId  String
+  organization    Organization     @relation(fields: [organizationId], references: [id])
+  categoryId      String?
+  category        JobCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  headcount       Int              @default(1)
+  employmentType  EmploymentType
+  workplaceType   WorkplaceType
+  location        String?
+  justification   String           @db.Text
+  requirements    String?          @db.Text
+  salaryMin       Int?
+  salaryMax       Int?
+  salaryCurrency  String?
+  targetStartDate DateTime?
+  status          JobRequestStatus @default(DRAFT)
+  requestedById   String
+  requestedBy     User             @relation("JobRequestor", fields: [requestedById], references: [id])
+  jobId           String?          @unique
+  job             Job?             @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  approvals JobRequestApproval[]
+
+  @@index([status])
+  @@index([organizationId])
+  @@index([requestedById])
+}
+
+model JobRequestApproval {
+  id             String         @id @default(cuid())
+  requestId      String
+  request        JobRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approverUserId String
+  approver       User           @relation("JobApprover", fields: [approverUserId], references: [id])
+  level          Int
+  status         ApprovalStatus @default(PENDING)
+  comments       String?        @db.Text
+  decidedAt      DateTime?
+  createdAt      DateTime       @default(now())
+
+  @@unique([requestId, approverUserId])
+  @@index([approverUserId])
+}
+
+// ==========================================
+// Phase 3: Questionnaire System
+// ==========================================
+
+enum QuestionType {
+  TEXT
+  TEXTAREA
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  RATING
+  DATE
+  FILE_UPLOAD
+  YES_NO
+  NUMBER
+}
+
+enum QuestionnaireType {
+  APPLICATION
+  SCREENING
+  INTERVIEW
+  ASSESSMENT
+  EXIT
+  ONBOARDING
+}
+
+model Questionnaire {
+  id          String            @id @default(cuid())
+  name        String
+  code        String            @unique
+  description String?           @db.Text
+  type        QuestionnaireType
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  questions QuestionnaireQuestion[]
+  responses QuestionnaireResponse[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model QuestionnaireQuestion {
+  id              String        @id @default(cuid())
+  questionnaireId String
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  text            String        @db.Text
+  type            QuestionType
+  options         Json?         // For choice questions: [{ value: string, label: string }]
+  isRequired      Boolean       @default(false)
+  helpText        String?
+  sortOrder       Int           @default(0)
+  validations     Json?         // { min, max, pattern, etc. }
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  answers QuestionnaireAnswer[]
+
+  @@index([questionnaireId])
+}
+
+model QuestionnaireResponse {
+  id               String        @id @default(cuid())
+  questionnaireId  String
+  questionnaire    Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  applicationId    String?
+  application      Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  respondentUserId String
+  respondentUser   User          @relation("QuestionnaireRespondent", fields: [respondentUserId], references: [id])
+  completedAt      DateTime?
+  createdAt        DateTime      @default(now())
+
+  answers QuestionnaireAnswer[]
+
+  @@unique([questionnaireId, applicationId])
+  @@index([respondentUserId])
+}
+
+model QuestionnaireAnswer {
+  id         String                @id @default(cuid())
+  responseId String
+  response   QuestionnaireResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId String
+  question   QuestionnaireQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value      String?               @db.Text
+  fileUrl    String?
+  createdAt  DateTime              @default(now())
+
+  @@unique([responseId, questionId])
+  @@index([questionId])
 }

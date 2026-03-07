@@ -51,7 +51,6 @@ export async function updateSavedSearch(id: string, data: SavedSearchFormData) {
         throw new Error('Saved search not found')
     }
 
-    // Only owner can update unless it's public
     if (existingSearch.userId !== user.id) {
         throw new Error('Unauthorized to update this saved search')
     }

@@ -127,7 +127,10 @@ export async function getCandidates(params: CandidatesQueryParams = {}) {
             where.submittedAt.gte = new Date(appliedAfter)
         }
         if (appliedBefore) {
-            where.submittedAt.lte = new Date(appliedBefore)
+            // Use lt with start of next day to include the entire selected day
+            const beforeDate = new Date(appliedBefore)
+            beforeDate.setDate(beforeDate.getDate() + 1)
+            where.submittedAt.lt = beforeDate
         }
     }
 

@@ -191,6 +191,7 @@ export function TitlesTable({ titles }: TitlesTableProps) {
                 await deleteJobTitle(deleteId)
                 toast.success('Job title deleted')
                 setDeleteId(null)
+                router.refresh()
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : 'Failed to delete')
                 setDeleteId(null)

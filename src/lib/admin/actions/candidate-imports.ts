@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { requireCurrentUser } from '@/lib/auth'
 import { createAuditLog } from '@/lib/observability/audit'
@@ -254,7 +255,7 @@ export async function processImport(params: ProcessImportParams) {
             processedRows,
             successCount,
             errorCount: errors.length,
-            errors: errors.length > 0 ? errors : null,
+            errors: errors.length > 0 ? (errors as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
             completedAt: new Date(),
         },
     })
