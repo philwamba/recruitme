@@ -51,20 +51,21 @@ export function PhoneInput({
 }: PhoneInputProps) {
     const [open, setOpen] = React.useState(false)
     const [selectedCountry, setSelectedCountry] = React.useState<Country>(
-        () => countries.find(c => c.code === defaultCountry) || countries[0]
+        () => countries.find(c => c.code === defaultCountry) || countries[0],
     )
 
     // Parse initial value to extract country code
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     React.useEffect(() => {
         if (value) {
             const matchedCountry = countries.find(c =>
-                value.startsWith(c.dialCode)
+                value.startsWith(c.dialCode),
             )
             if (matchedCountry && matchedCountry.code !== selectedCountry.code) {
                 setSelectedCountry(matchedCountry)
             }
         }
-    }, []) // Only run on mount
+    }, [])
 
     const handleCountrySelect = (country: Country) => {
         setSelectedCountry(country)
@@ -112,7 +113,7 @@ export function PhoneInput({
                         <CommandList>
                             <CommandEmpty>No country found.</CommandEmpty>
                             <CommandGroup>
-                                {countries.map((country) => (
+                                {countries.map(country => (
                                     <CommandItem
                                         key={country.code}
                                         value={`${country.name} ${country.dialCode}`}

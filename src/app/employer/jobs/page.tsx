@@ -165,7 +165,16 @@ export default async function EmployerJobsPage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="salaryCurrency">Currency</Label>
-                            <Input id="salaryCurrency" name="salaryCurrency" defaultValue="USD" placeholder="USD" />
+                            <select
+                                id="salaryCurrency"
+                                name="salaryCurrency"
+                                defaultValue="USD"
+                                className="h-9 w-full cursor-pointer rounded-md border bg-background px-3 py-2 text-sm"
+                            >
+                                <option value="USD">USD</option>
+                                <option value="KES">KES</option>
+                                <option value="TZS">TZS</option>
+                            </select>
                         </div>
 
                         <div className="space-y-2">
