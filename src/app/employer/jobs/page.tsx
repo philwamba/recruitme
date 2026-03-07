@@ -22,18 +22,12 @@ export default async function EmployerJobsPage() {
     })
 
     // Fetch data in parallel
-    const [jobs, departments, existingJobs] = await Promise.all([
+    const [jobs, departments, companies, locations] = await Promise.all([
         getEmployerJobs(user.id),
         prisma.department.findMany({ orderBy: { name: 'asc' } }),
-        prisma.job.findMany({
-            where: { createdByUserId: user.id },
-            select: { company: true, location: true },
-        }),
+        prisma.company.findMany({ orderBy: { name: 'asc' } }),
+        prisma.location.findMany({ orderBy: { name: 'asc' } }),
     ])
-
-    // Get distinct companies and locations
-    const companies = [...new Set(existingJobs.map(j => j.company).filter(Boolean))]
-    const locations = [...new Set(existingJobs.map(j => j.location).filter(Boolean))] as string[]
 
     return (
         <div className="space-y-6">
@@ -61,34 +55,54 @@ export default async function EmployerJobsPage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="company">Company<span className="text-destructive ml-1">*</span></Label>
-                            <Input
-                                id="company"
-                                name="company"
-                                list="companies-list"
-                                placeholder="Enter or select company"
-                                required
-                            />
-                            <datalist id="companies-list">
-                                {companies.map(company => (
-                                    <option key={company} value={company} />
-                                ))}
-                            </datalist>
+                            {companies.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                    No companies yet.{' '}
+                                    <a href="/employer/settings/companies" className="text-primary hover:underline">
+                                        Create one first
+                                    </a>
+                                </p>
+                            ) : (
+                                <select
+                                    id="company"
+                                    name="company"
+                                    required
+                                    className="h-9 w-full cursor-pointer rounded-md border bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">Select a company</option>
+                                    {companies.map(company => (
+                                        <option key={company.id} value={company.name}>
+                                            {company.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="location">Location<span className="text-destructive ml-1">*</span></Label>
-                            <Input
-                                id="location"
-                                name="location"
-                                list="locations-list"
-                                placeholder="Enter or select location"
-                                required
-                            />
-                            <datalist id="locations-list">
-                                {locations.map(location => (
-                                    <option key={location} value={location} />
-                                ))}
-                            </datalist>
+                            {locations.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                    No locations yet.{' '}
+                                    <a href="/employer/settings/locations" className="text-primary hover:underline">
+                                        Create one first
+                                    </a>
+                                </p>
+                            ) : (
+                                <select
+                                    id="location"
+                                    name="location"
+                                    required
+                                    className="h-9 w-full cursor-pointer rounded-md border bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">Select a location</option>
+                                    {locations.map(location => (
+                                        <option key={location.id} value={location.name}>
+                                            {location.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
 
                         <div className="space-y-2">

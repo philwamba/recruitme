@@ -213,6 +213,7 @@ export async function signIn(
     return {
         success: false,
         message: 'Unable to sign in right now. Please try again later.',
+        email: String(formData.get('email') ?? ''),
     }
 }
 
